@@ -1325,7 +1325,7 @@ PluginEditor = function(jsEditor, valueEditor)
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	}
 
-	function _appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, includeRemove)
+	function _appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, includeRemove,target)
 	{
 		var input = $('<textarea></textarea>');
 
@@ -1356,11 +1356,22 @@ PluginEditor = function(jsEditor, valueEditor)
 		var wrapperDiv = $('<div class="calculated-setting-row"></div>');
 		wrapperDiv.append(input).append(datasourceToolbox);
 
-		var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
+		if(target)
+		{
+			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATATARGET</label></li>')
+				.mousedown(function(e) {
+					e.preventDefault();
+					$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
+				});
+		}
+		else
+		{
+			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
 			.mousedown(function(e) {
 				e.preventDefault();
-				$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
+				$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
 			});
+		}
 		datasourceToolbox.append(datasourceTool);
 
 		var jsEditorTool = $('<li><i class="icon-fullscreen icon-white"></i><label>.JS EDITOR</label></li>')
@@ -1606,28 +1617,30 @@ PluginEditor = function(jsEditor, valueEditor)
 					{
 						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
-						if(settingDef.type == "calculated")
+						if(settingDef.type == "calculated" || settingDef.type == "target")
 						{
+							var target=settingDef.type == "target";
+
 							if(settingDef.name in currentSettingsValues) {
 								var currentValue = currentSettingsValues[settingDef.name];
 								if(settingDef.multi_input && _.isArray(currentValue)) {
 									var includeRemove = false;
 									for(var i=0; i<currentValue.length; i++) {
-										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue[i], includeRemove);
+										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue[i], includeRemove,target);
 										includeRemove = true;
 									}
 								} else {
-									_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, false);
+									_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, false,target);
 								}
 							} else {
-								_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, false);
+								_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, false,target);
 							}
 
 							if(settingDef.multi_input) {
 								var inputAdder = $('<ul class="board-toolbar"><li class="add-setting-row"><i class="icon-plus icon-white"></i><label>ADD</label></li></ul>')
 									.mousedown(function(e) {
 										e.preventDefault();
-										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, true);
+										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, true,target);
 									});
 								$(valueCell).siblings('.form-label').append(inputAdder);
 							}
@@ -1912,9 +1925,14 @@ ValueEditor = function(theFreeboardModel)
 			// Editor value is: datasources["; List all datasources
 			if(match[1] == "")
 			{
+                var prefix=''
+                if (inputString=='')
+                {
+                    prefix='='
+                }
 				_.each(datasources, function(datasource)
 				{
-					options.push({value: datasource.name(), entity: undefined,
+					options.push({value: prefix+datasource.name(), entity: undefined,
 						precede_char: "", follow_char: "\"]"});
 				});
 			}
@@ -2195,7 +2213,22 @@ ValueEditor = function(theFreeboardModel)
 	}
 }
 
+
 function WidgetModel(theFreeboardModel, widgetPlugins) {
+
+	var targetFunctionFromScript = function(script)
+	{
+		// First we compile hte user's code, appending to make it into an assignment to the target
+		var targetFunction = new Function("datasources",'value', script+'=value');
+		
+		//Next we wrap this into another function that supplies the neccesary context.
+		var f = function (val) {
+			return targetFunction(theFreeboardModel.protectedDataSourceData, val);
+		}
+		
+		return f
+	}
+
 	function disposeWidgetInstance() {
 		if (!_.isUndefined(self.widgetInstance)) {
 			if (_.isFunction(self.widgetInstance.onDispose)) {
@@ -2210,6 +2243,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 	this.datasourceRefreshNotifications = {};
 	this.calculatedSettingScripts = {};
+
+	//When you have a setting of type 'target', that setting gets an entry here, and it's a function you call to set the target with new data.
+	this.dataTargets={}
 
 	this.title = ko.observable();
 	this.fillSize = ko.observable(false);
@@ -2226,6 +2262,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 					self.fillSize((widgetType.fill_size === true));
 					self.widgetInstance = widgetInstance;
+
+				
+					self.widgetInstance.dataTargets= self.dataTargets;
 					self.shouldRender(true);
 					self._heightUpdate.valueHasMutated();
 
@@ -2299,18 +2338,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	}
 
-	this.targetFunctionFromScript = function(script)
-    {
-        // First we compile hte user's code, appending to make it into an assignment to the target
-         var targetFunction = new Function("datasources",'value', script+'=value');
-         
-         //Next we wrap this into another function that supplies the neccesary context.
-         var f = function (val) {
-            return targetFunction(theFreeboardModel.protectedDataSourceData, val);
-        }
-        
-        return f
-    }
+
 	this.updateCalculatedSettings = function () {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
@@ -2343,15 +2371,18 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
                             script = "[" + script.join(",") + "]";
                         }
 
-                        // If there is no return, add one
+						var getter=script;                        
+						
+						// If there is no return, add one
+						//Only th the getter though, not the setter if it's a target.
                         if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
-                            script = "return " + script;
-                        }
+                            getter = "return " + script;
+						}
 
                         var valueFunction;
 
                         try {
-                            valueFunction = new Function("datasources", script);
+                            valueFunction = new Function("datasources", getter);
                         }
                         catch (e) {
                             isLiteralText=1
@@ -2379,10 +2410,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
                     {
                         try {
                            
-                            self.targetSetterScripts[settingDef.name] = targetFunctionFromScript(script);
+                            self.dataTargets[settingDef.name] = targetFunctionFromScript(script);
                         }
                         catch (e) {
-                            console.log("Bad data target: "+ script)
+							console.log("Bad data target: "+ script)
+							console.log(e)
+							self.dataTargets[settingDef.name]=undefined
                         }
                     }
 					self.processCalculatedSetting(settingDef.name);
@@ -2404,6 +2437,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							refreshSettingNames.push(settingDef.name);
 						}
 					}
+				}
+				else
+				{
+					self.dataTargets[settingDef.name]=undefined;
 				}
 			}
 		});
