@@ -1,5 +1,12 @@
-freeboard
+freeboard(fork!)
 ==========
+
+
+
+### What this fork changes
+
+* Widgets are no longer just inputs. We standardize data targets. Which are really just data soures that we assign to.
+* Calculated expressions use Spreadsheet syntax. Anything that doesn't start with = is considered a literal value.
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

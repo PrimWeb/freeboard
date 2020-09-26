@@ -282,8 +282,22 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	this.header_image = ko.observable();
 	this.plugins = ko.observableArray();
 	this.datasources = ko.observableArray();
+    
+         
 	this.panes = ko.observableArray();
 	this.datasourceData = {};
+    
+    //We want to let widgets assign to properties of data sources.
+    //However, we can't let them directly overwrite the reactive object that the plugin
+    //provides,that would mess everything up.  So we give a read only view of datasourcedata
+    var dataSourceProtectionHandler = {
+        set: function(obj, prop, value) {
+            throw new Error("You cannot directly overwrite a datasource here. Try assigning to one of the properties of the source instead")
+        }
+    };
+    
+    self.protectedDataSourceData =  new Proxy(self.datasourceData, dataSourceProtectionHandler)
+   
 	this.processDatasourceUpdate = function(datasourceModel, newData)
 	{
 		var datasourceName = datasourceModel.name();
@@ -1887,7 +1901,7 @@ ValueEditor = function(theFreeboardModel)
 		$(element).css({height: newHeight + "px"});
 	}
 
-	function _autocompleteFromDatasource(inputString, datasources, expectsType)
+	function _autocompleteFromDatasource(inputString, datasources, expectsType, isTarget)
 	{
 		var match = _veDatasourceRegex.exec(inputString);
 
@@ -1984,6 +1998,10 @@ ValueEditor = function(theFreeboardModel)
 					// For everything else, do nothing (no further selection possible)
 					else
 					{
+                        if (isTarget)
+                        {
+                            options.push(" = value")
+                        }
 						// no-op
 					}
 				}
@@ -2281,6 +2299,18 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	}
 
+	this.targetFunctionFromScript = function(script)
+    {
+        // First we compile hte user's code, appending to make it into an assignment to the target
+         var targetFunction = new Function("datasources",'value', script+'=value');
+         
+         //Next we wrap this into another function that supplies the neccesary context.
+         var f = function (val) {
+            return targetFunction(theFreeboardModel.protectedDataSourceData, val);
+        }
+        
+        return f
+    }
 	this.updateCalculatedSettings = function () {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
@@ -2291,37 +2321,70 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 		// Check for any calculated settings
 		var settingsDefs = widgetPlugins[self.type()].settings;
-		var datasourceRegex = new RegExp("datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
+		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
 		var currentSettings = self.settings();
 
 		_.each(settingsDefs, function (settingDef) {
-			if (settingDef.type == "calculated") {
+			if (settingDef.type == "calculated" || settingDef.type == "target") {
 				var script = currentSettings[settingDef.name];
 
 				if (!_.isUndefined(script)) {
+                    var isLiteralText=0
+                    
+                    if (script[0]=='=' || settingDef.type == "target"){
+                        
+                        //We use the spreadsheet convention here. 
+                        if (script[0]=='=')
+                        {
+                            script = script.substring(1)
+                        }
 
-					if(_.isArray(script)) {
-						script = "[" + script.join(",") + "]";
-					}
+                        if(_.isArray(script)) {
+                            script = "[" + script.join(",") + "]";
+                        }
 
-					// If there is no return, add one
-					if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
-						script = "return " + script;
-					}
+                        // If there is no return, add one
+                        if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
+                            script = "return " + script;
+                        }
 
-					var valueFunction;
+                        var valueFunction;
 
- 					try {
-						valueFunction = new Function("datasources", script);
-					}
-					catch (e) {
-						var literalText = currentSettings[settingDef.name].replace(/"/g, '\\"').replace(/[\r\n]/g, ' \\\n');
-
+                        try {
+                            valueFunction = new Function("datasources", script);
+                        }
+                        catch (e) {
+                            isLiteralText=1
+                        }
+                    }
+                    else
+                    {
+                        isLiteralText = 1;
+                    }
+					
+					if (isLiteralText)
+                    {
+                        var literalText = currentSettings[settingDef.name].replace(/"/g, '\\"').replace(/[\r\n]/g, ' \\\n');
 						// If the value function cannot be created, then go ahead and treat it as literal text
-						valueFunction = new Function("datasources", "return \"" + literalText + "\";");
-					}
+						valueFunction = new Function("datasources", "return \"" + literalText + "\";");   
+                    }
 
 					self.calculatedSettingScripts[settingDef.name] = valueFunction;
+                    
+                    //The settting is asking the uesr for a data target. So we create a function
+                    //to set that value.
+                    
+                    //The datasource is then expected to handle this with a set function.
+                    if (settingDef.type == "target")
+                    {
+                        try {
+                           
+                            self.targetSetterScripts[settingDef.name] = targetFunctionFromScript(script);
+                        }
+                        catch (e) {
+                            console.log("Bad data target: "+ script)
+                        }
+                    }
 					self.processCalculatedSetting(settingDef.name);
 
 					// Are there any datasources we need to be subscribed to?
@@ -2344,7 +2407,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 			}
 		});
-	}
+    };
+	
 
 	this._heightUpdate = ko.observable();
 	this.height = ko.computed({
