@@ -367,7 +367,7 @@ div.CodeMirror-cursors {
 
 	--box-bg-color:#444659d7;
 	--widget-bg-color: #A1A1A1;
-	--border-color: #3D3D3D;
+	--border-color: #26362f;
 	--bar-bg-color: #534152;
 	--fg-color: #cfcfcf;
 	--reverseout-bg: #dddddd;
@@ -1435,6 +1435,8 @@ ul, ol {
 	background: var(--box-bg-color);
 	padding: var(--pane-padding);
 	border-radius: var(--pane-border-radius);
+	border-style: var(--border-style);
+	border-color: var(--border-color);
 	margin: 0px;
 	overflow: hidden;
 	z-index: auto;
@@ -1444,6 +1446,13 @@ ul, ol {
 	-moz-user-select: text;
 	-ms-user-select: text;
 	user-select: text;
+}
+
+.gridster .gs_w header{
+	border: none;
+	border-bottom: 1px solid;
+	border-style: solid;
+	border-color: var(--border-color);
 }
 
 .gridster .preview-holder {
