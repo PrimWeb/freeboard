@@ -18,31 +18,17 @@
 	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
 	freeboard.loadDatasourcePlugin({
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
-		"type_name"   : "my_datasource_plugin",
+		"type_name"   : "my_datatarget_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "Datasource Plugin Example",
+		"display_name": "Data target Plugin Example",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
-        "description" : "Some sort of description <strong>with optional html!</strong>",
+        "description" : "The data has one property, hello.  It's just a loopback, whhich can be set as well as read.  Try using the slider widget!",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
-		"external_scripts" : [
-			"http://mydomain.com/myscript1.js",
-		    "http://mydomain.com/myscript2.js"
-		],
+	
 		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
 		"settings"    : [
 			{
-				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
-				"name"         : "first_name",
-				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
-				"display_name" : "First Name",
-				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
-				"type"         : "text",
-				// **default_value** : A default value for this setting.
-				"default_value": "John",
-				// **description** : Text that will be displayed below the setting to give the user any extra information.
-				"description"  : "This is pretty self explanatory...",
-                // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
-                "required" : true
+
 			}
 
 		],
@@ -71,6 +57,11 @@
 		var currentSettings = settings;
 
         self.handler={
+			set: function(obj,prop,val)
+			{
+				obj[prop]=val;
+				updateCallback(self.proxy)
+			}
 
         }
         self.data={ hello : "world!"}
