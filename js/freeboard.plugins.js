@@ -951,9 +951,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "text_widget",
         display_name: "Text",
-        "external_scripts" : [
-            "plugins/thirdparty/jquery.sparkline.min.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -1073,10 +1070,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "gauge",
         display_name: "Gauge",
-        "external_scripts" : [
-            "plugins/thirdparty/raphael.2.1.0.min.js",
-            "plugins/thirdparty/justgage.1.0.1.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -1164,9 +1157,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "sparkline",
         display_name: "Sparkline",
-        "external_scripts" : [
-            "plugins/thirdparty/jquery.sparkline.min.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -1275,9 +1265,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "pointer",
         display_name: "Pointer",
-        "external_scripts" : [
-            "plugins/thirdparty/raphael.2.1.0.min.js"
-        ],
         settings: [
             {
                 name: "direction",

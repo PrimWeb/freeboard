@@ -548,7 +548,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 	}
 
-	this.saveDashboardClicked = function(){
+	this.downloadDashboardClicked = function(){
 		var target = $(event.currentTarget);
 		var siblingsShown = target.data('siblings-shown') || false;
 		if(!siblingsShown){
@@ -559,7 +559,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		target.data('siblings-shown', !siblingsShown);
 	}
 
-	this.saveDashboard = function(_thisref, event)
+	this.downloadDashboard = function(_thisref, event)
 	{
 		var pretty = $(event.currentTarget).data('pretty');
 		var contentType = 'application/octet-stream';
@@ -2361,8 +2361,31 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 				if (!_.isUndefined(script)) {
                     var isLiteralText=0
-                    
-                    if (script[0]=='=' || settingDef.type == "target"){
+					
+					var wasArray =0;
+
+					//For arrays, we have to go down the line, check them, and convert to expressions as needed.
+					if(_.isArray(script)) {
+						wasArray=1;
+
+						var s =[]
+						for(i in script)
+						{
+							if(i[0]=='=')
+							{
+								s.push(i.substring(1))
+							}
+							else
+							{
+								//String escaping
+								s.push(JSON.stringify(i))
+							}
+						}
+						script = "[" + s.join(",") + "]";
+					}
+
+
+                    if (script[0]=='=' || settingDef.type == "target" || wasArray){
                         
                         //We use the spreadsheet convention here. 
                         if (script[0]=='=')
@@ -2370,9 +2393,6 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
                             script = script.substring(1)
                         }
 
-                        if(_.isArray(script)) {
-                            script = "[" + script.join(",") + "]";
-                        }
 
 						var getter=script;                        
 						
@@ -4083,9 +4103,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "text_widget",
         display_name: "Text",
-        "external_scripts" : [
-            "plugins/thirdparty/jquery.sparkline.min.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -4205,10 +4222,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "gauge",
         display_name: "Gauge",
-        "external_scripts" : [
-            "plugins/thirdparty/raphael.2.1.0.min.js",
-            "plugins/thirdparty/justgage.1.0.1.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -4296,9 +4309,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "sparkline",
         display_name: "Sparkline",
-        "external_scripts" : [
-            "plugins/thirdparty/jquery.sparkline.min.js"
-        ],
         settings: [
             {
                 name: "title",
@@ -4407,9 +4417,6 @@ freeboard.loadDatasourcePlugin({
     freeboard.loadWidgetPlugin({
         type_name: "pointer",
         display_name: "Pointer",
-        "external_scripts" : [
-            "plugins/thirdparty/raphael.2.1.0.min.js"
-        ],
         settings: [
             {
                 name: "direction",
