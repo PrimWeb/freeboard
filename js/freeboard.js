@@ -2221,7 +2221,15 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 	var targetFunctionFromScript = function(script)
 	{
-		// First we compile hte user's code, appending to make it into an assignment to the target
+		// First we compile the user's code, appending to make it into an assignment to the target
+
+		var append =''
+
+		//Assignments or function calls let you ado something other than what you expect with the value.
+		if (!(script.includes('=') || script.includes('(')))
+		{
+			append = '=value'
+		}
 		var targetFunction = new Function("datasources",'value', script+'=value');
 		
 		//Next we wrap this into another function that supplies the neccesary context.

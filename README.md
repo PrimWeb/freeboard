@@ -7,6 +7,9 @@ freeboard(fork!)
 
 * Widgets are no longer just inputs. We standardize data targets. Which are really just data soures that we assign to.
 * Calculated expressions use Spreadsheet syntax. Anything that doesn't start with = is considered a literal value.
+* Data targets can just be a writable data source that uses proxies to detect when you set it's keys
+* But if they include an assignment or a function call, they are interpreted as literal javascript, so alert(value) works.
+
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 
