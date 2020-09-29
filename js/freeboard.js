@@ -278,6 +278,8 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			$("#main-header").hide();
 		}
 	});
+    
+   
 
 	this.header_image = ko.observable();
 	this.plugins = ko.observableArray();
@@ -300,6 +302,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
    
 	this.processDatasourceUpdate = function(datasourceModel, newData)
 	{
+		//TODO should we actually iterate everything on every change?
 		var datasourceName = datasourceModel.name();
 
 		self.datasourceData[datasourceName] = newData;
@@ -1657,7 +1660,8 @@ PluginEditor = function(jsEditor, valueEditor)
 
 							if (settingDef.name=='name')
 							{
-								var defaultregex='[a-zA-Z0-9_]+'
+								//Discourage names that are not valid identifiers
+								var defaultregex='[a-zA-Z][a-zA-Z0-9_]+'
 							}
 							else{
 								var defaultregex=null;
@@ -1883,6 +1887,7 @@ PluginEditor = function(jsEditor, valueEditor)
 ValueEditor = function(theFreeboardModel)
 {
 	var _veDatasourceRegex = new RegExp(".*datasources\\[\"([^\"]*)(\"\\])?(.*)$");
+	//var identifierRegex = new RegExp("[a-zA-Z][a-zA-Z0-9_]+")
 
 	var dropdown = null;
 	var selectedOptionIndex = 0;
@@ -2993,6 +2998,28 @@ var freeboard = (function()
 
 	// PUBLIC FUNCTIONS
 	return {
+          eval: function(s)
+            {
+                if(typeof(s)=="string" && s[0]=='=')
+                {
+                    return this.compile("return "+s.substring(1))()
+                }
+                else
+                {
+                    return s;
+                }
+            },
+        
+            compile :function(s)
+            {
+                var f= new Function('datasources',s)
+                
+                var f2 = function()
+                {
+                    return f(theFreeboardModel.datasources)
+                }
+                return f2
+            },
 		initialize          : function(allowEdit, finishedCallback)
 		{
 			ko.applyBindings(theFreeboardModel);

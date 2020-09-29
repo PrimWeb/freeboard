@@ -18,18 +18,31 @@
 	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
 	freeboard.loadDatasourcePlugin({
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
-		"type_name"   : "my_datatarget_plugin",
+		"type_name"   : "core_scratchpad_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "Data target Plugin Example",
+		"display_name": "Scratchpad Variables",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
-        "description" : "The data has one property, hello.  It's just a loopback, whhich can be set as well as read.  Try using the slider widget!",
+        "description" : "The data is just an empty space.  To set some data, use datasources['scratchpad']['SomeName'] as a data target.  It will be available to read in other widgets.  You can also set the default data using JSON.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 	
 		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
 		"settings"    : [
-			{
-
-			}
+			
+                {
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "data",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Default Data(as JSON or JS expression)",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "text",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "={}",
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
+                    // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
+                    "required" : true
+                }
+			
 
 		],
 		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
@@ -64,8 +77,9 @@
 			}
 
         }
-        self.data={ hello : "world!"}
+        self.data=freeboard.eval(settings['data'])
         self.proxy = new Proxy(self.data, self.handler)
+        
 
 		/* This is some function where I'll get my data from somewhere */
 		function getData()
@@ -86,6 +100,9 @@
 		{
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
+            self.data =  freeboard.eval(settings['data']);
+
+            updateCallback(self.proxy)
 		}
 
 		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
