@@ -1407,7 +1407,7 @@ PluginEditor = function(jsEditor, valueEditor)
 			settings: {}
 		};
 
-		function createSettingRow(name, displayName)
+		function createSettingRow(name, displayName,regex)
 		{
 			var tr = $('<div id="setting-row-' + name + '" class="form-row"></div>').appendTo(form);
 
@@ -1437,6 +1437,7 @@ PluginEditor = function(jsEditor, valueEditor)
 				{
 					displayName = settingDef.display_name;
 				}
+
 
 				var valueCell = createSettingRow(settingDef.name, displayName);
 
@@ -1508,6 +1509,8 @@ PluginEditor = function(jsEditor, valueEditor)
 
 								newSetting[subSettingDef.name] = subsettingValueString;
 
+
+							
 								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).change(function()
 								{
 									newSetting[subSettingDef.name] = $(this).val();
@@ -1650,7 +1653,24 @@ PluginEditor = function(jsEditor, valueEditor)
 						}
 						else
 						{
-							var input = $('<input type="text">').appendTo(valueCell).change(function()
+
+
+							if (settingDef.name=='name')
+							{
+								var defaultregex='[a-zA-Z0-9_]+'
+							}
+							else{
+								var defaultregex=null;
+							}
+							
+							var regex = settingDef.regex;
+							if(_.isUndefined(settingDef.regex))
+							{
+								regex=defaultregex;
+							}
+
+
+							var input = $('<input type="text">').appendTo(valueCell).attr('pattern',regex).change(function()
 							{
 								if(settingDef.type == "number")
 								{
