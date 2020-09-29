@@ -10,6 +10,10 @@ freeboard(fork!)
 * Data targets can just be a writable data source that uses proxies to detect when you set it's keys
 * But if they include an assignment or a function call, they are interpreted as literal javascript, so alert(value) works.
 
+* The "spec" for input widgets is simple:  The data is always a value,timestamp tuple, with the time in floating point seconds.
+* If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
+* v,t pairs ensure data always changes on interaction.
+
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

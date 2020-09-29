@@ -84,11 +84,13 @@
 			{
 				"name": "value",
 				"display_name": "Value",
+                description:'Value. Accepts either a number, or a value,timestamp pair.',
 				"type": "calculated"
 			},
 			{
 				name: "target",
-				display_name: "Data target when value changed",
+				display_name: "Data target when value changes. ",
+                description:'Value pushed will be a value, timestamp pair.',
 				type: "target"
 			}
 		],
@@ -156,10 +158,11 @@
 					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target(e.target.value);
+							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
 					}
 				});
+            
 			$(theSlider).on('input',
 				function (e) {
 					self.value = e.target.value;
@@ -173,7 +176,7 @@
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target(e.target.value);
+							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
 					}
 				}
@@ -213,6 +216,14 @@
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "value") {
 				self.value = newValue
+				
+				var value= newValue
+				
+				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
+				if(! (typeof(value)=='number'))
+                {
+                    value=value[0]
+                }
 
 				$(valueElement).html(newValue + currentSettings.unit);
 
