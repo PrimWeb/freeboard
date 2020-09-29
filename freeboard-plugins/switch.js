@@ -7,12 +7,12 @@
 // ├────────────────────────────────────────────────────────────────────┤ \\
 // │ Freeboard widget plugin for Highcharts.                            │ \\
 // └────────────────────────────────────────────────────────────────────┘ \\
+
 (function()
 {
     //
     // DECLARATIONS
     //
-    var LOADING_INDICATOR_DELAY = 1000;
     var SWITCH_ID = 0;
     //
    
@@ -28,19 +28,10 @@
                 type: "text"
             },
             {
-                name: "value",
-                display_name: "Value",
-                type: "calculated"
-            },
-            {
-                name: "urlOn",
-                display_name: "url On ",
-                type: "calculated"
-            },
-            {
-                name: "urlOff",
-                display_name: "url Off ",
-                type: "calculated"
+                name: "target",
+                display_name: "Data Target",
+                type: "target",
+                description:"Bind state to this datasource"
             },
             {
                 name: "on_text",
@@ -80,68 +71,31 @@
         
         onOffSwitch.prependTo(box1);
         
-        var isOn = false;
-        var onText;
-        var offText;
-        var url;
+        self.isOn = false;
+    
         
         function updateState() {
-            console.log("isOn: " + isOn);
-            $('#'+thisWidgetId).prop('checked', isOn);
+            $('#'+thisWidgetId).prop('checked', self.isOn);
             console.log(onOffSwitch.find("span.on"));
-            onOffSwitch.find("span.on").text(onText);
-            onOffSwitch.find("span.off").text(offText);
-        }
-        
-        var alertContents = function () {
-            if (request.readyState === XMLHttpRequest.DONE) {
-                if (request.status === 200) {
-                    console.log(request.responseText);
-                    setTimeout(function(){
-                        freeboard.showLoadingIndicator(false);
-                        //freeboard.showDialog($("<div align='center'>Request response 200</div>"),"Success!","OK",null,function(){});
-                    }, LOADING_INDICATOR_DELAY);
-                } else {
-                    console.log('There was a problem with the request.');
-                    setTimeout(function(){
-                        freeboard.showLoadingIndicator(false);
-                        freeboard.showDialog($("<div align='center'>There was a problem with the request. Code " + request.status  + request.responseText + " </div>"),"Error!","OK",null,function(){});
-                    }, LOADING_INDICATOR_DELAY);  
-                }
-                
-            }
-            
+            onOffSwitch.find("span.on").text(self.onText);
+            onOffSwitch.find("span.off").text(self.offText);
         }
          
-        var request;
-        
-        var sendValue = function (url, options) {
-            console.log(url, options);
-            request = new XMLHttpRequest();
-            if (!request) {
-                console.log('Giving up :( Cannot create an XMLHTTP instance');
-                return false;
-            }
-            request.onreadystatechange = alertContents;
-            request.open('GET', url, true);
-            freeboard.showLoadingIndicator(true);
-            request.send();
-        }
 
         this.render = function (element) {
            
             $(element).append(box1).append(box2);
-             var input = $('<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="'+ thisWidgetId +'">').prependTo(onOffSwitch).change(function()
+             var input = $('<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="'+ thisWidgetId +'">').prependTo(onOffSwitch).change(function(e)
                 {
-                    isOn =!isOn;
-                    console.log( thisWidgetId + ": toogled " + isOn);
-                    url = (isOn) ? currentSettings.urlOn: currentSettings.urlOff;
-                    if ( _.isUndefined(url) )
-                        freeboard.showDialog($("<div align='center'>url undefined</div>"),"Error!","OK",null,function(){});
-                    else {
-                        sendValue(url, isOn);
-                 
-                    }
+                    self.isOn =e.target.checked
+                    
+                    if (_.isUndefined(currentSettings.target)) { }
+					else {
+						//todo Avoid loops, only real user input triggers this
+						if (true) {
+							self.dataTargets.target([self.isOn, Date.now()/1000]);
+						}
+					}
                     
                 });
         }
@@ -150,29 +104,28 @@
             currentSettings = newSettings;
             box2.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
             console.log( "isUndefined on_text: " + _.isUndefined(newSettings.on_text) );
-            onText = newSettings.on_text;
-            offText = newSettings.off_text;
+            self.onText = newSettings.on_text;
+            self.offText = newSettings.off_text;
             updateState();
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
             console.log(settingName, newValue);
             
-            if (settingName == "value") {
-                isOn = Boolean(newValue);
+             if (settingName == "target") {
+                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
+                var value = newValue
+				if(typeof(value)=='object')
+                {
+                    value=value[0]
+                }
+
+                self.isOn = Boolean(value);
             }
-            if (settingName == "urlOn") {
-                urlOn = newValue;
-            }
-            if (settingName == "urlOff") {
-                urlOff = newValue;
-            }
+            
             updateState();
         }
         
-       
-        
-
         
         this.onDispose = function () {
         }

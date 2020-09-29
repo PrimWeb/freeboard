@@ -220,7 +220,7 @@
 				var value= newValue
 				
 				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(! (typeof(value)=='number'))
+				if(typeof(value)=='object')
                 {
                     value=value[0]
                 }
