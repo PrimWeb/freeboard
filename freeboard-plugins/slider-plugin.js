@@ -158,7 +158,7 @@
 					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
 						}
 					}
 				});
@@ -176,7 +176,7 @@
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
 						}
 					}
 				}
@@ -214,7 +214,7 @@
 		self.onCalculatedValueChanged = function (settingName, newValue) {
 
 			// Remember we defined "the_text" up above in our settings.
-			if (settingName == "value") {
+			if (settingName == "value"||settingName == "target") {
 				self.value = newValue
 				
 				var value= newValue
@@ -225,12 +225,12 @@
                     value=value[0]
                 }
 
-				$(valueElement).html(newValue + currentSettings.unit);
+				$(valueElement).html(value + currentSettings.unit);
 
 				//Attempt to break l00ps
 				if(newValue!=$(theSlider).val())
 				{
-					$(theSlider).val(newValue);
+					$(theSlider).val(value);
 				}
 			}
 			if(settingName=='step')

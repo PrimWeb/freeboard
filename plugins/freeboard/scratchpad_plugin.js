@@ -27,7 +27,6 @@
 	
 		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
 		"settings"    : [
-			
                 {
                     // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
                     "name"         : "data",
@@ -37,13 +36,15 @@
                     "type"         : "text",
                     // **default_value** : A default value for this setting.
                     "default_value": "={}",
+                    "options" : function(){
+                        return {"={key: 'value'}":""}
+                    },
                     // **description** : Text that will be displayed below the setting to give the user any extra information.
                     "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
                     "required" : true
                 }
 			
-
 		],
 		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
 		// * **settings** : A javascript object with the initial settings set by the user. The names of the properties in the object will correspond to the setting names defined above.
@@ -100,7 +101,7 @@
 		{
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
-            self.data =  freeboard.eval(settings['data']);
+            self.data =  freeboard.eval(newSettings['data']);
 
             updateCallback(self.proxy)
 		}

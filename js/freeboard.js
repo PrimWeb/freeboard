@@ -1468,6 +1468,14 @@ PluginEditor = function(jsEditor, valueEditor)
 							}
 
 							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
+                            
+                                if(subSettingDef.options)
+                                {
+                                    $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
+                                    $.each(subSettingDef.options(), function(i, item) {
+                                        $("#"+settingDef.name+subSettingDef.name+"ac").append($("<option>").attr('value', i).text(item));
+                                        });
+                                }
 						});
 
 						if(settingDef.name in currentSettingsValues)
@@ -1499,6 +1507,9 @@ PluginEditor = function(jsEditor, valueEditor)
 							}
 
 							newSettings.settings[settingDef.name].push(newSetting);
+                            
+                            
+              
 
 							_.each(settingDef.settings, function(subSettingDef)
 							{
@@ -1512,9 +1523,9 @@ PluginEditor = function(jsEditor, valueEditor)
 
 								newSetting[subSettingDef.name] = subsettingValueString;
 
-
+                           
 							
-								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).change(function()
+								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).attr('list',settingDef.name+subSettingDef.name+"ac").change(function()
 								{
 									newSetting[subSettingDef.name] = $(this).val();
 								});
@@ -1672,9 +1683,18 @@ PluginEditor = function(jsEditor, valueEditor)
 							{
 								regex=defaultregex;
 							}
+							
+							      
+                            if(settingDef.options)
+                                {
+                                    $('<datalist></datalist>').attr("id",settingDef.name+"ac").appendTo(valueCell);
+                                    $.each(settingDef.options(), function(i, item) {
+                                        $("#"+settingDef.name+"ac").append($("<option>").attr('value', i).text(item || i));
+                                        });
+                                }
 
 
-							var input = $('<input type="text">').appendTo(valueCell).attr('pattern',regex).change(function()
+							var input = $('<input type="text">').appendTo(valueCell).attr('pattern',regex).attr('list',settingDef.name+"ac").change(function()
 							{
 								if(settingDef.type == "number")
 								{

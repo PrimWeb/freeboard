@@ -337,7 +337,17 @@
             {
                 name: "units",
                 display_name: "Units",
-                type: "text"
+                type: "text",
+                options:function(){return{
+                    'lbs':'',
+                    'kgs':'',
+                    'psi':'',
+                    'meters':'',
+                    'feet':'',
+                    'mm':'',
+                    'degC':'',
+                    'degF':'',
+                }}
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
