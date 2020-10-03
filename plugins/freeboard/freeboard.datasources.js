@@ -459,9 +459,17 @@
 
 		this.updateNow = function () {
 			var date = new Date();
+            var st = ""
+            
+            if (currentSettings.strftime)
+            {
+                st = strftime(currentSettings.strftime, date)
+            }
+        
 
 			var data = {
 				numeric_value: date.getTime(),
+                custom_value: st,
 				full_string_value: date.toLocaleString(),
 				date_string_value: date.toLocaleDateString(),
 				time_string_value: date.toLocaleTimeString(),
@@ -493,6 +501,13 @@
 				"type": "number",
 				"suffix": "seconds",
 				"default_value": 1
+			},
+            {
+				"name": "strftime",
+				"display_name": "Strftime String for custom_value",
+				"type": "text",
+				"suffix": "seconds",
+				"default_value": "%I:%M:%S %p %b %d %Y"
 			}
 		],
 		newInstance: function (settings, newInstanceCallback, updateCallback) {

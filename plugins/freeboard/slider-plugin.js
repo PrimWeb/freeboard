@@ -140,6 +140,7 @@
 			$(theSlider).attr('min', self.min);
 			$(theSlider).attr('max', self.max);
 			$(theSlider).attr('step', self.step);
+            $(theSlider).css('width', "95%");
 
 			$(theSlider).on('input', function (e) { $("#value-" + thisWidgetId).html(e.value) });
 

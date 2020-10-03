@@ -2275,7 +2275,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		{
 			append = '=value'
 		}
-		var targetFunction = new Function("datasources",'value', script+'=value');
+		var targetFunction = new Function("datasources",'value', script+append);
 		
 		//Next we wrap this into another function that supplies the neccesary context.
 		var f = function (val) {
@@ -3231,6 +3231,167 @@ var freeboard = (function()
 $.extend(freeboard, jQuery.eventEmitter);
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
+// │ derived from freeboard-button-plugin                                            │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ http://blog.onlinux.fr/                                            │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ Licensed under the MIT license.                                    │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ Freeboard widget plugin.                                           │ \\
+// └────────────────────────────────────────────────────────────────────┘ \\
+(function () {
+	//
+	// DECLARATIONS
+	//
+	var LOADING_INDICATOR_DELAY = 1000;
+	var SLIDER_ID = 0;
+
+	freeboard.addStyle('.button', "border: 2px solid #3d3d3d;background-color: #222;margin: 10px;");
+	freeboard.addStyle('.button-label', 'margin-left: 10px; margin-top: 10px; text-transform: capitalize;');
+	freeboard.addStyle('.myui-button-handle', "width: 1.5em !important; height: 1.5em !important; border-radius: 50%; top: -.4em !important; margin-left:-1.0em !important;");
+	freeboard.addStyle('.ui-button-range', 'background: #F90;');
+
+	// ## A Widget Plugin
+	//
+	// -------------------
+	// ### Widget Definition
+	//
+	// -------------------
+	// **freeboard.loadWidgetPlugin(definition)** tells freeboard that we are giving it a widget plugin. It expects an object with the following:
+	freeboard.loadWidgetPlugin({
+		// Same stuff here as with datasource plugin.
+		"type_name": "button_plugin",
+		"display_name": "Button",
+		"description": "DataTarget compatible button that can run JS code when clicked",
+		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
+
+		// **fill_size** : If this is set to true, the widget will fill be allowed to fill the entire space given it, otherwise it will contain an automatic padding of around 10 pixels around it.
+		"fill_size": true,
+		"settings": [
+			{
+				"name": "html",
+				"display_name": "Button Contents",
+				"type": "calculated",
+                "default_value": "<i>Button</i>"
+			},
+            
+			{
+				"name": "tooltip",
+				"display_name": "Tooltip hint",
+				"type": "text",
+				"default_value": ""
+			},
+
+			{
+				name: "target",
+				display_name: "Data target or JS code when clicked",
+                description:'"value" pushed will be a clickCount,timestamp pair.',
+				type: "target"
+			}
+		],
+		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
+		newInstance: function (settings, newInstanceCallback) {
+			newInstanceCallback(new button(settings));
+		}
+	});
+
+
+	// ### Widget Implementation
+	//
+	// -------------------
+	// Here we implement the actual widget plugin. We pass in the settings;
+	var button = function (settings) {
+		var self = this;
+		self.currentSettings = settings;
+
+		var thisWidgetId = "button-" + SLIDER_ID++;
+		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
+
+
+		var inputElement = $('<button/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId }).html(settings.html);
+		var theButton = '#' + thisWidgetId;
+
+		//console.log( "theButton ", theButton);
+
+
+		var requestChange = false;
+		var target;
+        
+        self.clickCount = 0;
+
+		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
+
+		// **render(containerElement)** (required) : A public function we must implement that will be called when freeboard wants us to render the contents of our widget. The container element is the DIV that will surround the widget.
+		self.render = function (containerElement) {
+			$(containerElement)
+				.append(thisWidgetContainer);
+			inputElement.appendTo(thisWidgetContainer);
+
+			$(theButton).attr('title', self.currentSettings.tooltip);
+			
+
+			$(theButton).html(self.currentSettings.html);
+
+			$(theButton).on('click',
+				function (e) {
+					if (_.isUndefined(self.currentSettings.target)) { }
+					else {
+						//Avoid loops, only real user input triggers this
+						if (true) {
+                            self.dataTargets.target([self.clickCount,Date.now()/1000]);
+                            self.clickCount+=1;
+						}
+					}
+				});
+            
+			
+
+			$(theButton).removeClass("ui-widget-content");
+		}
+
+		// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
+		//
+		// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
+		//
+		// Blocks of different sizes may be supported in the future.
+		self.getHeight = function () {
+			if (self.currentSettings.size == "big") {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+		}
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function (newSettings) {
+			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
+			self.currentSettings = newSettings;
+			self.currentSettings.unit = self.currentSettings.unit || ''
+            $(theButton).attr('tooltip', newSettings.placeholder);
+
+		
+
+		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
+		self.onCalculatedValueChanged = function (settingName, newValue) {
+
+			
+			if(settingName=='html')
+			{
+                $(theButton).html(newValue);
+			}
+			
+		}
+
+
+		// **onDispose()** (required) : Same as with datasource plugins.
+		self.onDispose = function () {
+		}
+	}
+    }
+}());
+
+// ┌────────────────────────────────────────────────────────────────────┐ \\
 // │ F R E E B O A R D                                                  │ \\
 // ├────────────────────────────────────────────────────────────────────┤ \\
 // │ Copyright © 2013 Jim Heising (https://github.com/jheising)         │ \\
@@ -3691,9 +3852,17 @@ $.extend(freeboard, jQuery.eventEmitter);
 
 		this.updateNow = function () {
 			var date = new Date();
+            var st = ""
+            
+            if (currentSettings.strftime)
+            {
+                st = strftime(currentSettings.strftime, date)
+            }
+        
 
 			var data = {
 				numeric_value: date.getTime(),
+                custom_value: st,
 				full_string_value: date.toLocaleString(),
 				date_string_value: date.toLocaleDateString(),
 				time_string_value: date.toLocaleTimeString(),
@@ -3725,6 +3894,13 @@ $.extend(freeboard, jQuery.eventEmitter);
 				"type": "number",
 				"suffix": "seconds",
 				"default_value": 1
+			},
+            {
+				"name": "strftime",
+				"display_name": "Strftime String for custom_value",
+				"type": "text",
+				"suffix": "seconds",
+				"default_value": "%I:%M:%S %p %b %d %Y"
 			}
 		],
 		newInstance: function (settings, newInstanceCallback, updateCallback) {
@@ -4293,9 +4469,14 @@ freeboard.loadDatasourcePlugin({
             titleElement.html(newSettings.title);
         }
 
-        this.onCalculatedValueChanged = function (settingName, newValue) {
+        this.onCalculatedValueChanged = function (settingName, value) {
             if (!_.isUndefined(gaugeObject)) {
-                gaugeObject.refresh(Number(newValue));
+                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
+				if(typeof(value)=='object')
+                {
+                    value=value[0]
+                }
+                gaugeObject.refresh(Number(value));
             }
         }
 
@@ -4716,163 +4897,6 @@ freeboard.loadDatasourcePlugin({
 
     freeboard.addStyle('.gm-style-cc a', "text-shadow:none;");
 
-    var googleMapWidget = function (settings) {
-        var self = this;
-        var currentSettings = settings;
-        var map;
-        var marker;
-        var currentPosition = {};
-
-        function updatePosition() {
-            if (map && marker && currentPosition.lat && currentPosition.lon) {
-                var newLatLon = new google.maps.LatLng(currentPosition.lat, currentPosition.lon);
-                marker.setPosition(newLatLon);
-                map.panTo(newLatLon);
-            }
-        }
-
-        this.render = function (element) {
-            function initializeMap() {
-                var mapOptions = {
-                    zoom: 13,
-                    center: new google.maps.LatLng(37.235, -115.811111),
-                    disableDefaultUI: true,
-                    draggable: false,
-                    styles: [
-                        {"featureType": "water", "elementType": "geometry", "stylers": [
-                            {"color": "#2a2a2a"}
-                        ]},
-                        {"featureType": "landscape", "elementType": "geometry", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 20}
-                        ]},
-                        {"featureType": "road.highway", "elementType": "geometry.fill", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 17}
-                        ]},
-                        {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 29},
-                            {"weight": 0.2}
-                        ]},
-                        {"featureType": "road.arterial", "elementType": "geometry", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 18}
-                        ]},
-                        {"featureType": "road.local", "elementType": "geometry", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 16}
-                        ]},
-                        {"featureType": "poi", "elementType": "geometry", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 21}
-                        ]},
-                        {"elementType": "labels.text.stroke", "stylers": [
-                            {"visibility": "on"},
-                            {"color": "#000000"},
-                            {"lightness": 16}
-                        ]},
-                        {"elementType": "labels.text.fill", "stylers": [
-                            {"saturation": 36},
-                            {"color": "#000000"},
-                            {"lightness": 40}
-                        ]},
-                        {"elementType": "labels.icon", "stylers": [
-                            {"visibility": "off"}
-                        ]},
-                        {"featureType": "transit", "elementType": "geometry", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 19}
-                        ]},
-                        {"featureType": "administrative", "elementType": "geometry.fill", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 20}
-                        ]},
-                        {"featureType": "administrative", "elementType": "geometry.stroke", "stylers": [
-                            {"color": "#000000"},
-                            {"lightness": 17},
-                            {"weight": 1.2}
-                        ]}
-                    ]
-                };
-
-                map = new google.maps.Map(element, mapOptions);
-
-                google.maps.event.addDomListener(element, 'mouseenter', function (e) {
-                    e.cancelBubble = true;
-                    if (!map.hover) {
-                        map.hover = true;
-                        map.setOptions({zoomControl: true});
-                    }
-                });
-
-                google.maps.event.addDomListener(element, 'mouseleave', function (e) {
-                    if (map.hover) {
-                        map.setOptions({zoomControl: false});
-                        map.hover = false;
-                    }
-                });
-
-                marker = new google.maps.Marker({map: map});
-
-                updatePosition();
-            }
-
-            if (window.google && window.google.maps) {
-                initializeMap();
-            }
-            else {
-                window.gmap_initialize = initializeMap;
-                head.js("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gmap_initialize");
-            }
-        }
-
-        this.onSettingsChanged = function (newSettings) {
-            currentSettings = newSettings;
-        }
-
-        this.onCalculatedValueChanged = function (settingName, newValue) {
-            if (settingName == "lat") {
-                currentPosition.lat = newValue;
-            }
-            else if (settingName == "lon") {
-                currentPosition.lon = newValue;
-            }
-
-            updatePosition();
-        }
-
-        this.onDispose = function () {
-        }
-
-        this.getHeight = function () {
-            return 4;
-        }
-
-        this.onSettingsChanged(settings);
-    };
-
-    freeboard.loadWidgetPlugin({
-        type_name: "google_map",
-        display_name: "Google Map",
-        fill_size: true,
-        settings: [
-            {
-                name: "lat",
-                display_name: "Latitude",
-                type: "calculated"
-            },
-            {
-                name: "lon",
-                display_name: "Longitude",
-                type: "calculated"
-            }
-        ],
-        newInstance: function (settings, newInstanceCallback) {
-            newInstanceCallback(new googleMapWidget(settings));
-        }
-    });
-
     freeboard.addStyle('.html-widget', "white-space:normal;width:100%;height:100%");
 
     var htmlWidget = function (settings) {
@@ -5197,6 +5221,7 @@ freeboard.loadDatasourcePlugin({
 			$(theSlider).attr('min', self.min);
 			$(theSlider).attr('max', self.max);
 			$(theSlider).attr('step', self.step);
+            $(theSlider).css('width', "95%");
 
 			$(theSlider).on('input', function (e) { $("#value-" + thisWidgetId).html(e.value) });
 

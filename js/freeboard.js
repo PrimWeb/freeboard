@@ -2275,7 +2275,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		{
 			append = '=value'
 		}
-		var targetFunction = new Function("datasources",'value', script+'=value');
+		var targetFunction = new Function("datasources",'value', script+append);
 		
 		//Next we wrap this into another function that supplies the neccesary context.
 		var f = function (val) {
