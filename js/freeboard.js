@@ -2428,6 +2428,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							{
 								s.push(i.substring(1))
 							}
+							else if(settingDef.type == "target")
+                            {
+                                s.push(i)
+                            }
 							else
 							{
 								//String escaping
@@ -2461,6 +2465,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
                             valueFunction = new Function("datasources", getter);
                         }
                         catch (e) {
+                            console.log(" arg "+getter+"\nlooks like a function but won't compile, treating as text")
                             isLiteralText=1
                         }
                     }

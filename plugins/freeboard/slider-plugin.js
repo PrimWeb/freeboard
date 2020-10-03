@@ -30,7 +30,7 @@
 		// Same stuff here as with datasource plugin.
 		"type_name": "slider_plugin",
 		"display_name": "Slider",
-		"description": "Interactive Slider Plugin with 2-way data binding",
+		"description": "Interactive Slider Plugin with 2-way data binding.  Value is a list of 2 items, the value and the timestamp.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 
 		// **fill_size** : If this is set to true, the widget will fill be allowed to fill the entire space given it, otherwise it will contain an automatic padding of around 10 pixels around it.
@@ -80,12 +80,6 @@
 						"value": "change"
 					}
 				]
-			},
-			{
-				"name": "value",
-				"display_name": "Value",
-                description:'Value. Accepts either a number, or a value,timestamp pair.',
-				"type": "calculated"
 			},
 			{
 				name: "target",
@@ -158,7 +152,7 @@
 					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
+							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
 					}
 				});
@@ -176,7 +170,7 @@
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
+							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
 					}
 				}
@@ -214,7 +208,7 @@
 		self.onCalculatedValueChanged = function (settingName, newValue) {
 
 			// Remember we defined "the_text" up above in our settings.
-			if (settingName == "value"||settingName == "target") {
+			if (settingName == "target") {
 				self.value = newValue
 				
 				var value= newValue
@@ -228,7 +222,7 @@
 				$(valueElement).html(value + currentSettings.unit);
 
 				//Attempt to break l00ps
-				if(newValue!=$(theSlider).val())
+				if(value!=$(theSlider).val())
 				{
 					$(theSlider).val(value);
 				}
