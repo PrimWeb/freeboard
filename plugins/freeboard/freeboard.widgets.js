@@ -669,11 +669,17 @@
         {
             if(widgetElement && imageURL)
             {
-                var cacheBreakerURL = imageURL + (imageURL.indexOf("?") == -1 ? "?" : "&") + Date.now();
+                //var cacheBreakerURL = imageURL + (imageURL.indexOf("?") == -1 ? "?" : "&") + Date.now();
+                
+                //Overriding cache is generally a bad thing if there is polling happening.  If needed, fix your cache settings.
+                var cacheBreakerURL = imageURL 
+                
 
                 $(widgetElement).css({
                     "background-image" :  "url(" + cacheBreakerURL + ")"
                 });
+                
+
             }
         }
 

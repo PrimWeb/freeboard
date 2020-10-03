@@ -1,5 +1,5 @@
 // ┌────────────────────────────────────────────────────────────────────┐ \\
-// │ freeboard-slider-plugin                                            │ \\
+// │ freeboard-textbox-plugin                                            │ \\
 // ├────────────────────────────────────────────────────────────────────┤ \\
 // │ http://blog.onlinux.fr/                                            │ \\
 // ├────────────────────────────────────────────────────────────────────┤ \\
@@ -14,10 +14,10 @@
 	var LOADING_INDICATOR_DELAY = 1000;
 	var SLIDER_ID = 0;
 
-	freeboard.addStyle('.slider', "border: 2px solid #3d3d3d;background-color: #222;margin: 10px;");
-	freeboard.addStyle('.slider-label', 'margin-left: 10px; margin-top: 10px; text-transform: capitalize;');
-	freeboard.addStyle('.myui-slider-handle', "width: 1.5em !important; height: 1.5em !important; border-radius: 50%; top: -.4em !important; margin-left:-1.0em !important;");
-	freeboard.addStyle('.ui-slider-range', 'background: #F90;');
+	freeboard.addStyle('.textbox', "border: 2px solid #3d3d3d;background-color: #222;margin: 10px;");
+	freeboard.addStyle('.textbox-label', 'margin-left: 10px; margin-top: 10px; text-transform: capitalize;');
+	freeboard.addStyle('.myui-textbox-handle', "width: 1.5em !important; height: 1.5em !important; border-radius: 50%; top: -.4em !important; margin-left:-1.0em !important;");
+	freeboard.addStyle('.ui-textbox-range', 'background: #F90;');
 
 	// ## A Widget Plugin
 	//
@@ -85,7 +85,7 @@
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
-			newInstanceCallback(new slider(settings));
+			newInstanceCallback(new textbox(settings));
 		}
 	});
 
@@ -94,16 +94,16 @@
 	//
 	// -------------------
 	// Here we implement the actual widget plugin. We pass in the settings;
-	var slider = function (settings) {
+	var textbox = function (settings) {
 		var self = this;
 		self.currentSettings = settings;
 
-		var thisWidgetId = "slider-" + SLIDER_ID++;
-		var thisWidgetContainer = $('<div class="slider-widget slider-label" id="__' + thisWidgetId + '"></div>');
+		var thisWidgetId = "textbox-" + SLIDER_ID++;
+		var thisWidgetContainer = $('<div class="textbox-widget textbox-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var titleElement = $('<h2 class="section-title slider-label"></h2>');
-		var inputElement = $('<input/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId }).css('width', '90%');
+		var titleElement = $('<h2 class="section-title textbox-label"></h2>');
+		var inputElement = $('<input/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId,name:thisWidgetId}).css('width', '90%');
 		var theTextbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
@@ -196,14 +196,14 @@
 
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "target") {
-				self.value = newValue
+				self.value = newValue;
 				
-				var value= newValue
+				var value= newValue;
 				
 				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
 				if(typeof(value)=='object')
                 {
-                    value=value[0]
+                    value=value[0];
                 }
 
 

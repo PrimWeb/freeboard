@@ -171,7 +171,7 @@
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
 						}
 					}
 				}
