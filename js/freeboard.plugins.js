@@ -98,7 +98,7 @@
 			$(theButton).attr('title', self.currentSettings.tooltip);
 			
 
-			$(theButton).html(self.currentSettings.html);
+			//$(theButton).html(self.currentSettings.html);
 
 			$(theButton).on('click',
 				function (e) {
@@ -137,6 +137,7 @@
 			self.currentSettings = newSettings;
 			self.currentSettings.unit = self.currentSettings.unit || ''
             $(theButton).attr('tooltip', newSettings.placeholder);
+        }
 
 		
 
@@ -155,7 +156,7 @@
 		// **onDispose()** (required) : Same as with datasource plugins.
 		self.onDispose = function () {
 		}
-	}
+	
     }
 }());
 

@@ -3330,7 +3330,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 			$(theButton).attr('title', self.currentSettings.tooltip);
 			
 
-			$(theButton).html(self.currentSettings.html);
+			//$(theButton).html(self.currentSettings.html);
 
 			$(theButton).on('click',
 				function (e) {
@@ -3369,6 +3369,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 			self.currentSettings = newSettings;
 			self.currentSettings.unit = self.currentSettings.unit || ''
             $(theButton).attr('tooltip', newSettings.placeholder);
+        }
 
 		
 
@@ -3387,7 +3388,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 		// **onDispose()** (required) : Same as with datasource plugins.
 		self.onDispose = function () {
 		}
-	}
+	
     }
 }());
 
