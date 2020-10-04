@@ -14,6 +14,8 @@ freeboard(fork!)
 * If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
 * v,t pairs ensure data always changes on interaction.
 
+* WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value
+
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

@@ -2321,6 +2321,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 				
 					self.widgetInstance.dataTargets= self.dataTargets;
+                    self.widgetInstance.processCalculatedSetting= self.processCalculatedSetting;
+
 					self.shouldRender(true);
 					self._heightUpdate.valueHasMutated();
 
@@ -2367,6 +2369,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	}
 
+	
+	//This function is now a public API function
 	this.processCalculatedSetting = function (settingName) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;

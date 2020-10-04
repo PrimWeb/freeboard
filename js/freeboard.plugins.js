@@ -49,11 +49,17 @@
 				"type": "text",
 				"default_value": ""
 			},
+            {
+				name: "value",
+				display_name: "Value",
+                description:'This value gets pushed to the target when clicked.  If empty, a simple counter is used.  It recalculated every click.',
+				type: "calculated"
+			},
 
 			{
 				name: "target",
-				display_name: "Data target or JS code when clicked",
-                description:'"value" pushed will be a clickCount,timestamp pair.',
+				display_name: "Data target when clicked",
+                description:'"value" pushed will be a value,timestamp pair. Value defaults to a click counter',
 				type: "target"
 			}
 		],
@@ -76,7 +82,7 @@
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId }).html(settings.html);
+		var inputElement = $('<button/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId }).html(settings.html).css('width','95%');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -86,6 +92,7 @@
 		var target;
         
         self.clickCount = 0;
+        self.value = settings.value || ''
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
@@ -104,9 +111,15 @@
 				function (e) {
 					if (_.isUndefined(self.currentSettings.target)) { }
 					else {
-						//Avoid loops, only real user input triggers this
 						if (true) {
-                            self.dataTargets.target([self.clickCount,Date.now()/1000]);
+                            var v = self.clickCount;
+                            //We can refreshed in pull mode here
+                            self.processCalculatedSetting('value');
+                            if (!_.isUndefined(self.currentSettings.value))
+                            {
+                               v=self.value 
+                            }
+                            self.dataTargets.target([v,Date.now()/1000]);
                             self.clickCount+=1;
 						}
 					}
@@ -149,6 +162,10 @@
 			{
                 $(theButton).html(newValue);
 			}
+			if(settingName=='value')
+            {
+                self.value = newValue;
+            }
 			
 		}
 
