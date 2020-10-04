@@ -266,6 +266,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	this.version = 0;
 	this.isEditing = ko.observable(false);
+
 	this.allow_edit = ko.observable(false);
 	this.allow_edit.subscribe(function(newValue)
 	{
@@ -679,6 +680,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		freeboardUI.showPaneEditIcons(editing, animate);
 	}
+	
 
 	this.toggleEditing = function()
 	{
@@ -3085,6 +3087,7 @@ var freeboard = (function()
                 freeboard.emit("initialized");
 			}
 		},
+
 		newDashboard        : function()
 		{
 			theFreeboardModel.loadDashboard({allow_edit: true});

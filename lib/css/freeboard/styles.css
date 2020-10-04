@@ -39,8 +39,24 @@
 
   }
 
-  
+#freeboard-extra-tools{
 
+    position:absolute;
+    bottom:0px;
+    min-height:1.5em;
+    border-width: 1px;
+    border-style:solid;
+    width: 100%;
+    background-color: var(--box-bg-color);
+    border-color: var(--border-color);
+    flex-direction: horizontal;
+    display: flex;
+}
+  
+#freeboard-extra-tools div{
+    flex-grow: 0.05;
+}
+  
 
   
 article,

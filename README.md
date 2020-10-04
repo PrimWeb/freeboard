@@ -15,6 +15,7 @@ freeboard(fork!)
 * v,t pairs ensure data always changes on interaction.
 
 * WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value
+* #freeboard-extra-tools is now a div running across the whole bottom of the screen, set up as a flex container expecting children to be unstyled divs, for plugins to add stuff into.
 
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*

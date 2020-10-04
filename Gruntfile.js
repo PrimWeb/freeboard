@@ -25,6 +25,9 @@ module.exports = function(grunt) {
 						'lib/js/thirdparty/jquery.xdomainrequest.js',
                         'lib/js/thirdparty/codemirror.js',
                         'lib/js/thirdparty/strftime.js',
+                        //'lib/js/thirdparty/jexcel.js',
+                        //'lib/js/thirdparty/jsuites.js',
+
 
                     ]
                 ],
