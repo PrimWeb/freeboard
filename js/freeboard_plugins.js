@@ -1366,7 +1366,14 @@ PluginEditor = function(jsEditor, valueEditor)
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATATARGET</label></li>')
 				.mousedown(function(e) {
 					e.preventDefault();
-					$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
+					if($(input).is(":focus"))
+					{
+						$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
+					}
+					else
+					{
+						$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
+					}				
 				});
 		}
 		else
@@ -1374,7 +1381,18 @@ PluginEditor = function(jsEditor, valueEditor)
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
 			.mousedown(function(e) {
 				e.preventDefault();
-				$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
+				if($(input).is(":focus"))
+				{
+					if($(input).val().length=0)
+					{
+						$(input).insertAtCaret('=')
+					}
+					$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
+				}
+				else
+				{
+					$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
+				}
 			});
 		}
 		datasourceToolbox.append(datasourceTool);
@@ -2068,7 +2086,7 @@ ValueEditor = function(theFreeboardModel)
 					{
                         if (isTarget)
                         {
-                            options.push(" = value")
+                            //options.push(" = value")
                         }
 						// no-op
 					}
@@ -2084,6 +2102,7 @@ ValueEditor = function(theFreeboardModel)
 
 		// Weird issue where the textarea box was putting in ASCII (nbsp) for spaces.
 		inputString = inputString.replace(String.fromCharCode(160), " ");
+
 
 		_autocompleteFromDatasource(inputString, theFreeboardModel.datasources(), expectsType);
 
@@ -2147,16 +2166,9 @@ ValueEditor = function(theFreeboardModel)
 				var optionValue = option.value;
 				optionValue = option.precede_char + optionValue + option.follow_char;
 
-				var replacementIndex = inputString.lastIndexOf("]");
-				if(replacementIndex != -1)
-				{
-					$(element).replaceTextAt(replacementIndex+1, $(element).val().length,
-						optionValue);
-				}
-				else
-				{
-					$(element).insertAtCaret(optionValue);
-				}
+				
+				$(element).insertAtCaret(optionValue);
+				
 
 				currentValue = option.entity;
 				$(element).triggerHandler("mouseup");
