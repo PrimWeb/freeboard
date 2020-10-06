@@ -16,7 +16,7 @@ freeboard(fork!)
 
 * WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value
 * #freeboard-extra-tools is now a div running across the whole bottom of the screen, set up as a flex container expecting children to be unstyled divs, for plugins to add stuff into.
-
+* We use ES6 now, install this to be able to build: npm install gruntjs/grunt-contrib-uglify#harmony --save
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

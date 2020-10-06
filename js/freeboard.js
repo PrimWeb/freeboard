@@ -1,4 +1,4 @@
-DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
+DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 	var self = this;
 
 	function disposeDatasourceInstance()
@@ -35,24 +35,27 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 		self.last_updated(now.toLocaleTimeString());
 	}
 
-	this.type = ko.observable();
-	this.type.subscribe(function(newValue)
+	this.type = '';
+	this.setType = async function(newValue)
 	{
+		self.type=newValue;
+
 		disposeDatasourceInstance();
 
 		if((newValue in datasourcePlugins) && _.isFunction(datasourcePlugins[newValue].newInstance))
 		{
 			var datasourceType = datasourcePlugins[newValue];
 
-			function finishLoad()
+			async function finishLoad()
 			{
-				datasourceType.newInstance(self.settings(), function(datasourceInstance)
-				{
+				await Promise.resolve(datasourceType.newInstance(self.settings(), function(datasourceInstance)
+					{
 
-					self.datasourceInstance = datasourceInstance;
-					datasourceInstance.updateNow();
+						self.datasourceInstance = datasourceInstance;
+						datasourceInstance.updateNow();
 
-				}, self.updateCallback);
+					}, self.updateCallback)
+				)
 			}
 
 			// Do we need to load any external scripts?
@@ -62,10 +65,10 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 			}
 			else
 			{
-				finishLoad();
+				await finishLoad();
 			}
 		}
-	});
+	};
 
 	this.last_updated = ko.observable("never");
 	this.last_error = ko.observable();
@@ -74,16 +77,17 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 	{
 		return {
 			name    : self.name(),
-			type    : self.type(),
+			type    : self.type,
 			settings: self.settings()
 		};
 	}
 
-	this.deserialize = function(object)
+	this.deserialize = async function(object)
 	{
 		self.settings(object.settings);
 		self.name(object.name);
-		self.type(object.type);
+		self.type=object.type;
+		await self.setType(object.type);
 	}
 
 	this.getDataRepresentation = function(dataPath)
@@ -408,11 +412,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		};
 	}
 
-	this.deserialize = function(object, finishedCallback)
+	this.deserialize = async function(object, finishedCallback)
 	{
 		self.clearDashboard();
 
-		function finishLoad()
+		async function finishLoad()
 		{
 			freeboardUI.setUserColumns(object.columns);
 
@@ -427,10 +431,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			self.version = object.version || 0;
 			self.header_image(object.header_image);
 
-			_.each(object.datasources, function(datasourceConfig)
+			_.each(object.datasources, async function(datasourceConfig)
 			{
 				var datasource = new DatasourceModel(self, datasourcePlugins);
-				datasource.deserialize(datasourceConfig);
+				//Deserialize can be an async function if it wants to be.
+				await Promise.resolve(datasource.deserialize(datasourceConfig));
 				self.addDatasource(datasource);
 			});
 
@@ -452,7 +457,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 			if(_.isFunction(finishedCallback))
 			{
-				finishedCallback();
+				await Promise.resolve(finishedCallback());
 			}
 
 			freeboardUI.processResize(true);
@@ -467,14 +472,14 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		// Load any plugins referenced in this definition
 		if(_.isArray(object.plugins) && object.plugins.length > 0)
 		{
-			head.js(object.plugins, function()
+			head.js(object.plugins, async function()
 			{
-				finishLoad();
+				await finishLoad();
 			});
 		}
 		else
 		{
-			finishLoad();
+			await finishLoad();
 		}
 	}
 
@@ -2320,8 +2325,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.title = ko.observable();
 	this.fillSize = ko.observable(false);
 
-	this.type = ko.observable();
-	this.type.subscribe(function (newValue) {
+	this.type = ''
+	this.setType = function (newValue) {
+		self.type=newValue
 		disposeWidgetInstance();
 
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
@@ -2351,7 +2357,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				finishLoad();
 			}
 		}
-	});
+	};
 
 	this.settings = ko.observable({});
 	this.settings.subscribe(function (newValue) {
@@ -2401,14 +2407,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 			}
 
-			if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
-				try {
-					self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
-				}
-				catch (e) {
-					console.log(e.toString());
+			var f = function(returnValue)
+			{
+				if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
+					try {
+						self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
+					}
+					catch (e) {
+						console.log(e.toString());
+					}
 				}
 			}
+
+	        //We might get a Promise as a return value. If that happens, we need to resolve it.
+			var x =Promise.resolve(returnValue)
+			x.then(f).catch(console.log)
+		
 		}
 	}
 
@@ -2417,12 +2431,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
 
-		if (_.isUndefined(self.type())) {
+		if (!self.type) {
 			return;
 		}
 
 		// Check for any calculated settings
-		var settingsDefs = widgetPlugins[self.type()].settings;
+		var settingsDefs = widgetPlugins[self.type].settings;
 		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
 		var currentSettings = self.settings();
 
@@ -2575,7 +2589,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.serialize = function () {
 		return {
 			title: self.title(),
-			type: self.type(),
+			type: self.type,
 			settings: self.settings()
 		};
 	}
@@ -2583,7 +2597,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.deserialize = function (object) {
 		self.title(object.title);
 		self.settings(object.settings);
-		self.type(object.type);
+		self.setType(object.type);
 	}
 }
 
@@ -2867,7 +2881,7 @@ var freeboard = (function()
 						}
 						else
 						{
-							instanceType = viewModel.type();
+							instanceType = viewModel.type;
 							settings = viewModel.settings();
 							settings.name = viewModel.name();
 						}
@@ -2880,7 +2894,7 @@ var freeboard = (function()
 						}
 						else
 						{
-							instanceType = viewModel.type();
+							instanceType = viewModel.type;
 							settings = viewModel.settings();
 						}
 					}
@@ -2927,13 +2941,13 @@ var freeboard = (function()
 								delete newSettings.settings.name;
 
 								newViewModel.settings(newSettings.settings);
-								newViewModel.type(newSettings.type);
+								newViewModel.setType(newSettings.type);
 							}
 							else if(options.type == 'widget')
 							{
 								var newViewModel = new WidgetModel(theFreeboardModel, widgetPlugins);
 								newViewModel.settings(newSettings.settings);
-								newViewModel.type(newSettings.type);
+								newViewModel.setType(newSettings.type);
 
 								viewModel.widgets.push(newViewModel);
 
@@ -2956,7 +2970,7 @@ var freeboard = (function()
 									delete newSettings.settings.name;
 								}
 
-								viewModel.type(newSettings.type);
+								viewModel.setType(newSettings.type);
 								viewModel.settings(newSettings.settings);
 							}
 						}

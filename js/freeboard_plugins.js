@@ -1,4 +1,4 @@
-DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
+DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 	var self = this;
 
 	function disposeDatasourceInstance()
@@ -35,24 +35,27 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 		self.last_updated(now.toLocaleTimeString());
 	}
 
-	this.type = ko.observable();
-	this.type.subscribe(function(newValue)
+	this.type = '';
+	this.setType = async function(newValue)
 	{
+		self.type=newValue;
+
 		disposeDatasourceInstance();
 
 		if((newValue in datasourcePlugins) && _.isFunction(datasourcePlugins[newValue].newInstance))
 		{
 			var datasourceType = datasourcePlugins[newValue];
 
-			function finishLoad()
+			async function finishLoad()
 			{
-				datasourceType.newInstance(self.settings(), function(datasourceInstance)
-				{
+				await Promise.resolve(datasourceType.newInstance(self.settings(), function(datasourceInstance)
+					{
 
-					self.datasourceInstance = datasourceInstance;
-					datasourceInstance.updateNow();
+						self.datasourceInstance = datasourceInstance;
+						datasourceInstance.updateNow();
 
-				}, self.updateCallback);
+					}, self.updateCallback)
+				)
 			}
 
 			// Do we need to load any external scripts?
@@ -62,10 +65,10 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 			}
 			else
 			{
-				finishLoad();
+				await finishLoad();
 			}
 		}
-	});
+	};
 
 	this.last_updated = ko.observable("never");
 	this.last_error = ko.observable();
@@ -74,16 +77,17 @@ DatasourceModel = function(theFreeboardModel, datasourcePlugins) {
 	{
 		return {
 			name    : self.name(),
-			type    : self.type(),
+			type    : self.type,
 			settings: self.settings()
 		};
 	}
 
-	this.deserialize = function(object)
+	this.deserialize = async function(object)
 	{
 		self.settings(object.settings);
 		self.name(object.name);
-		self.type(object.type);
+		self.type=object.type;
+		await self.setType(object.type);
 	}
 
 	this.getDataRepresentation = function(dataPath)
@@ -408,11 +412,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		};
 	}
 
-	this.deserialize = function(object, finishedCallback)
+	this.deserialize = async function(object, finishedCallback)
 	{
 		self.clearDashboard();
 
-		function finishLoad()
+		async function finishLoad()
 		{
 			freeboardUI.setUserColumns(object.columns);
 
@@ -427,10 +431,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			self.version = object.version || 0;
 			self.header_image(object.header_image);
 
-			_.each(object.datasources, function(datasourceConfig)
+			_.each(object.datasources, async function(datasourceConfig)
 			{
 				var datasource = new DatasourceModel(self, datasourcePlugins);
-				datasource.deserialize(datasourceConfig);
+				//Deserialize can be an async function if it wants to be.
+				await Promise.resolve(datasource.deserialize(datasourceConfig));
 				self.addDatasource(datasource);
 			});
 
@@ -452,7 +457,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 			if(_.isFunction(finishedCallback))
 			{
-				finishedCallback();
+				await Promise.resolve(finishedCallback());
 			}
 
 			freeboardUI.processResize(true);
@@ -467,14 +472,14 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		// Load any plugins referenced in this definition
 		if(_.isArray(object.plugins) && object.plugins.length > 0)
 		{
-			head.js(object.plugins, function()
+			head.js(object.plugins, async function()
 			{
-				finishLoad();
+				await finishLoad();
 			});
 		}
 		else
 		{
-			finishLoad();
+			await finishLoad();
 		}
 	}
 
@@ -2320,8 +2325,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.title = ko.observable();
 	this.fillSize = ko.observable(false);
 
-	this.type = ko.observable();
-	this.type.subscribe(function (newValue) {
+	this.type = ''
+	this.setType = function (newValue) {
+		self.type=newValue
 		disposeWidgetInstance();
 
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
@@ -2351,7 +2357,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				finishLoad();
 			}
 		}
-	});
+	};
 
 	this.settings = ko.observable({});
 	this.settings.subscribe(function (newValue) {
@@ -2401,14 +2407,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 			}
 
-			if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
-				try {
-					self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
-				}
-				catch (e) {
-					console.log(e.toString());
+			var f = function(returnValue)
+			{
+				if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
+					try {
+						self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
+					}
+					catch (e) {
+						console.log(e.toString());
+					}
 				}
 			}
+
+	        //We might get a Promise as a return value. If that happens, we need to resolve it.
+			var x =Promise.resolve(returnValue)
+			x.then(f).catch(console.log)
+		
 		}
 	}
 
@@ -2417,12 +2431,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
 
-		if (_.isUndefined(self.type())) {
+		if (!self.type) {
 			return;
 		}
 
 		// Check for any calculated settings
-		var settingsDefs = widgetPlugins[self.type()].settings;
+		var settingsDefs = widgetPlugins[self.type].settings;
 		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
 		var currentSettings = self.settings();
 
@@ -2575,7 +2589,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.serialize = function () {
 		return {
 			title: self.title(),
-			type: self.type(),
+			type: self.type,
 			settings: self.settings()
 		};
 	}
@@ -2583,7 +2597,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.deserialize = function (object) {
 		self.title(object.title);
 		self.settings(object.settings);
-		self.type(object.type);
+		self.setType(object.type);
 	}
 }
 
@@ -2867,7 +2881,7 @@ var freeboard = (function()
 						}
 						else
 						{
-							instanceType = viewModel.type();
+							instanceType = viewModel.type;
 							settings = viewModel.settings();
 							settings.name = viewModel.name();
 						}
@@ -2880,7 +2894,7 @@ var freeboard = (function()
 						}
 						else
 						{
-							instanceType = viewModel.type();
+							instanceType = viewModel.type;
 							settings = viewModel.settings();
 						}
 					}
@@ -2927,13 +2941,13 @@ var freeboard = (function()
 								delete newSettings.settings.name;
 
 								newViewModel.settings(newSettings.settings);
-								newViewModel.type(newSettings.type);
+								newViewModel.setType(newSettings.type);
 							}
 							else if(options.type == 'widget')
 							{
 								var newViewModel = new WidgetModel(theFreeboardModel, widgetPlugins);
 								newViewModel.settings(newSettings.settings);
-								newViewModel.type(newSettings.type);
+								newViewModel.setType(newSettings.type);
 
 								viewModel.widgets.push(newViewModel);
 
@@ -2956,7 +2970,7 @@ var freeboard = (function()
 									delete newSettings.settings.name;
 								}
 
-								viewModel.type(newSettings.type);
+								viewModel.setType(newSettings.type);
 								viewModel.settings(newSettings.settings);
 							}
 						}
@@ -3426,6 +3440,131 @@ $.extend(freeboard, jQuery.eventEmitter);
 		}
 	
     }
+}());
+
+// # Building a Freeboard Plugin
+//
+// A freeboard plugin is simply a javascript file that is loaded into a web page after the main freeboard.js file is loaded.
+//
+// Let's get started with an example of a datasource plugin and a widget plugin.
+//
+// -------------------
+
+// Best to encapsulate your plugin in a closure, although not required.
+(function()
+{
+	// ## A Datasource Plugin
+	//
+	// -------------------
+	// ### Datasource Definition
+	//
+	// -------------------
+	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
+	freeboard.loadDatasourcePlugin({
+		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
+		"type_name"   : "core_scratchpad_plugin",
+		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
+		"display_name": "Scratchpad Variables",
+        // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
+        "description" : "The data is just an empty space.  To set some data, use datasources['scratchpad']['SomeName'] as a data target.  It will be available to read in other widgets.  You can also set the default data using JSON.",
+		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
+	
+		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
+		"settings"    : [
+                {
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "data",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Default Data(as JSON or JS expression)",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "text",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "={}",
+                    "options" : function(){
+                        return {"={key: 'value'}":""}
+                    },
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
+                    // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
+                    "required" : true
+                }
+			
+		],
+		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
+		// * **settings** : A javascript object with the initial settings set by the user. The names of the properties in the object will correspond to the setting names defined above.
+		// * **newInstanceCallback** : A callback function that you'll call when the new instance of the plugin is ready. This function expects a single argument, which is the new instance of your plugin object.
+		// * **updateCallback** : A callback function that you'll call if and when your datasource has an update for freeboard to recalculate. This function expects a single parameter which is a javascript object with the new, updated data. You should hold on to this reference and call it when needed.
+		newInstance   : function(settings, newInstanceCallback, updateCallback)
+		{
+			// myDatasourcePlugin is defined below.
+			newInstanceCallback(new myDatasourcePlugin(settings, updateCallback));
+		}
+	});
+
+
+	// ### Datasource Implementation
+	//
+	// -------------------
+	// Here we implement the actual datasource plugin. We pass in the settings and updateCallback.
+	var myDatasourcePlugin = function(settings, updateCallback)
+	{
+		// Always a good idea...
+		var self = this;
+
+		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
+		var currentSettings = settings;
+
+        self.handler={
+			set: function(obj,prop,val)
+			{
+				obj[prop]=val;
+				updateCallback(self.proxy)
+			}
+
+        }
+        self.data=freeboard.eval(settings['data'])
+        self.proxy = new Proxy(self.data, self.handler)
+        
+
+		/* This is some function where I'll get my data from somewhere */
+		function getData()
+		{
+			var newData= self.proxy ; // Just putting some sample data in for fun.
+
+			/* Get my data from somewhere and populate newData with it... Probably a JSON API or something. */
+			/* ... */
+
+			// I'm calling updateCallback to tell it I've got new data for it to munch on.
+			updateCallback(newData);
+		}
+
+
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function(newSettings)
+		{
+			// Here we update our current settings with the variable that is passed in.
+			currentSettings = newSettings;
+            self.data =  freeboard.eval(newSettings['data']);
+
+            updateCallback(self.proxy)
+		}
+
+		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
+		self.updateNow = function()
+		{
+			// Most likely I'll just call getData() here.
+			getData();
+		}
+
+		// **onDispose()** (required) : A public function we must implement that will be called when this instance of this plugin is no longer needed. Do anything you need to cleanup after yourself here.
+		self.onDispose = function()
+		{
+		
+		}
+
+	}
+
 }());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\

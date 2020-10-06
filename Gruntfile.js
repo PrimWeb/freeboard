@@ -25,6 +25,7 @@ module.exports = function(grunt) {
 						'lib/js/thirdparty/jquery.xdomainrequest.js',
                         'lib/js/thirdparty/codemirror.js',
                         'lib/js/thirdparty/strftime.js',
+                        'lib/js/thirdparty/js-yaml.js',
                         //'lib/js/thirdparty/jexcel.js',
                         //'lib/js/thirdparty/jsuites.js',
 
@@ -112,7 +113,7 @@ module.exports = function(grunt) {
     });
 
     grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-uglify-es');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-string-replace');
