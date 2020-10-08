@@ -14,9 +14,11 @@ freeboard(fork!)
 * If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
 * v,t pairs ensure data always changes on interaction.
 
-* WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value
+* WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value.  But it is async!!
 * #freeboard-extra-tools is now a div running across the whole bottom of the screen, set up as a flex container expecting children to be unstyled divs, for plugins to add stuff into.
 * We use ES6 now, install this to be able to build: npm install gruntjs/grunt-contrib-uglify#harmony --save
+* Async compatibility: your newInstance data source function can be async, widgets will still load after sources
+* Async compatibility: if a calculated value expression returns a promise, we resolve it and use the result.
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

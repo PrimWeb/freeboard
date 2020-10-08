@@ -26,6 +26,8 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/codemirror.js',
                         'lib/js/thirdparty/strftime.js',
                         'lib/js/thirdparty/js-yaml.js',
+                        'lib/js/thirdparty/jsgrid.min.js'
+
                         //'lib/js/thirdparty/jexcel.js',
                         //'lib/js/thirdparty/jsuites.js',
 

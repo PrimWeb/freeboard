@@ -16,12 +16,14 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 	this.name = ko.observable();
 	this.latestData = ko.observable();
-	this.settings = ko.observable({});
-	this.settings.subscribe(function(newValue)
+	this.settings = {};
+
+	this.setSettings =(async function(newValue)
 	{
+		self.settings = newValue;
 		if(!_.isUndefined(self.datasourceInstance) && _.isFunction(self.datasourceInstance.onSettingsChanged))
 		{
-			self.datasourceInstance.onSettingsChanged(newValue);
+			await self.datasourceInstance.onSettingsChanged(newValue);
 		}
 	});
 
@@ -48,14 +50,13 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 			async function finishLoad()
 			{
-				await Promise.resolve(datasourceType.newInstance(self.settings(), function(datasourceInstance)
+				await datasourceType.newInstance(self.settings, function(datasourceInstance)
 					{
-
 						self.datasourceInstance = datasourceInstance;
 						datasourceInstance.updateNow();
 
 					}, self.updateCallback)
-				)
+				
 			}
 
 			// Do we need to load any external scripts?
@@ -78,13 +79,13 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 		return {
 			name    : self.name(),
 			type    : self.type,
-			settings: self.settings()
+			settings: self.settings
 		};
 	}
 
 	this.deserialize = async function(object)
 	{
-		self.settings(object.settings);
+		self.setSettings(object.settings);
 		self.name(object.name);
 		self.type=object.type;
 		await self.setType(object.type);
@@ -2326,6 +2327,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.fillSize = ko.observable(false);
 
 	this.type = ''
+	
+	//Sync function.  We are sure t always call this after calculating settings.
+	//Note that we don't have any way to wait on the newinstance function
+	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
+	//clearly doesn't care about waiting
 	this.setType = function (newValue) {
 		self.type=newValue
 		disposeWidgetInstance();
@@ -2333,8 +2339,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
 			var widgetType = widgetPlugins[newValue];
 
-			function finishLoad() {
-				widgetType.newInstance(self.settings(), function (widgetInstance) {
+			async function finishLoad() {
+				    await widgetType.newInstance(self.calculatedSettings, function (widgetInstance) {
 
 					self.fillSize((widgetType.fill_size === true));
 					self.widgetInstance = widgetInstance;
@@ -2359,21 +2365,33 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	};
 
-	this.settings = ko.observable({});
-	this.settings.subscribe(function (newValue) {
+	this.settings = {}
+
+	//After processing
+	this.calculatedSettings = {}
+	
+	this.setSettings = async function (newValue) {
+		this.settings=newValue
+
+		//Make the processed copy
+		Object.assign(this.calculatedSettings,this.settings);
+
+		//Now we are gonna calc the real values
+		await self.updateCalculatedSettings();
+
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
-			self.widgetInstance.onSettingsChanged(newValue);
+			await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
 		}
 
-		self.updateCalculatedSettings();
 		self._heightUpdate.valueHasMutated();
-	});
+	};
 
 	this.processDatasourceUpdate = function (datasourceName) {
 		var refreshSettingNames = self.datasourceRefreshNotifications[datasourceName];
 
 		if (_.isArray(refreshSettingNames)) {
 			_.each(refreshSettingNames, function (settingName) {
+				//All those updates are async
 				self.processCalculatedSetting(settingName);
 			});
 		}
@@ -2390,8 +2408,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	}
 
 	
-	//This function is now a public API function
-	this.processCalculatedSetting = function (settingName) {
+	//This function is now a public API function.
+	//Will not complete till the effect is resolved, but the function itself is async
+	this.processCalculatedSetting = async function (settingName) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;
 
@@ -2399,7 +2418,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				returnValue = self.callValueFunction(self.calculatedSettingScripts[settingName]);
 			}
 			catch (e) {
-				var rawValue = self.settings()[settingName];
+				var rawValue = self.settings[settingName];
 
 				// If there is a reference error and the value just contains letters and numbers, then
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
@@ -2407,11 +2426,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 			}
 
-			var f = function(returnValue)
+			var f = async function(returnValue)
 			{
 				if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
 					try {
-						self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
+						//Maybe async, maybe not
+						await self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
 					}
 					catch (e) {
 						console.log(e.toString());
@@ -2420,14 +2440,14 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 			}
 
 	        //We might get a Promise as a return value. If that happens, we need to resolve it.
-			var x =Promise.resolve(returnValue)
-			x.then(f).catch(console.log)
-		
+			var x =await returnValue;
+			self.calculatedSettings[settingName]=x;
+			await f(x)
 		}
 	}
 
 
-	this.updateCalculatedSettings = function () {
+	this.updateCalculatedSettings = async function () {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
 
@@ -2438,9 +2458,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		// Check for any calculated settings
 		var settingsDefs = widgetPlugins[self.type].settings;
 		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
-		var currentSettings = self.settings();
+		var currentSettings = self.settings;
 
-		_.each(settingsDefs, function (settingDef) {
+		for(var settingDefIndex in settingsDefs) {
+			var settingDef=settingsDefs[settingDefIndex]
 			if (settingDef.type == "calculated" || settingDef.type == "target") {
 				var script = currentSettings[settingDef.name];
 
@@ -2531,7 +2552,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							self.dataTargets[settingDef.name]=undefined
                         }
                     }
-					self.processCalculatedSetting(settingDef.name);
+					await self.processCalculatedSetting(settingDef.name);
 
 					// Are there any datasources we need to be subscribed to?
 					var matches;
@@ -2556,7 +2577,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					self.dataTargets[settingDef.name]=undefined;
 				}
 			}
-		});
+		};
+
     };
 	
 
@@ -2574,11 +2596,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	});
 
 	this.shouldRender = ko.observable(false);
-	this.render = function (element) {
+	this.render = async function (element) {
 		self.shouldRender(false);
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.render)) {
 			self.widgetInstance.render(element);
-			self.updateCalculatedSettings();
+			await self.updateCalculatedSettings();
 		}
 	}
 
@@ -2590,13 +2612,13 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		return {
 			title: self.title(),
 			type: self.type,
-			settings: self.settings()
+			settings: self.settings
 		};
 	}
 
 	this.deserialize = function (object) {
 		self.title(object.title);
-		self.settings(object.settings);
+		self.setSettings(object.settings);
 		self.setType(object.type);
 	}
 }
@@ -2882,7 +2904,7 @@ var freeboard = (function()
 						else
 						{
 							instanceType = viewModel.type;
-							settings = viewModel.settings();
+							settings = viewModel.settings;
 							settings.name = viewModel.name();
 						}
 					}
@@ -2895,7 +2917,7 @@ var freeboard = (function()
 						else
 						{
 							instanceType = viewModel.type;
-							settings = viewModel.settings();
+							settings = viewModel.settings;
 						}
 					}
 					else if(options.type == 'pane')
@@ -2928,7 +2950,7 @@ var freeboard = (function()
 						}
 					}
 
-					pluginEditor.createPluginEditor(title, types, instanceType, settings, function(newSettings)
+					pluginEditor.createPluginEditor(title, types, instanceType, settings, async function(newSettings)
 					{
 						if(options.operation == 'add')
 						{
@@ -2940,14 +2962,14 @@ var freeboard = (function()
 								newViewModel.name(newSettings.settings.name);
 								delete newSettings.settings.name;
 
-								newViewModel.settings(newSettings.settings);
-								newViewModel.setType(newSettings.type);
+								await newViewModel.setSettings(newSettings.settings);
+								await newViewModel.setType(newSettings.type);
 							}
 							else if(options.type == 'widget')
 							{
 								var newViewModel = new WidgetModel(theFreeboardModel, widgetPlugins);
-								newViewModel.settings(newSettings.settings);
-								newViewModel.setType(newSettings.type);
+								await newViewModel.setSettings(newSettings.settings);
+								await newViewModel.setType(newSettings.type);
 
 								viewModel.widgets.push(newViewModel);
 
@@ -2970,8 +2992,8 @@ var freeboard = (function()
 									delete newSettings.settings.name;
 								}
 
-								viewModel.setType(newSettings.type);
-								viewModel.settings(newSettings.settings);
+								await viewModel.setType(newSettings.type);
+								await viewModel.setSettings(newSettings.settings);
 							}
 						}
 					});
@@ -3214,7 +3236,7 @@ var freeboard = (function()
 
             if(datasource)
             {
-                return datasource.settings();
+                return datasource.settings;
             }
             else
             {
@@ -3236,8 +3258,8 @@ var freeboard = (function()
                 return;
             }
 
-            var combinedSettings = _.defaults(settings, datasource.settings());
-            datasource.settings(combinedSettings);
+            var combinedSettings = _.defaults(settings, datasource.settings);
+            datasource.setSettings(combinedSettings);
         },
 		getStyleString      : function(name)
 		{

@@ -16,12 +16,14 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 	this.name = ko.observable();
 	this.latestData = ko.observable();
-	this.settings = ko.observable({});
-	this.settings.subscribe(function(newValue)
+	this.settings = {};
+
+	this.setSettings =(async function(newValue)
 	{
+		self.settings = newValue;
 		if(!_.isUndefined(self.datasourceInstance) && _.isFunction(self.datasourceInstance.onSettingsChanged))
 		{
-			self.datasourceInstance.onSettingsChanged(newValue);
+			await self.datasourceInstance.onSettingsChanged(newValue);
 		}
 	});
 
@@ -48,14 +50,13 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 			async function finishLoad()
 			{
-				await Promise.resolve(datasourceType.newInstance(self.settings(), function(datasourceInstance)
+				await datasourceType.newInstance(self.settings, function(datasourceInstance)
 					{
-
 						self.datasourceInstance = datasourceInstance;
 						datasourceInstance.updateNow();
 
 					}, self.updateCallback)
-				)
+				
 			}
 
 			// Do we need to load any external scripts?
@@ -78,13 +79,13 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 		return {
 			name    : self.name(),
 			type    : self.type,
-			settings: self.settings()
+			settings: self.settings
 		};
 	}
 
 	this.deserialize = async function(object)
 	{
-		self.settings(object.settings);
+		self.setSettings(object.settings);
 		self.name(object.name);
 		self.type=object.type;
 		await self.setType(object.type);
@@ -2326,6 +2327,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.fillSize = ko.observable(false);
 
 	this.type = ''
+	
+	//Sync function.  We are sure t always call this after calculating settings.
+	//Note that we don't have any way to wait on the newinstance function
+	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
+	//clearly doesn't care about waiting
 	this.setType = function (newValue) {
 		self.type=newValue
 		disposeWidgetInstance();
@@ -2333,8 +2339,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
 			var widgetType = widgetPlugins[newValue];
 
-			function finishLoad() {
-				widgetType.newInstance(self.settings(), function (widgetInstance) {
+			async function finishLoad() {
+				    await widgetType.newInstance(self.calculatedSettings, function (widgetInstance) {
 
 					self.fillSize((widgetType.fill_size === true));
 					self.widgetInstance = widgetInstance;
@@ -2359,21 +2365,33 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	};
 
-	this.settings = ko.observable({});
-	this.settings.subscribe(function (newValue) {
+	this.settings = {}
+
+	//After processing
+	this.calculatedSettings = {}
+	
+	this.setSettings = async function (newValue) {
+		this.settings=newValue
+
+		//Make the processed copy
+		Object.assign(this.calculatedSettings,this.settings);
+
+		//Now we are gonna calc the real values
+		await self.updateCalculatedSettings();
+
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
-			self.widgetInstance.onSettingsChanged(newValue);
+			await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
 		}
 
-		self.updateCalculatedSettings();
 		self._heightUpdate.valueHasMutated();
-	});
+	};
 
 	this.processDatasourceUpdate = function (datasourceName) {
 		var refreshSettingNames = self.datasourceRefreshNotifications[datasourceName];
 
 		if (_.isArray(refreshSettingNames)) {
 			_.each(refreshSettingNames, function (settingName) {
+				//All those updates are async
 				self.processCalculatedSetting(settingName);
 			});
 		}
@@ -2390,8 +2408,9 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	}
 
 	
-	//This function is now a public API function
-	this.processCalculatedSetting = function (settingName) {
+	//This function is now a public API function.
+	//Will not complete till the effect is resolved, but the function itself is async
+	this.processCalculatedSetting = async function (settingName) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;
 
@@ -2399,7 +2418,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				returnValue = self.callValueFunction(self.calculatedSettingScripts[settingName]);
 			}
 			catch (e) {
-				var rawValue = self.settings()[settingName];
+				var rawValue = self.settings[settingName];
 
 				// If there is a reference error and the value just contains letters and numbers, then
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
@@ -2407,11 +2426,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 			}
 
-			var f = function(returnValue)
+			var f = async function(returnValue)
 			{
 				if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
 					try {
-						self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
+						//Maybe async, maybe not
+						await self.widgetInstance.onCalculatedValueChanged(settingName, returnValue);
 					}
 					catch (e) {
 						console.log(e.toString());
@@ -2420,14 +2440,14 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 			}
 
 	        //We might get a Promise as a return value. If that happens, we need to resolve it.
-			var x =Promise.resolve(returnValue)
-			x.then(f).catch(console.log)
-		
+			var x =await returnValue;
+			self.calculatedSettings[settingName]=x;
+			await f(x)
 		}
 	}
 
 
-	this.updateCalculatedSettings = function () {
+	this.updateCalculatedSettings = async function () {
 		self.datasourceRefreshNotifications = {};
 		self.calculatedSettingScripts = {};
 
@@ -2438,9 +2458,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		// Check for any calculated settings
 		var settingsDefs = widgetPlugins[self.type].settings;
 		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
-		var currentSettings = self.settings();
+		var currentSettings = self.settings;
 
-		_.each(settingsDefs, function (settingDef) {
+		for(var settingDefIndex in settingsDefs) {
+			var settingDef=settingsDefs[settingDefIndex]
 			if (settingDef.type == "calculated" || settingDef.type == "target") {
 				var script = currentSettings[settingDef.name];
 
@@ -2531,7 +2552,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							self.dataTargets[settingDef.name]=undefined
                         }
                     }
-					self.processCalculatedSetting(settingDef.name);
+					await self.processCalculatedSetting(settingDef.name);
 
 					// Are there any datasources we need to be subscribed to?
 					var matches;
@@ -2556,7 +2577,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					self.dataTargets[settingDef.name]=undefined;
 				}
 			}
-		});
+		};
+
     };
 	
 
@@ -2574,11 +2596,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	});
 
 	this.shouldRender = ko.observable(false);
-	this.render = function (element) {
+	this.render = async function (element) {
 		self.shouldRender(false);
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.render)) {
 			self.widgetInstance.render(element);
-			self.updateCalculatedSettings();
+			await self.updateCalculatedSettings();
 		}
 	}
 
@@ -2590,13 +2612,13 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		return {
 			title: self.title(),
 			type: self.type,
-			settings: self.settings()
+			settings: self.settings
 		};
 	}
 
 	this.deserialize = function (object) {
 		self.title(object.title);
-		self.settings(object.settings);
+		self.setSettings(object.settings);
 		self.setType(object.type);
 	}
 }
@@ -2882,7 +2904,7 @@ var freeboard = (function()
 						else
 						{
 							instanceType = viewModel.type;
-							settings = viewModel.settings();
+							settings = viewModel.settings;
 							settings.name = viewModel.name();
 						}
 					}
@@ -2895,7 +2917,7 @@ var freeboard = (function()
 						else
 						{
 							instanceType = viewModel.type;
-							settings = viewModel.settings();
+							settings = viewModel.settings;
 						}
 					}
 					else if(options.type == 'pane')
@@ -2928,7 +2950,7 @@ var freeboard = (function()
 						}
 					}
 
-					pluginEditor.createPluginEditor(title, types, instanceType, settings, function(newSettings)
+					pluginEditor.createPluginEditor(title, types, instanceType, settings, async function(newSettings)
 					{
 						if(options.operation == 'add')
 						{
@@ -2940,14 +2962,14 @@ var freeboard = (function()
 								newViewModel.name(newSettings.settings.name);
 								delete newSettings.settings.name;
 
-								newViewModel.settings(newSettings.settings);
-								newViewModel.setType(newSettings.type);
+								await newViewModel.setSettings(newSettings.settings);
+								await newViewModel.setType(newSettings.type);
 							}
 							else if(options.type == 'widget')
 							{
 								var newViewModel = new WidgetModel(theFreeboardModel, widgetPlugins);
-								newViewModel.settings(newSettings.settings);
-								newViewModel.setType(newSettings.type);
+								await newViewModel.setSettings(newSettings.settings);
+								await newViewModel.setType(newSettings.type);
 
 								viewModel.widgets.push(newViewModel);
 
@@ -2970,8 +2992,8 @@ var freeboard = (function()
 									delete newSettings.settings.name;
 								}
 
-								viewModel.setType(newSettings.type);
-								viewModel.settings(newSettings.settings);
+								await viewModel.setType(newSettings.type);
+								await viewModel.setSettings(newSettings.settings);
 							}
 						}
 					});
@@ -3214,7 +3236,7 @@ var freeboard = (function()
 
             if(datasource)
             {
-                return datasource.settings();
+                return datasource.settings;
             }
             else
             {
@@ -3236,8 +3258,8 @@ var freeboard = (function()
                 return;
             }
 
-            var combinedSettings = _.defaults(settings, datasource.settings());
-            datasource.settings(combinedSettings);
+            var combinedSettings = _.defaults(settings, datasource.settings);
+            datasource.setSettings(combinedSettings);
         },
 		getStyleString      : function(name)
 		{
@@ -3262,6 +3284,189 @@ var freeboard = (function()
 }());
 
 $.extend(freeboard, jQuery.eventEmitter);
+
+// ┌────────────────────────────────────────────────────────────────────┐ \\
+// │ freeboard-datagrid-plugin                                            │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ http://blog.onlinux.fr/                                            │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ Licensed under the MIT license.                                    │ \\
+// ├────────────────────────────────────────────────────────────────────┤ \\
+// │ Freeboard widget plugin.                                           │ \\
+// └────────────────────────────────────────────────────────────────────┘ \\
+(function () {
+	//
+	// DECLARATIONS
+	//
+	var LOADING_INDICATOR_DELAY = 1000;
+	var SLIDER_ID = 0;
+
+	freeboard.addStyle('.datagrid', "border: 2px solid #3d3d3d;background-color: #222;margin: 10px;");
+	freeboard.addStyle('.datagrid-label', 'margin-left: 10px; margin-top: 10px; text-transform: capitalize;');
+	freeboard.addStyle('.myui-datagrid-handle', "width: 1.5em !important; height: 1.5em !important; border-radius: 50%; top: -.4em !important; margin-left:-1.0em !important;");
+	freeboard.addStyle('.ui-datagrid-range', 'background: #F90;');
+
+	// ## A Widget Plugin
+	//
+	// -------------------
+	// ### Widget Definition
+	//
+	// -------------------
+	// **freeboard.loadWidgetPlugin(definition)** tells freeboard that we are giving it a widget plugin. It expects an object with the following:
+	freeboard.loadWidgetPlugin({
+		// Same stuff here as with datasource plugin.
+		"type_name": "jsGrid",
+		"display_name": "jsGrid Data grid View Plugin",
+		"description": "Database grid view.  Requires a JSGrid controller as it's data source",
+		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
+
+		// **fill_size** : If this is set to true, the widget will fill be allowed to fill the entire space given it, otherwise it will contain an automatic padding of around 10 pixels around it.
+		"fill_size": true,
+		"settings": [
+			{
+				"name": "title",
+				"display_name": "Title",
+				"type": "text",
+                "default_value": ""
+			},
+            
+		
+            {
+				"name": "backend",
+				"display_name": "Data backend(JS controller)",
+				"type": "calculated",
+				"default_value": ""
+            },
+            
+            {
+				"name": "columns",
+                "display_name": "Display Columns",
+				"type": "calculated",
+				"default_value": '=[\n{ name: "Name", type: "text", width: 150},\n{name: "Country", type: "text"}]'
+			},
+		
+			{
+				name: "selectionTarget",
+				display_name: "Data target when selection changes. ",
+                description:'Value pushed will be a value, timestamp pair. Value will be the entire selected record object',
+				type: "target"
+			}
+		],
+		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
+		newInstance: function (settings, newInstanceCallback) {
+			newInstanceCallback(new datagrid(settings));
+		}
+	});
+
+
+
+    
+
+	// ### Widget Implementation
+	//
+	// -------------------
+	// Here we implement the actual widget plugin. We pass in the settings;
+	var datagrid = function (settings) {
+        var self = this;
+        
+
+
+		self.currentSettings = settings;
+
+		var thisWidgetId = "datagrid-" + SLIDER_ID++;
+		var thisWidgetContainer = $('<div class="datagrid-widget datagrid-label" id="__' + thisWidgetId + '"></div>');
+
+
+		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
+		var gridBox = $('<div>',{id:thisWidgetId}).css('width', '90%');
+		var theGridbox = '#' + thisWidgetId;
+		var theValue = '#' + "value-" + thisWidgetId;
+
+
+        self.refreshGrid= function(){
+            $(theGridbox).jsGrid('destroy');
+            $(theGridbox).jsGrid({
+                width: "100%",
+                height: "400px",
+         
+                inserting: true,
+                editing: true,
+                sorting: true,
+                paging: true,
+         
+                data: [{ "Name": "Otto Clay", "Age": 25, "Country": 1, "Address": "Ap #897-1459 Quam Avenue", "Married": false }],
+         
+                fields: self.currentSettings.columns
+                
+            });
+        }
+            
+
+
+		//console.log( "theGridbox ", theGridbox);
+
+		titleElement.html(self.currentSettings.title);
+		self.value = self.currentSettings.value || 0;
+
+		var requestChange = false;
+		var target;
+
+		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
+
+		// **render(containerElement)** (required) : A public function we must implement that will be called when freeboard wants us to render the contents of our widget. The container element is the DIV that will surround the widget.
+		self.render = function (containerElement) {
+			$(containerElement)
+				.append(thisWidgetContainer);
+			titleElement.appendTo(thisWidgetContainer);
+            gridBox.appendTo(thisWidgetContainer);
+            
+            self.refreshGrid()
+
+ 
+
+			$(theValue).html(self.value + self.currentSettings.unit);
+			$(theGridbox).removeClass("ui-widget-content");
+		}
+
+		// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
+		//
+		// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
+		//
+		// Blocks of different sizes may be supported in the future.
+		self.getHeight = function () {
+				return 2;
+		}
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function (newSettings) {
+			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
+			self.currentSettings = newSettings;
+			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
+			self.currentSettings.unit = self.currentSettings.unit || ''
+            $(theGridbox).attr('pattern', newSettings.pattern);
+            $(theGridbox).attr('placeholder', newSettings.placeholder);
+            $(theGridbox).attr('tooltip', newSettings.placeholder);
+
+		}
+
+		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
+		self.onCalculatedValueChanged = function (settingName, newValue) {
+
+			
+			if(settingName=='columns')
+			{
+                self.refreshGrid()
+			}
+			
+		}
+
+
+		// **onDispose()** (required) : Same as with datasource plugins.
+		self.onDispose = function () {
+            $(theGridbox).jsGrid('destroy');
+		}
+	}
+}());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
 // │ derived from freeboard-button-plugin                                            │ \\
@@ -3305,26 +3510,26 @@ $.extend(freeboard, jQuery.eventEmitter);
 				"name": "html",
 				"display_name": "Button Contents",
 				"type": "calculated",
-                "default_value": "<i>Button</i>"
+				"default_value": "<i>Button</i>"
 			},
-            
+
 			{
 				"name": "tooltip",
 				"display_name": "Tooltip hint",
 				"type": "text",
 				"default_value": ""
 			},
-            {
+			{
 				name: "value",
 				display_name: "Value",
-                description:'This value gets pushed to the target when clicked.  If empty, a simple counter is used.  It recalculated every click.',
+				description: 'This value gets pushed to the target when clicked.  If empty, a simple counter is used.  It recalculated every click.',
 				type: "calculated"
 			},
 
 			{
 				name: "target",
 				display_name: "Data target when clicked",
-                description:'"value" pushed will be a value,timestamp pair. Value defaults to a click counter',
+				description: '"value" pushed will be a value,timestamp pair. Value defaults to a click counter',
 				type: "target"
 			}
 		],
@@ -3347,7 +3552,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId }).html(settings.html).css('width','95%');
+		var inputElement = $('<button/>', { type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -3355,9 +3560,9 @@ $.extend(freeboard, jQuery.eventEmitter);
 
 		var requestChange = false;
 		var target;
-        
-        self.clickCount = 0;
-        self.value = settings.value || ''
+
+		self.clickCount = 0;
+		self.value = settings.value || ''
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
@@ -3368,78 +3573,90 @@ $.extend(freeboard, jQuery.eventEmitter);
 			inputElement.appendTo(thisWidgetContainer);
 
 			$(theButton).attr('title', self.currentSettings.tooltip);
-			
+
 
 			//$(theButton).html(self.currentSettings.html);
 
 			$(theButton).on('click',
-				function (e) {
-					if (_.isUndefined(self.currentSettings.target)) { }
-					else {
-						if (true) {
-                            var v = self.clickCount;
-                            //We can refreshed in pull mode here
-                            self.processCalculatedSetting('value');
-                            if (!_.isUndefined(self.currentSettings.value))
-                            {
-                               v=self.value 
-                            }
-                            self.dataTargets.target([v,Date.now()/1000]);
-                            self.clickCount+=1;
-						}
+				async function (e) {
+
+
+					var v = self.clickCount;
+
+					//If an async background function is happening here,
+					//disable user input until  everything is completed. so you can't
+					//queue up a billion events
+					$(theButton).attr('disabled', true).html(settings.html+"(waiting)")
+
+					//We can refreshed in pull mode here
+					await self.processCalculatedSetting('value');
+					
+					if (!_.isUndefined(self.currentSettings.value)) {
+						v = self.value
 					}
-				});
-            
-			
 
-			$(theButton).removeClass("ui-widget-content");
+					if (_.isUndefined(self.currentSettings.target)) { 
+
+					}
+					else {
+						await self.dataTargets.target([v, Date.now() / 1000]);
+					}
+					self.clickCount += 1;
+					$(theButton).attr('disabled', false).html(settings.html);
+
+					
+				}
+					
+				);
+
+
+
+		$(theButton).removeClass("ui-widget-content");
+	}
+
+	// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
+	//
+	// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
+	//
+	// Blocks of different sizes may be supported in the future.
+	self.getHeight = function () {
+		if (self.currentSettings.size == "big") {
+			return 2;
+		}
+		else {
+			return 1;
+		}
+	}
+
+	// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+	self.onSettingsChanged = function (newSettings) {
+		// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
+		self.currentSettings = newSettings;
+		self.currentSettings.unit = self.currentSettings.unit || ''
+		$(theButton).attr('tooltip', newSettings.placeholder);
+	}
+
+
+
+	// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
+	self.onCalculatedValueChanged = function (settingName, newValue) {
+
+
+		if (settingName == 'html') {
+			$(theButton).html(newValue);
+		}
+		if (settingName == 'value') {
+			self.value = newValue;
 		}
 
-		// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
-		//
-		// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
-		//
-		// Blocks of different sizes may be supported in the future.
-		self.getHeight = function () {
-			if (self.currentSettings.size == "big") {
-				return 2;
-			}
-			else {
-				return 1;
-			}
-		}
-
-		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
-		self.onSettingsChanged = function (newSettings) {
-			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
-			self.currentSettings = newSettings;
-			self.currentSettings.unit = self.currentSettings.unit || ''
-            $(theButton).attr('tooltip', newSettings.placeholder);
-        }
-
-		
-
-		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
-		self.onCalculatedValueChanged = function (settingName, newValue) {
-
-			
-			if(settingName=='html')
-			{
-                $(theButton).html(newValue);
-			}
-			if(settingName=='value')
-            {
-                self.value = newValue;
-            }
-			
-		}
+	}
 
 
-		// **onDispose()** (required) : Same as with datasource plugins.
-		self.onDispose = function () {
-		}
-	
-    }
+	// **onDispose()** (required) : Same as with datasource plugins.
+	self.onDispose = function () {
+	}
+
+}
 }());
 
 // # Building a Freeboard Plugin
@@ -3449,6 +3666,15 @@ $.extend(freeboard, jQuery.eventEmitter);
 // Let's get started with an example of a datasource plugin and a widget plugin.
 //
 // -------------------
+
+
+//This is a limited, easy-to-use nosql db build on alasql
+
+function uuidv4() {
+	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+	);
+  }
 
 // Best to encapsulate your plugin in a closure, although not required.
 (function()
@@ -3462,11 +3688,11 @@ $.extend(freeboard, jQuery.eventEmitter);
 	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
 	freeboard.loadDatasourcePlugin({
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
-		"type_name"   : "core_scratchpad_plugin",
+		"type_name"   : "document_database_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "Scratchpad Variables",
+		"display_name": "In-browser database",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
-        "description" : "The data is just an empty space.  To set some data, use datasources['scratchpad']['SomeName'] as a data target.  It will be available to read in other widgets.  You can also set the default data using JSON.",
+        "description" : "DB for storing JSON records.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 	
 		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
@@ -3506,23 +3732,73 @@ $.extend(freeboard, jQuery.eventEmitter);
 	//
 	// -------------------
 	// Here we implement the actual datasource plugin. We pass in the settings and updateCallback.
-	var myDatasourcePlugin = function(settings, updateCallback)
+	var myDatasourcePlugin = async function(settings, updateCallback)
 	{
-		// Always a good idea...
 		var self = this;
 
+
+		self.makeDB=async function()
+		{
+			self.db = await nSQL().createDatabase({
+				id: "my-db",
+				mode: "TEMP", // pass in "PERM" to switch to persistent storage mode!
+				tables: [
+				  {
+					name: "records",
+					model: 
+					{
+						".uuid:uuid":{pk: true}
+					}
+				  }
+				]
+			  })
+		}
+
+		await self.makeDB()
+
 		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
-		var currentSettings = settings;
+        var currentSettings = settings;
+        self.database = new alasql.Database();
+        self.database.exec('CREATE TABLE one (two INT)');
 
         self.handler={
 			set: function(obj,prop,val)
 			{
-				obj[prop]=val;
-				updateCallback(self.proxy)
+				throw new Error("You can't set anything here, all DB properties are async.");
 			}
 
-        }
-        self.data=freeboard.eval(settings['data'])
+		}
+		
+        self.data={
+
+			query: function(match) {
+				nSQL().useDatabase("my_db");
+				var x = nSQL('records').query('select');
+
+				//Everything in the DB must match
+				for (i in match)
+				{
+					x = x.where([i,'=', match[i]]);
+				}
+
+				return x.exec()
+			},
+
+			set: function(record)
+			{
+				var r = {}
+				r.assign(record)
+				r['.time']=r['.time'] | Date.now()*1000;
+				r['.arrival']=r['.arrival'] | Date.now()*1000;
+				r['.name']=r['.name'] | String(Date.now()*1000);
+				nSQL().useDatabase("my_db");
+				nSQL('records').query('upsert', r).exec()
+
+			}
+
+			
+
+		}
         self.proxy = new Proxy(self.data, self.handler)
         
 
@@ -3533,7 +3809,6 @@ $.extend(freeboard, jQuery.eventEmitter);
 
 			/* Get my data from somewhere and populate newData with it... Probably a JSON API or something. */
 			/* ... */
-
 			// I'm calling updateCallback to tell it I've got new data for it to munch on.
 			updateCallback(newData);
 		}
