@@ -1449,6 +1449,8 @@ PluginEditor = function(jsEditor, valueEditor)
 
 		var pluginDescriptionElement = $('<div id="plugin-description"></div>').hide();
 		form.append(pluginDescriptionElement);
+        
+        var toDestroy = []
 
 		function createSettingsFromDefinition(settingsDefs, typeaheadSource, typeaheadDataSegment)
 		{
@@ -1594,6 +1596,51 @@ PluginEditor = function(jsEditor, valueEditor)
 
 						break;
 					}
+					
+					case "html-wysywig":
+					{
+                        //We use font awesome instead of the SVG
+                        $.trumbowyg.svgPath = false;
+                        $.trumbowyg.hideButtonTexts = true;
+                        
+						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
+
+						var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="'+settingDef.name+'-trumbo"></textarea></div>').appendTo(valueCell);
+                        
+                        $('#'+settingDef.name+'-trumbo').trumbowyg({
+                               btns: [
+                                        ['viewHTML'],
+                                        ['undo', 'redo'], // Only supported in Blink browsers
+                                        ['formatting'],
+                                        ['strong', 'em', 'del'],
+                                        ['superscript', 'subscript'],
+                                        ['link'],
+                                        ['base64'],
+                                        ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                                        ['unorderedList', 'orderedList'],
+                                        ['horizontalRule'],
+                                        ['removeformat'],
+                                        ['fullscreen'],
+                                        ['fontsize','fontfamily','preformatted'],
+                                        ['emoji','table','specialChars']
+                                    ]
+                        });
+                       
+                        
+						$('#'+settingDef.name+'-trumbo').on('tbwchange',function(e)
+						{
+							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
+						});
+
+						if(settingDef.name in currentSettingsValues)
+						{
+							 $('#'+settingDef.name+'-trumbo').trumbowyg('html',currentSettingsValues[settingDef.name])
+						}
+						toDestroy.push($('#editor').trumbowyg)
+
+						break;
+					}
+					
 					case "boolean":
 					{
 						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
@@ -1842,6 +1889,11 @@ PluginEditor = function(jsEditor, valueEditor)
 				settingsSavedCallback(newSettings);
 			}
 		});
+        
+        for (var i of toDestroy)
+        {
+            i('destroy')
+        }
 
 		// Create our body
 		var pluginTypeNames = _.keys(pluginTypes);
@@ -3467,6 +3519,64 @@ $.extend(freeboard, jQuery.eventEmitter);
 		}
 	}
 }());
+
+
+    var htmlWidget = function (settings) {
+        var self = this;
+        var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
+        var currentSettings = settings;
+
+        this.render = function (element) {
+            $(element).append(htmlElement);
+             htmlElement.html(settings.html);
+        }
+
+        this.onSettingsChanged = function (newSettings) {
+            currentSettings = newSettings;
+            htmlElement.html(settings.html);
+
+        }
+
+        this.onCalculatedValueChanged = function (settingName, newValue) {
+            if (settingName == "html") {
+                htmlElement.html(newValue);
+            }
+        }
+
+        this.onDispose = function () {
+        }
+
+        this.getHeight = function () {
+            return Number(currentSettings.height);
+        }
+
+        this.onSettingsChanged(settings);
+    };
+
+    freeboard.loadWidgetPlugin({
+        "type_name": "html-template",
+        "display_name": "Rich Text Content",
+        "fill_size": true,
+        "settings": [
+            {
+                "name": "html",
+                "display_name": "HTML",
+                "type": "html-wysywig",
+                "description": "HTML template.  You can paste images here, they are stored in the freeboard config itself as base64."
+            },
+            {
+                "name": "height",
+                "display_name": "Height Blocks",
+                "type": "number",
+                "default_value": 4,
+                "description": "A height block is around 60 pixels"
+            }
+        ],
+        newInstance: function (settings, newInstanceCallback) {
+            newInstanceCallback(new htmlWidget(settings));
+        }
+    });
+
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
 // │ derived from freeboard-button-plugin                                            │ \\
@@ -5387,7 +5497,7 @@ freeboard.loadDatasourcePlugin({
 
     freeboard.loadWidgetPlugin({
         "type_name": "html",
-        "display_name": "HTML",
+        "display_name": "Show computed HTML",
         "fill_size": true,
         "settings": [
             {

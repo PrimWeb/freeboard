@@ -874,7 +874,7 @@
 
     freeboard.loadWidgetPlugin({
         "type_name": "html",
-        "display_name": "HTML",
+        "display_name": "Show computed HTML",
         "fill_size": true,
         "settings": [
             {

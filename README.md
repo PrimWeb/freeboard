@@ -20,6 +20,8 @@ freeboard(fork!)
 * Async compatibility: your newInstance data source function can be async, widgets will still load after sources
 * Async compatibility: if a calculated value expression returns a promise, we resolve it and use the result.
 
+* We use FontAwesome.  Everything just works if you run directly, but if you embed, you may have to override the path to  @font-face FontAwesome with the right file.
+
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 
 1. the distance between the waterline and the main deck or weather deck of a ship or between the level of the water and the upper edge of the side of a small boat.

@@ -1449,6 +1449,8 @@ PluginEditor = function(jsEditor, valueEditor)
 
 		var pluginDescriptionElement = $('<div id="plugin-description"></div>').hide();
 		form.append(pluginDescriptionElement);
+        
+        var toDestroy = []
 
 		function createSettingsFromDefinition(settingsDefs, typeaheadSource, typeaheadDataSegment)
 		{
@@ -1594,6 +1596,51 @@ PluginEditor = function(jsEditor, valueEditor)
 
 						break;
 					}
+					
+					case "html-wysywig":
+					{
+                        //We use font awesome instead of the SVG
+                        $.trumbowyg.svgPath = false;
+                        $.trumbowyg.hideButtonTexts = true;
+                        
+						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
+
+						var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="'+settingDef.name+'-trumbo"></textarea></div>').appendTo(valueCell);
+                        
+                        $('#'+settingDef.name+'-trumbo').trumbowyg({
+                               btns: [
+                                        ['viewHTML'],
+                                        ['undo', 'redo'], // Only supported in Blink browsers
+                                        ['formatting'],
+                                        ['strong', 'em', 'del'],
+                                        ['superscript', 'subscript'],
+                                        ['link'],
+                                        ['base64'],
+                                        ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                                        ['unorderedList', 'orderedList'],
+                                        ['horizontalRule'],
+                                        ['removeformat'],
+                                        ['fullscreen'],
+                                        ['fontsize','fontfamily','preformatted'],
+                                        ['emoji','table','specialChars']
+                                    ]
+                        });
+                       
+                        
+						$('#'+settingDef.name+'-trumbo').on('tbwchange',function(e)
+						{
+							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
+						});
+
+						if(settingDef.name in currentSettingsValues)
+						{
+							 $('#'+settingDef.name+'-trumbo').trumbowyg('html',currentSettingsValues[settingDef.name])
+						}
+						toDestroy.push($('#editor').trumbowyg)
+
+						break;
+					}
+					
 					case "boolean":
 					{
 						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
@@ -1842,6 +1889,11 @@ PluginEditor = function(jsEditor, valueEditor)
 				settingsSavedCallback(newSettings);
 			}
 		});
+        
+        for (var i of toDestroy)
+        {
+            i('destroy')
+        }
 
 		// Create our body
 		var pluginTypeNames = _.keys(pluginTypes);

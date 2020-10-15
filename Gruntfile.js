@@ -5,7 +5,8 @@ module.exports = function(grunt) {
             css: {
                 src: [
                     'lib/css/thirdparty/*.css',
-                    'lib/css/freeboard/styles.css'
+                    'lib/css/freeboard/styles.css',
+                     'lib/css/thirdparty/fa/*.css'
                 ],
                 dest: 'css/freeboard.css'
             },
@@ -26,7 +27,15 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/codemirror.js',
                         'lib/js/thirdparty/strftime.js',
                         'lib/js/thirdparty/js-yaml.js',
-                        'lib/js/thirdparty/jsgrid.min.js'
+                        'lib/js/thirdparty/jsgrid.min.js',
+                        'lib/js/thirdparty/trumbowyg.min.js',
+                        'lib/js/thirdparty/trumbowyg.fontsize.min.js',
+                        'lib/js/thirdparty/trumbowyg.fontfamily.min.js',
+                        'lib/js/thirdparty/trumbowyg.base64.min.js',
+                        'lib/js/thirdparty/trumbowyg.table.min.js',
+                        'lib/js/thirdparty/trumbowyg.preformatted.min.js',
+                        'lib/js/thirdparty/trumbowyg.emoji.min.js',
+                        'lib/js/thirdparty/trumbowyg.specialchars.min.js',
 
                         //'lib/js/thirdparty/jexcel.js',
                         //'lib/js/thirdparty/jsuites.js',
