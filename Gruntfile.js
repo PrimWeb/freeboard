@@ -36,6 +36,11 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/trumbowyg.preformatted.min.js',
                         'lib/js/thirdparty/trumbowyg.emoji.min.js',
                         'lib/js/thirdparty/trumbowyg.specialchars.min.js',
+                        'lib/js/thirdparty/trumbowyg.resizeimg.min.js',
+                        'lib/js/thirdparty/trumbowyg.colors.min.js',
+                        'lib/js/thirdparty/mustache.min.js',
+                        'lib/js/thirdparty/jquery-resizable.min.js'
+
 
                         //'lib/js/thirdparty/jexcel.js',
                         //'lib/js/thirdparty/jsuites.js',

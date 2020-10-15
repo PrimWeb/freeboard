@@ -184,6 +184,14 @@
 	content: "\f5b8";
 }
 
+.trumbowyg-foreColor-button:before {
+	font-family: FontAwesome;
+	content: "\f043";
+}.trumbowyg-backColor-button:before {
+	font-family: FontAwesome;
+	content: "\f5aa";
+}
+
 
 
 .trumbowyg-table-button:before {

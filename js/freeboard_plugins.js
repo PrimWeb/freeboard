@@ -1606,7 +1606,7 @@ PluginEditor = function(jsEditor, valueEditor)
 						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
 						var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="'+settingDef.name+'-trumbo"></textarea></div>').appendTo(valueCell);
-                        
+                        var l= ["ffffff","000000","eeece1","1f497d","4f81bd","c0504d","9bbb59","8064a2","4bacc6","f79646","ffff00","f2f2f2","7f7f7f","ddd9c3","c6d9f0","dbe5f1","f2dcdb","ebf1dd"]
                         $('#'+settingDef.name+'-trumbo').trumbowyg({
                                btns: [
                                         ['viewHTML'],
@@ -1614,6 +1614,7 @@ PluginEditor = function(jsEditor, valueEditor)
                                         ['formatting'],
                                         ['strong', 'em', 'del'],
                                         ['superscript', 'subscript'],
+                                        ['foreColor', 'backColor'],
                                         ['link'],
                                         ['base64'],
                                         ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
@@ -1623,7 +1624,15 @@ PluginEditor = function(jsEditor, valueEditor)
                                         ['fullscreen'],
                                         ['fontsize','fontfamily','preformatted'],
                                         ['emoji','table','specialChars']
-                                    ]
+                                    ],
+                                    plugins: {
+                                        colors: {
+                                            displayAsList: true,
+                                            foreColorList: l,
+                                            backColorList: l,
+                                            
+                                        }
+                                    }
                         });
                        
                         
@@ -1631,6 +1640,11 @@ PluginEditor = function(jsEditor, valueEditor)
 						{
 							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
 						});
+                        $('#'+settingDef.name+'-trumbo').on('tbwblur',function(e)
+						{
+							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
+						});
+
 
 						if(settingDef.name in currentSettingsValues)
 						{
@@ -3525,21 +3539,38 @@ $.extend(freeboard, jQuery.eventEmitter);
         var self = this;
         var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
         var currentSettings = settings;
+        
+        this.updateData=function()
+        {
+            self.data = {};
+            if(currentSettings.data && typeof(currentSettings.data)=='object')
+            {
+                htmlElement.html(Mustache.render(currentSettings.html, currentSettings.data));
+            }
+            else
+            {
+                htmlElement.html(currentSettings.html);
+            }
+
+        }
 
         this.render = function (element) {
             $(element).append(htmlElement);
-             htmlElement.html(settings.html);
+             self.updateData()
         }
 
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
-            htmlElement.html(settings.html);
-
+            self.updateData()
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
             if (settingName == "html") {
-                htmlElement.html(newValue);
+                self.updateData();
+            }
+            if (settingName == "data") {
+                      currentSettings.data=newValue
+                self.updateData();
             }
         }
 
@@ -3563,6 +3594,18 @@ $.extend(freeboard, jQuery.eventEmitter);
                 "display_name": "HTML",
                 "type": "html-wysywig",
                 "description": "HTML template.  You can paste images here, they are stored in the freeboard config itself as base64."
+            },
+            {
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "data",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Variables to use",
+					// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+	
+					"type"        : "calculated",
+                    "default_value" : "={varName: 'value'}",
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "Variables to use in Mustache templating, as a JS object.  Access a var with {{varname}} in your document template, it gets replaced with the value.",
             },
             {
                 "name": "height",

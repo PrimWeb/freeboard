@@ -1606,7 +1606,7 @@ PluginEditor = function(jsEditor, valueEditor)
 						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
 						var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="'+settingDef.name+'-trumbo"></textarea></div>').appendTo(valueCell);
-                        
+                        var l= ["ffffff","000000","eeece1","1f497d","4f81bd","c0504d","9bbb59","8064a2","4bacc6","f79646","ffff00","f2f2f2","7f7f7f","ddd9c3","c6d9f0","dbe5f1","f2dcdb","ebf1dd"]
                         $('#'+settingDef.name+'-trumbo').trumbowyg({
                                btns: [
                                         ['viewHTML'],
@@ -1614,6 +1614,7 @@ PluginEditor = function(jsEditor, valueEditor)
                                         ['formatting'],
                                         ['strong', 'em', 'del'],
                                         ['superscript', 'subscript'],
+                                        ['foreColor', 'backColor'],
                                         ['link'],
                                         ['base64'],
                                         ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
@@ -1623,7 +1624,15 @@ PluginEditor = function(jsEditor, valueEditor)
                                         ['fullscreen'],
                                         ['fontsize','fontfamily','preformatted'],
                                         ['emoji','table','specialChars']
-                                    ]
+                                    ],
+                                    plugins: {
+                                        colors: {
+                                            displayAsList: true,
+                                            foreColorList: l,
+                                            backColorList: l,
+                                            
+                                        }
+                                    }
                         });
                        
                         
@@ -1631,6 +1640,11 @@ PluginEditor = function(jsEditor, valueEditor)
 						{
 							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
 						});
+                        $('#'+settingDef.name+'-trumbo').on('tbwblur',function(e)
+						{
+							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
+						});
+
 
 						if(settingDef.name in currentSettingsValues)
 						{
