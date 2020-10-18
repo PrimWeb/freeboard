@@ -23,7 +23,14 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 		self.settings = newValue;
 		if(!_.isUndefined(self.datasourceInstance) && _.isFunction(self.datasourceInstance.onSettingsChanged))
 		{
-			await self.datasourceInstance.onSettingsChanged(newValue);
+			try{
+				await self.datasourceInstance.onSettingsChanged(newValue);
+			}
+			catch(e)
+			{
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings")
+				throw e;
+			}
 		}
 	});
 
@@ -1378,7 +1385,7 @@ PluginEditor = function(jsEditor, valueEditor)
 					}
 					else
 					{
-						$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
+						$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
 					}				
 				});
 		}
@@ -1497,7 +1504,7 @@ PluginEditor = function(jsEditor, valueEditor)
 
 							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
                             
-                                if(subSettingDef.options)
+                                if(subSettingDef.type in ['text', 'datasource'] && subSettingDef.options)
                                 {
                                     $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
                                     $.each(subSettingDef.options(), function(i, item) {
@@ -1551,12 +1558,53 @@ PluginEditor = function(jsEditor, valueEditor)
 
 								newSetting[subSettingDef.name] = subsettingValueString;
 
-                           
-							
+								if(subSettingDef.type== "option")
+									{				
+										var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(subsettingCol)).change(function()
+										{
+											newSetting[subSettingDef.name] = $(this).val();
+
+										});
+				
+										_.each(subSettingDef.options, function(option)
+										{
+				
+											var optionName;
+											var optionValue;
+				
+											if(_.isObject(option))
+											{
+												optionName = option.name;
+												optionValue = option.value;
+											}
+											else
+											{
+												optionName = option;
+											}
+				
+											if(_.isUndefined(optionValue))
+											{
+												optionValue = optionName;
+											}
+				
+											if(_.isUndefined(defaultValue))
+											{
+												defaultValue = optionValue;
+											}
+				
+											$("<option></option>").text(optionName).attr("value", optionValue).appendTo(input);
+										});
+				
+								
+											input.val(currentSettingsValues[subsettingValueString]);
+						
+									}
+								else{
 								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).attr('list',settingDef.name+subSettingDef.name+"ac").change(function()
 								{
 									newSetting[subSettingDef.name] = $(this).val();
 								});
+								}
 							});
 
 							subsettingRow.append($('<td class="table-row-operation"></td>').append($('<ul class="board-toolbar"></ul>').append($('<li></li>').append($('<i class="icon-trash icon-white"></i>').click(function()
@@ -1792,6 +1840,11 @@ PluginEditor = function(jsEditor, valueEditor)
 									newSettings.settings[settingDef.name] = $(this).val();
 								}
 							});
+
+							if(settingDef.type == "integer")
+							{
+								input.attr('type','number')
+							}
 
 							if(settingDef.name in currentSettingsValues)
 							{
@@ -2353,7 +2406,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	var targetFunctionFromScript = function(script)
 	{
 		// First we compile the user's code, appending to make it into an assignment to the target
-
+		if(!script)
+		{
+			return new Function("datasources",'value', "");
+		}
 		var append =''
 
 		//Assignments or function calls let you ado something other than what you expect with the value.
@@ -2398,9 +2454,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	//Note that we don't have any way to wait on the newinstance function
 	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
 	//clearly doesn't care about waiting
-	this.setType = function (newValue) {
+	this.setType = async function (newValue) {
 		self.type=newValue
 		disposeWidgetInstance();
+		await self.updateCalculatedSettings();
 
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
 			var widgetType = widgetPlugins[newValue];
@@ -2446,7 +2503,14 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		await self.updateCalculatedSettings();
 
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
-			await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
+			try{
+				await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
+			}
+			catch(e)
+			{
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings","OK")
+				throw e;
+			}
 		}
 
 		self._heightUpdate.valueHasMutated();
@@ -2561,7 +2625,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 
 
-                    if (script[0]=='=' || settingDef.type == "target" || wasArray){
+					if(!script)
+					{
+						valueFunction = new Function("datasources", "return undefined;");   
+					}
+                    else if ((script[0]=='=' || settingDef.type == "target" || wasArray)){
                         
                         //We use the spreadsheet convention here. 
                         if (script[0]=='=')
@@ -2682,10 +2750,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		};
 	}
 
-	this.deserialize = function (object) {
+	this.deserialize = async function (object) {
 		self.title(object.title);
-		self.setSettings(object.settings);
-		self.setType(object.type);
+		await self.setSettings(object.settings);
+		await self.setType(object.type);
 	}
 }
 
@@ -3360,6 +3428,12 @@ $.extend(freeboard, jQuery.eventEmitter);
 // ├────────────────────────────────────────────────────────────────────┤ \\
 // │ Freeboard widget plugin.                                           │ \\
 // └────────────────────────────────────────────────────────────────────┘ \\
+function uuidv4() {
+	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+	);
+  }
+
 (function () {
 	//
 	// DECLARATIONS
@@ -3383,7 +3457,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 		// Same stuff here as with datasource plugin.
 		"type_name": "jsGrid",
 		"display_name": "jsGrid Data grid View Plugin",
-		"description": "Database grid view.  Requires a JSGrid controller as it's data source",
+		"description": "Database grid view. Data is an array of objects.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 
 		// **fill_size** : If this is set to true, the widget will fill be allowed to fill the entire space given it, otherwise it will contain an automatic padding of around 10 pixels around it.
@@ -3399,16 +3473,58 @@ $.extend(freeboard, jQuery.eventEmitter);
 		
             {
 				"name": "backend",
-				"display_name": "Data backend(JS controller)",
+				"display_name": "Data backend(JS Grid CSontroller)",
 				"type": "calculated",
 				"default_value": ""
             },
-            
+			
+			
+			{
+				"name": "data",
+				"display_name": "Direct data array",
+				'description':"",
+				"type": "target",
+				"default_value": ""
+            },
             {
 				"name": "columns",
                 "display_name": "Display Columns",
-				"type": "calculated",
-				"default_value": '=[\n{ name: "Name", type: "text", width: 150},\n{name: "Country", type: "text"}]'
+				"type": "array",
+
+				"settings"    : [
+					{
+						"name"        : "name",
+						"display_name": "Data Field(match key on row)",
+						"type"        : "text",
+					},
+					{
+						"name":"type",
+						"display_name": "Type",
+						"type": 'option',
+						'options':[
+						{
+							'name': 'Text',
+							'value': 'text'
+						},
+						{
+							'name': 'Long Textarea',
+							'value': 'textarea'
+						},
+						{
+							'name': 'Number',
+							'value': 'number'
+						},
+						{
+							'name': 'Checkbox',
+							'value': 'checkbox'
+						},
+						{
+							'name': 'Add/Edit/Del Controls',
+							'value': 'control'
+						}
+					]
+					}
+				],
 			},
 		
 			{
@@ -3433,36 +3549,133 @@ $.extend(freeboard, jQuery.eventEmitter);
 	// -------------------
 	// Here we implement the actual widget plugin. We pass in the settings;
 	var datagrid = function (settings) {
+
+		//jsgrid.sortStrategies.natural = Intl.Collator(undefined, {numeric: true, sensitivity: 'base'}).compare;
+
+		if(settings.backend && settings.data)
+		{
+			throw new Error("Cannot use both the backend and the data options at the same time")
+		}
         var self = this;
         
 
 
 		self.currentSettings = settings;
 
+		self.data = settings['data'] || [] 
+
 		var thisWidgetId = "datagrid-" + SLIDER_ID++;
 		var thisWidgetContainer = $('<div class="datagrid-widget datagrid-label" id="__' + thisWidgetId + '"></div>');
 
 
 		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
+
 		var gridBox = $('<div>',{id:thisWidgetId}).css('width', '90%');
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
+		self.arrayController =
+		{
+			insertItem: function(f){
+				self.data.push(f)
+			},
+			deleteItem: function(d){
+				self.data = _.without(self.data,d)
+			},
+			deleteItem: function(d){
+				var x = 0
+				for(i in self.data)
+				{
+					if(i._uuid==d._uuid)
+					{
+						self.data = _.without(self.data,i)
+					}
+				}
+				self.data.push(f)
+				self.dataTargets['data'](self.data)
+				
+			},
+			insertItem: function(f){
+				f._uuid = f._uuid || uuidv4()
+				f._name = f._name || f._uuid
+				f._time = f._time || parseInt(Date.now()*1000)
+				f._arrival = f._arrival || f._time
 
-        self.refreshGrid= function(){
-            $(theGridbox).jsGrid('destroy');
+
+				self.data.push(f)
+				self.dataTargets['data'](self.data)
+			},
+			loadData: function(filter)
+			{
+				var q = nSQL(self.data||[]).query('select')
+				for(i in filter)
+				{
+					if(filter[i] && !(['sortField','sortOrder','pageIndex','pageSize'].indexOf(i)>-1))
+					{
+						q=q.where(['LOWER('+i+')','=',String(filter[i]).toLowerCase()])
+					}
+				}
+				if(filter.sortOrder)
+				{
+				q=q.orderBy([filter.sortField+' '+filter.sortOrder.toUpperCase()])
+				}
+				q=q.limit(filter.pageSize).offset((filter.pageIndex-1)*filter.pageSize)
+
+				var f = async function ex()
+				{
+					var d = await q.exec()
+					//Someday this should show the right page count after filtering?
+					return {data:d, itemsCount:self.data.length}
+				}
+				return f()
+			}
+
+		}
+
+        self.refreshGrid= function(x){
+			if(x==0)
+			{
+				x = self.data
+			}
+			
+			self.data=x;
+
+			//Normalize by adding the special DB properties.
+			for (f in self.data)
+			{
+				f._uuid = f._uuid || uuidv4()
+				f._name = f._name || f._uuid
+				f._time = f._time || parseInt(Date.now()*1000)
+				f._arrival = f._arrival || f._time
+			}
+
+
+
+			$(theGridbox).jsGrid('destroy');
+			
+			var writebackData = function()
+			{
+				self.dataTargets['data']([self.data, Date.now()*1000]);
+			}
             $(theGridbox).jsGrid({
-                width: "100%",
-                height: "400px",
+                width: "95%",
+                height: "250px",
          
                 inserting: true,
                 editing: true,
                 sorting: true,
-                paging: true,
+				paging: true,
+				pageLoading: true,
+				filtering:true,
+				onItemDeleted: writebackData,
+				onItemUpdated: writebackData,
+				onItemInserted: writebackData,
+
+
          
-                data: [{ "Name": "Otto Clay", "Age": 25, "Country": 1, "Address": "Ap #897-1459 Quam Avenue", "Married": false }],
+                controller: self.currentSettings.backend || self.arrayController,
          
-                fields: self.currentSettings.columns
+                fields: self.currentSettings.columns||[]
                 
             });
         }
@@ -3486,7 +3699,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 			titleElement.appendTo(thisWidgetContainer);
             gridBox.appendTo(thisWidgetContainer);
             
-            self.refreshGrid()
+            self.refreshGrid(0)
 
  
 
@@ -3500,11 +3713,16 @@ $.extend(freeboard, jQuery.eventEmitter);
 		//
 		// Blocks of different sizes may be supported in the future.
 		self.getHeight = function () {
-				return 2;
+				return 6;
 		}
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
+			if(settings.backend && settings.data)
+			{
+				throw new Error("Cannot use both the backend and the data options at the same time")
+			}
+
 			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
@@ -3521,7 +3739,17 @@ $.extend(freeboard, jQuery.eventEmitter);
 			
 			if(settingName=='columns')
 			{
-                self.refreshGrid()
+                self.refreshGrid(0)
+			}
+
+			if(settingName=='data')
+			{
+				//Value, timestamp pair
+				if (newValue)
+				{
+					newValue=newValue[0]
+				}
+                self.refreshGrid(newValue||[])
 			}
 			
 		}

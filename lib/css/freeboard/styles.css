@@ -462,6 +462,8 @@ textarea {
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
+	scrollbar-color: var(--border-color);
+	scrollbar-width: 0.7em;
 }
 
 /* ==========
@@ -472,6 +474,48 @@ html {
 	background-color: var(--main-bg-color);
 	height: 100%;
 	overflow: hidden;
+}
+
+.jsgrid-header-row, .jsgrid-header-row>.jsgrid-header-cell
+
+{
+	background-color: var(--main-bg-color);
+	border-bottom: #000 1px solid;
+}
+.jsgrid-insert-row, .jsgrid-insert-row>.jsgrid-cell
+{
+	background-color: var(--main-bg-color);
+	border-bottom: #000 1px solid;
+}
+
+.jsgrid-nodata-row, .jsgrid-nodata-row>.jsgrid-cell
+{
+	background-color: darkred;
+	color: white;
+	border-bottom: #000 1px solid;
+}
+.jsgrid-edit-row, .jsgrid-edit-row>.jsgrid-cell
+{
+	background-color: var(--main-bg-color);
+	border-bottom: #000 1px solid;
+}
+.jsgrid-filter-row, .jsgrid-filter-row>.jsgrid-cell
+{
+	background-color: var(--main-bg-color);
+	border-bottom: #000 1px solid;
+}
+.jsgrid-row, .jsgrid-row>.jsgrid-cell
+{
+	background-color: var(--main-bg-color);
+	border-bottom: #000 1px solid;
+}
+.jsgrid-body{
+	background-color: var(--main-bg-color);
+	border: 2px black solid;
+}
+.jsgrid-alt-row, .jsgrid-edit-row, .jsgrid-alt-row>.jsgrid-cell,jsgrid-edit-row>.jsgrid-cell
+{
+	background-color: color(var(--main-bg-color) blackness(+ 5%));
 }
 
 body {
@@ -492,7 +536,7 @@ body {
 	position: absolute;
 	background-color: var(--box-bg-color);
 	top: 120px;
-	width: 900px;
+	width: 95%;
 	margin: auto;
 	right: 0px;
 	left: 0px;
@@ -827,7 +871,7 @@ a:focus {
 	height: 100%;
 	width: 100%;
 	background: var(--dialog-bg);
-	overflow-y: auto;
+	overflow: auto;
 }
 
 a:hover,
@@ -1797,15 +1841,14 @@ input.table-row-value {
 
 .form-table-value-subtable {
 	max-height: 110px;
-	overflow-x: hidden;
+	overflow-x: auto;
 	overflow-y: auto;
 	border-bottom: solid 1px #3d3d3d;
-	width: 414px;
 }
 
 .datasource-list-container {
 	max-height: 110px;
-	overflow-x: hidden;
+	overflow-x: auto;
 	overflow-y: auto;
 	border-bottom: solid 1px #3d3d3d;
 }
@@ -1817,7 +1860,7 @@ ul.value-dropdown {
 	margin: 0px;
 	background-color: var(--box-bg-color);
 	border: 1px solid var(--highlight-color);
-	overflow-x: hidden;
+	overflow-x: auto;
 	overflow-y: auto;
 	z-index: 3001;
 }
@@ -2006,7 +2049,7 @@ ul.datasource-input-suffix {
 }
 
 .styled-select select {
-	width: 414px;
+	width: 16em;
 	height: 30px;
 	-webkit-appearance: none;
 	border: 1px solid var(--border-color);
@@ -2339,13 +2382,13 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 
 ::-webkit-scrollbar {
 	height: 0px;
-	width: 4px;
+	width: 0.7em;
 	background: transparent;
 	padding-right: 10;
 }
 
 ::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.05);
+	background: var(--border-color);
 	-webkit-border-radius: 1ex;
 }
 

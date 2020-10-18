@@ -23,7 +23,14 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 		self.settings = newValue;
 		if(!_.isUndefined(self.datasourceInstance) && _.isFunction(self.datasourceInstance.onSettingsChanged))
 		{
-			await self.datasourceInstance.onSettingsChanged(newValue);
+			try{
+				await self.datasourceInstance.onSettingsChanged(newValue);
+			}
+			catch(e)
+			{
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings")
+				throw e;
+			}
 		}
 	});
 
@@ -1378,7 +1385,7 @@ PluginEditor = function(jsEditor, valueEditor)
 					}
 					else
 					{
-						$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
+						$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
 					}				
 				});
 		}
@@ -1497,7 +1504,7 @@ PluginEditor = function(jsEditor, valueEditor)
 
 							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
                             
-                                if(subSettingDef.options)
+                                if(subSettingDef.type in ['text', 'datasource'] && subSettingDef.options)
                                 {
                                     $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
                                     $.each(subSettingDef.options(), function(i, item) {
@@ -1551,12 +1558,53 @@ PluginEditor = function(jsEditor, valueEditor)
 
 								newSetting[subSettingDef.name] = subsettingValueString;
 
-                           
-							
+								if(subSettingDef.type== "option")
+									{				
+										var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(subsettingCol)).change(function()
+										{
+											newSetting[subSettingDef.name] = $(this).val();
+
+										});
+				
+										_.each(subSettingDef.options, function(option)
+										{
+				
+											var optionName;
+											var optionValue;
+				
+											if(_.isObject(option))
+											{
+												optionName = option.name;
+												optionValue = option.value;
+											}
+											else
+											{
+												optionName = option;
+											}
+				
+											if(_.isUndefined(optionValue))
+											{
+												optionValue = optionName;
+											}
+				
+											if(_.isUndefined(defaultValue))
+											{
+												defaultValue = optionValue;
+											}
+				
+											$("<option></option>").text(optionName).attr("value", optionValue).appendTo(input);
+										});
+				
+								
+											input.val(currentSettingsValues[subsettingValueString]);
+						
+									}
+								else{
 								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).attr('list',settingDef.name+subSettingDef.name+"ac").change(function()
 								{
 									newSetting[subSettingDef.name] = $(this).val();
 								});
+								}
 							});
 
 							subsettingRow.append($('<td class="table-row-operation"></td>').append($('<ul class="board-toolbar"></ul>').append($('<li></li>').append($('<i class="icon-trash icon-white"></i>').click(function()
@@ -1792,6 +1840,11 @@ PluginEditor = function(jsEditor, valueEditor)
 									newSettings.settings[settingDef.name] = $(this).val();
 								}
 							});
+
+							if(settingDef.type == "integer")
+							{
+								input.attr('type','number')
+							}
 
 							if(settingDef.name in currentSettingsValues)
 							{
@@ -2353,7 +2406,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	var targetFunctionFromScript = function(script)
 	{
 		// First we compile the user's code, appending to make it into an assignment to the target
-
+		if(!script)
+		{
+			return new Function("datasources",'value', "");
+		}
 		var append =''
 
 		//Assignments or function calls let you ado something other than what you expect with the value.
@@ -2398,9 +2454,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	//Note that we don't have any way to wait on the newinstance function
 	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
 	//clearly doesn't care about waiting
-	this.setType = function (newValue) {
+	this.setType = async function (newValue) {
 		self.type=newValue
 		disposeWidgetInstance();
+		await self.updateCalculatedSettings();
 
 		if ((newValue in widgetPlugins) && _.isFunction(widgetPlugins[newValue].newInstance)) {
 			var widgetType = widgetPlugins[newValue];
@@ -2446,7 +2503,14 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		await self.updateCalculatedSettings();
 
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
-			await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
+			try{
+				await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
+			}
+			catch(e)
+			{
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings","OK")
+				throw e;
+			}
 		}
 
 		self._heightUpdate.valueHasMutated();
@@ -2561,7 +2625,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 
 
-                    if (script[0]=='=' || settingDef.type == "target" || wasArray){
+					if(!script)
+					{
+						valueFunction = new Function("datasources", "return undefined;");   
+					}
+                    else if ((script[0]=='=' || settingDef.type == "target" || wasArray)){
                         
                         //We use the spreadsheet convention here. 
                         if (script[0]=='=')
@@ -2682,10 +2750,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		};
 	}
 
-	this.deserialize = function (object) {
+	this.deserialize = async function (object) {
 		self.title(object.title);
-		self.setSettings(object.settings);
-		self.setType(object.type);
+		await self.setSettings(object.settings);
+		await self.setType(object.type);
 	}
 }
 

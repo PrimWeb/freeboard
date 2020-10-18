@@ -70,8 +70,16 @@
         <p>These update in real time if the value of the expression changes.
         Much like a spreadsheet, they must begin with an equals sign,
         or else they get interpreted as just literal data.</p>
-
         </div>
+
+        <h2> Data Tables </h2>
+        <p>FreeBoard works with table-like data using the nanoSQl2 library which is always available to the user.   The following 4 special fields are reserved and may be added
+            to rows when used with widgets: _time, the microseconds modification time of the record, _arrival, the microseconds time the record arrived on the local node,
+           _uuid, a canonical UUID for the record, and _name, a nonunique name.<p>
+
+        <p>When using the table widget in the raw data mode, all you need to worry about is your application data, the special fields are added automatically by the table widget.</p>
+
+        
         `
 
             return $(x)
