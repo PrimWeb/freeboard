@@ -149,13 +149,10 @@
 
 			$(theSlider).on('change',
 				function (e) {
-					if (_.isUndefined(currentSettings.target)) { }
-					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
-					}
 				});
             
 			$(theSlider).on('input',
@@ -167,13 +164,12 @@
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(currentSettings.target)) { }
-					else {
+				
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
 						}
-					}
+					
 				}
 			);
 			$(theSlider).removeClass("ui-widget-content");

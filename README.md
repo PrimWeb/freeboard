@@ -9,10 +9,14 @@ freeboard(fork!)
 * Calculated expressions use Spreadsheet syntax. Anything that doesn't start with = is considered a literal value.
 * Data targets can just be a writable data source that uses proxies to detect when you set it's keys
 * But if they include an assignment or a function call, they are interpreted as literal javascript, so alert(value) works.
+* Your widget instance can just call datatargets['settingName'](theValue) to set whatever target the user gave
 
 * The "spec" for input widgets is simple:  The data is always a value,timestamp tuple, with the time in floating point seconds.
 * If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
 * v,t pairs ensure data always changes on interaction.
+
+* There's a basic "scratchpad" data source for storing your variables
+* Button, textbox, slider widgets
 
 * WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value.  But it is async!!
 * #freeboard-extra-tools is now a div running across the whole bottom of the screen, set up as a flex container expecting children to be unstyled divs, for plugins to add stuff into.
@@ -21,6 +25,13 @@ freeboard(fork!)
 * Async compatibility: if a calculated value expression returns a promise, we resolve it and use the result.
 
 * We use FontAwesome.  Everything just works if you run directly, but if you embed, you may have to override the path to  @font-face FontAwesome with the right file.
+* Datasources have a new setting type: button.  It takes an 'html' content param and an 'onclick' function that gets passed the (settungs,instanceobj)
+* New widget setting type: trumbowyg-html, which works like text, except you get a WYSYWIG editor wiht drag and drop image support(cpnverts to data URI)
+* "Rich text content" widget, allows mustache templating withing WYSYWIG edited HTML
+
+* Clock widget has custom strftime string capability
+
+* Always-available libraries are now part of the core: Luxon, Raphael, Math, Keyboard, Strftime
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

@@ -133,13 +133,10 @@
 
 			$(theTextbox).on('change',
 				function (e) {
-					if (_.isUndefined(self.currentSettings.target)) { }
-					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
-					}
 				});
             
 			$(theTextbox).on('input',

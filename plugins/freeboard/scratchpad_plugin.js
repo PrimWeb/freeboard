@@ -43,6 +43,25 @@
                     "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
                     "required" : true
+				},
+				
+				{
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					"display_name" : "",
+					'html': "Show current data",
+					
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "button",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "={}",
+                    'onclick': function(n,i){
+						freeboard.showDialog(JSON.stringify(i.data),"Debug data for: "+n+" (non-JSON not shown)","OK")
+					},
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "",
+                  
                 }
 			
 		],

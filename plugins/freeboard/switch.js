@@ -89,13 +89,11 @@
                 {
                     self.isOn =e.target.checked
                     
-                    if (_.isUndefined(currentSettings.target)) { }
-					else {
+
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([self.isOn, Date.now()/1000]);
 						}
-					}
                     
                 });
         }

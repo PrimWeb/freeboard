@@ -153,6 +153,15 @@ function uuidv4() {
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
+		//Cleans up the data, so it has all the Freeboard DB spec required keys.
+		var normalize = function(f)
+		{
+			f._uuid = f._uuid || uuidv4()
+			f._name = f._name || f._uuid
+			f._time = f._time || parseInt(Date.now()*1000)
+			f._arrival = f._arrival || f._time
+		}
+
 		self.arrayController =
 		{
 			insertItem: function(f){
@@ -175,10 +184,7 @@ function uuidv4() {
 				
 			},
 			insertItem: function(f){
-				f._uuid = f._uuid || uuidv4()
-				f._name = f._name || f._uuid
-				f._time = f._time || parseInt(Date.now()*1000)
-				f._arrival = f._arrival || f._time
+				normalize(f)
 
 
 				self.data.push(f)
@@ -222,10 +228,7 @@ function uuidv4() {
 			//Normalize by adding the special DB properties.
 			for (f in self.data)
 			{
-				f._uuid = f._uuid || uuidv4()
-				f._name = f._name || f._uuid
-				f._time = f._time || parseInt(Date.now()*1000)
-				f._arrival = f._arrival || f._time
+				normalize(f)
 			}
 
 

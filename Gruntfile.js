@@ -40,8 +40,10 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/trumbowyg.colors.min.js',
                         'lib/js/thirdparty/mustache.min.js',
                         'lib/js/thirdparty/jquery-resizable.min.js',
-                        'lib/js/thirdparty/nano-sql.min.js'
-
+                        'lib/js/thirdparty/nano-sql.min.js',
+                        'lib/js/thirdparty/luxon.min.js',
+                        'lib/js/thirdparty/keyboard.min.js',
+                        'lib/js/thirdparty/math.min.js'
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'

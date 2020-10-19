@@ -1721,6 +1721,18 @@ PluginEditor = function(jsEditor, valueEditor)
 
 						break;
 					}
+
+										
+					case "button":
+					{
+						var input = $('<button></button>').appendTo($('<div class="styled-select"></div>').appendTo(valueCell)).html(settingDef.html).on('click',function()
+						{
+							settingDef.onclick(currentSettingsValues,freeboard.getDatasourceInstance(currentSettingsValues.name));
+						});
+
+						break;
+					}
+
 					case "option":
 					{
 						var defaultValue = currentSettingsValues[settingDef.name];
@@ -2683,7 +2695,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
                         catch (e) {
 							console.log("Bad data target: "+ script)
 							console.log(e)
-							self.dataTargets[settingDef.name]=undefined
+							//The do nothing function
+							self.dataTargets[settingDef.name]=function(v){}
                         }
                     }
 					await self.processCalculatedSetting(settingDef.name);
@@ -2708,7 +2721,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 				else
 				{
-					self.dataTargets[settingDef.name]=undefined;
+					self.dataTargets[settingDef.name]==function(v){};
 				}
 			}
 		};
@@ -3211,6 +3224,18 @@ var freeboard = (function()
 
 	// PUBLIC FUNCTIONS
 	return {
+		  model: theFreeboardModel,
+
+		  getDatasourceInstance:function(n)
+		  {
+			for(var i of freeboard.model.datasources())
+			{
+				if(i.name()==n)
+				{
+					return i.datasourceInstance
+				}
+			}
+		  },
           eval: function(s)
             {
                 if(typeof(s)=="string" && s[0]=='=')

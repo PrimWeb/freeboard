@@ -153,6 +153,15 @@ function uuidv4() {
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
+		//Cleans up the data, so it has all the Freeboard DB spec required keys.
+		var normalize = function(f)
+		{
+			f._uuid = f._uuid || uuidv4()
+			f._name = f._name || f._uuid
+			f._time = f._time || parseInt(Date.now()*1000)
+			f._arrival = f._arrival || f._time
+		}
+
 		self.arrayController =
 		{
 			insertItem: function(f){
@@ -175,10 +184,7 @@ function uuidv4() {
 				
 			},
 			insertItem: function(f){
-				f._uuid = f._uuid || uuidv4()
-				f._name = f._name || f._uuid
-				f._time = f._time || parseInt(Date.now()*1000)
-				f._arrival = f._arrival || f._time
+				normalize(f)
 
 
 				self.data.push(f)
@@ -222,10 +228,7 @@ function uuidv4() {
 			//Normalize by adding the special DB properties.
 			for (f in self.data)
 			{
-				f._uuid = f._uuid || uuidv4()
-				f._name = f._name || f._uuid
-				f._time = f._time || parseInt(Date.now()*1000)
-				f._arrival = f._arrival || f._time
+				normalize(f)
 			}
 
 
@@ -555,12 +558,9 @@ function uuidv4() {
 						v = self.value
 					}
 
-					if (_.isUndefined(self.currentSettings.target)) { 
-
-					}
-					else {
-						await self.dataTargets.target([v, Date.now() / 1000]);
-					}
+		
+					await self.dataTargets.target([v, Date.now() / 1000]);
+				
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
 
@@ -2416,6 +2416,25 @@ freeboard.loadDatasourcePlugin({
                     "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
                     "required" : true
+				},
+				
+				{
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					"display_name" : "",
+					'html': "Show current data",
+					
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "button",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "={}",
+                    'onclick': function(n,i){
+						freeboard.showDialog(JSON.stringify(i.data),"Debug data for: "+n+" (non-JSON not shown)","OK")
+					},
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "",
+                  
                 }
 			
 		],
@@ -2647,13 +2666,10 @@ freeboard.loadDatasourcePlugin({
 
 			$(theSlider).on('change',
 				function (e) {
-					if (_.isUndefined(currentSettings.target)) { }
-					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
-					}
 				});
             
 			$(theSlider).on('input',
@@ -2665,13 +2681,12 @@ freeboard.loadDatasourcePlugin({
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(currentSettings.target)) { }
-					else {
+				
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
 						}
-					}
+					
 				}
 			);
 			$(theSlider).removeClass("ui-widget-content");
@@ -2849,13 +2864,11 @@ freeboard.loadDatasourcePlugin({
                 {
                     self.isOn =e.target.checked
                     
-                    if (_.isUndefined(currentSettings.target)) { }
-					else {
+
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([self.isOn, Date.now()/1000]);
 						}
-					}
                     
                 });
         }
@@ -3034,13 +3047,10 @@ freeboard.loadDatasourcePlugin({
 
 			$(theTextbox).on('change',
 				function (e) {
-					if (_.isUndefined(self.currentSettings.target)) { }
-					else {
 						//Avoid loops, only real user input triggers this
 						if (true) {
 							self.dataTargets.target([e.target.value, Date.now()/1000]);
 						}
-					}
 				});
             
 			$(theTextbox).on('input',
