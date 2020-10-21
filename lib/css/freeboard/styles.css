@@ -36,7 +36,6 @@
 	--header-fg-color: white;
 	--header-bg-color:#444659;
 	--error-color: red;
-
   }
 
 #freeboard-extra-tools{
@@ -56,14 +55,100 @@
 #freeboard-extra-tools div{
     flex-grow: 0.05;
 }
-  
- @font-face {
+
+/*JSON editor*/
+.je-modal{
+	background: var(--widget-bg-color);
+}
+/*
+Note use of generic font names
+*/
+@font-face {
         font-family: FontAwesome;
         src: url(fontawesome-webfont.woff2);
         font-weight: 400;
         font-style: normal;
-    }
+	}
 
+@font-face {
+        font-family: serif;
+        src: url(fonts/Lora-Regular.ttf);
+	}
+
+@font-face {
+        font-family: monospace;
+        src: url(fonts/Hack-Regular.ttf);
+
+	}
+
+@font-face {
+        font-family: Pixel;
+        src: url(fonts/w95fa.woff2);
+	}
+
+@font-face {
+        font-family: Comic;
+        src: url(fonts/ComicRelief.ttf);
+
+	}
+
+@font-face {
+        font-family: Pandora;
+        src: url(fonts/QTPandora.otf);
+
+	}
+
+@font-face {
+        font-family: Stencil;
+        src: url(fonts/QTMilitary.otf);
+
+	}
+
+@font-face {
+        font-family: Chancery;
+        src: url(fonts/QTChanceryType-Italic.otf);
+
+	}
+@font-face {
+        font-family: Blackletter;
+        src: url(fonts/QTHeidelbergType.otf);
+
+	}
+
+@font-face {
+        font-family: Handwriting;
+        src: url(fonts/QTHandwriting.otf);
+
+	}
+
+@font-face {
+        font-family: QTBlackForest;
+        src: url(fonts/QTBlackForest.otf);
+
+	}
+
+@font-face {
+        font-family: cursive;
+        src: url(fonts/Tangerine-Regular.ttf);
+
+	}
+
+@font-face {
+        font-family: RoughScript;
+        src: url(fonts/HomemadeApple.ttf);
+
+	}
+
+@font-face {
+        font-family: Chalkboard;
+        src: url(fonts/RockSalt-Regular.ttf);
+
+	}
+
+@font-face {
+		font-family: B612;
+		src: url(fonts/B612-Regular.woff2);
+	}
 article,
 aside,
 details,

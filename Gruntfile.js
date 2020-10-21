@@ -43,7 +43,9 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/nano-sql.min.js',
                         'lib/js/thirdparty/luxon.min.js',
                         'lib/js/thirdparty/keyboard.min.js',
-                        'lib/js/thirdparty/math.min.js'
+                        'lib/js/thirdparty/math.min.js',
+                        'lib/js/thirdparty/jsoneditor.min.js'
+
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
@@ -61,6 +63,8 @@ module.exports = function(grunt) {
 					'lib/js/freeboard/ValueEditor.js',
 					'lib/js/freeboard/WidgetModel.js',
 					'lib/js/freeboard/freeboard.js',
+                    'lib/js/freeboard/globalSettingsSchema.js',
+
 				],
 				dest : 'js/freeboard.js'
 			},

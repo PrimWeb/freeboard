@@ -181,7 +181,7 @@
 }
 .trumbowyg-emoji-button:before {
 	font-family: FontAwesome;
-	content: "\f5b8";
+	content: "\f004";
 }
 
 .trumbowyg-foreColor-button:before {
@@ -203,14 +203,14 @@
 	font-family: FontAwesome;
 	content: "\f035";
 }
-.trumbowyg-fontfamily-button:beforee {
+.trumbowyg-fontfamily-button:before {
 	font-family: FontAwesome;
-	content: "\f0ce";
+	content: "\f031";
 }
 
 .trumbowyg-specialChars-button:before {
 	font-family: FontAwesome;
-	content: "\f529";
+	content: "\f698";
 }
 
 .trumbowyg-italic-button:after {

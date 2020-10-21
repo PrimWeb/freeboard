@@ -393,6 +393,13 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 	}
 
+	this.globalSettings = {}
+	this.globalSettingsDefaults={theme:{}}
+	Object.assign(this.globalSettings, this.globalSettingsDefaults)
+
+
+	this.globalSettingsHandlers={}
+
 	this.serialize = function()
 	{
 		var panes = [];
@@ -416,8 +423,28 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			plugins     : self.plugins(),
 			panes       : panes,
 			datasources : datasources,
-			columns     : freeboardUI.getUserColumns()
+			columns     : freeboardUI.getUserColumns(),
+			globalSettings : self.globalSettings
 		};
+	}
+
+	this.setGlobalSettings=function(d)
+	{
+		Object.assign(self.globalSettings, d)
+		for(var i in self.globalSettingsHandlers)
+		{
+			self.globalSettingsHandlers[i](self.globalSettings)
+		}
+	}
+
+
+
+	this.globalSettingsHandlers['css'] = function(d)
+	{
+		for(i in d.theme)
+		{
+				document.body.style.setProperty(i, d.theme[i])
+		}
 	}
 
 	this.deserialize = async function(object, finishedCallback)
@@ -438,6 +465,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			}
 			self.version = object.version || 0;
 			self.header_image(object.header_image);
+
 
 			_.each(object.datasources, async function(datasourceConfig)
 			{
@@ -468,7 +496,17 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 				await Promise.resolve(finishedCallback());
 			}
 
+			for (var prop in self.globalSettings) {
+					delete self.globalSettings[prop];
+			}
+			Object.assign(self.globalSettings, self.globalSettingsDefaults)
+			
+		
+			self.setGlobalSettings(object.globalSettings||{})
+
 			freeboardUI.processResize(true);
+
+			
 		}
 
 		// This could have been self.plugins(object.plugins), but for some weird reason head.js was causing a function to be added to the list of plugins.
@@ -1679,7 +1717,27 @@ PluginEditor = function(jsEditor, valueEditor)
                                             foreColorList: l,
                                             backColorList: l,
                                             
-                                        }
+										},
+										fontfamily:
+										{
+											fontList:[
+												{name: 'Seriff', family: 'serif'},
+												{name: 'Sans', family: 'sans-serif'},
+												{name: 'Monospace', family: 'monospace'},
+												{name: 'Cursive', family: 'cursive'},
+												{name: 'Pandora', family: 'Pandora'},
+												{name: 'Chalkboard', family: 'Chalkboard'},
+												{name: 'Handwriting', family: 'Handwriting'},
+												{name: 'Rough Script', family: 'RoughScript'},
+												{name: 'Chancery', family: 'Chancery'},
+												{name: 'Comic', family: 'Comic'},
+												{name: 'Blackletter', family: 'Blackletter'},
+												{name: 'Stencil', family: 'Stencil'},
+												{name: 'Pixel', family: 'Pixel'},
+												{name: 'B612', family: 'B612'}
+
+											]
+										}
                                     }
                         });
                        
@@ -3226,6 +3284,10 @@ var freeboard = (function()
 	return {
 		  model: theFreeboardModel,
 
+		  setGlobalSettings = theFreeboardModel.setGlobalSettings,
+		  globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
+		  globalSettings = theFreeboardModel.globalSettings,
+
 		  getDatasourceInstance:function(n)
 		  {
 			for(var i of freeboard.model.datasources())
@@ -3444,6 +3506,83 @@ var freeboard = (function()
 
 $.extend(freeboard, jQuery.eventEmitter);
 
+globalSettingsSchema= {
+    type: "object",
+    title: "Settings",
+    properties: {
+      theme: {
+              type: "object",
+              title: "Theme",
+              properties: {
+                "--box-bg-color":{                   
+                      type: "string",
+                      format: 'color'
+                  },
+                "--main-bg-color":{                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--main-bg-image":{                   
+                    type: "string",
+                },
+
+                "--main-font":{                   
+                    type: "string",
+                },
+                "--fg-color":
+                {                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--widget-bg-color":
+                {                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--bar-bg-color":
+                {                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--header-bg-color":
+                {                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--header-fg-color":
+                {                   
+                    type: "string",
+                    format: 'color'
+                },
+                "--border-width":
+                {                   
+                    type: "string",
+                    enum: ['0px','1px','2px','3px','4px','5px']
+                },
+
+                "--pane-padding":
+                {                   
+                    type: "string",
+                    enum: ['0.3em','0.6em','1.2em','2.4em']
+                },
+
+                "--pane-border-radius":
+                {                   
+                    type: "string",
+                    enum: ['0.3em','0.6em','1.2em','2.4em']
+                },
+
+                "--main-bg-size":
+                {                   
+                    type: "string",
+                    enum: ['auto','cover','contain']
+                }
+
+                
+              }     
+    }
+  }
+}
 // ┌────────────────────────────────────────────────────────────────────┐ \\
 // │ freeboard-datagrid-plugin                                            │ \\
 // ├────────────────────────────────────────────────────────────────────┤ \\
