@@ -26,6 +26,8 @@
 	--main-font: Helvetica, sans-serif;
 
 	--pane-border-radius: 1.2em;
+	--header-border-radius: 1.2em;
+	--header-line-width: 0px;
 	--pane-padding:0.6em;
 	--dialog-border-radius:2em;
 	--border-width:2px;
@@ -43,7 +45,7 @@
     position:absolute;
     bottom:0px;
     min-height:1.5em;
-    border-width: 1px;
+    border-width: var(--border-width);
     border-style:solid;
     width: 100%;
     background-color: var(--box-bg-color);
@@ -1262,6 +1264,8 @@ ul, ol {
 	padding: var(--pane-padding);
 	border-radius: var(--pane-border-radius);
 	border-style: var(--border-style);
+	border-width: var(--border-width);
+
 	border-color: var(--border-color);
 	margin: 0px;
 	overflow: hidden;
@@ -1276,8 +1280,10 @@ ul, ol {
 
 .gridster .gs_w header{
 	border: none;
-	border-bottom: 1px solid;
-	border-style: solid;
+	border-radius: var(--header-border-radius);
+	border-bottom-style: solid;
+	border-bottom-width: var(--header-line-width);
+	
 	border-color: var(--border-color);
 }
 
@@ -2207,7 +2213,7 @@ h2.title {
 	.title.bordered {
 		padding: 1px 8px;
 		line-height: 25px;
-		border-width: 2px;
+		border-width: var(--border-width);
 	}
 
 	#admin-menu {

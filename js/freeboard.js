@@ -3560,6 +3560,16 @@ globalSettingsSchema= {
                     enum: ['0px','1px','2px','3px','4px','5px']
                 },
 
+                "--header-border-radius":
+                {                   
+                    type: "string",
+                    enum: ['0em','1em','2em','3em','4em','5em']
+                },
+                "--header-line-width":
+                {                   
+                    type: "string",
+                    enum: ['0px','1px','2px','3px']
+                },
                 "--pane-padding":
                 {                   
                     type: "string",
