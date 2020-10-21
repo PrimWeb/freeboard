@@ -1721,16 +1721,17 @@ PluginEditor = function(jsEditor, valueEditor)
 										fontfamily:
 										{
 											fontList:[
-												{name: 'Seriff', family: 'serif'},
-												{name: 'Sans', family: 'sans-serif'},
-												{name: 'Monospace', family: 'monospace'},
-												{name: 'Cursive', family: 'cursive'},
+												{name: 'Seriff', family: 'FBSerif'},
+												{name: 'Color Emoji', family: 'NotoColorEmoji'},
+												{name: 'Sans', family: 'FBSans'},
+												{name: 'Monospace', family: 'FBMono'},
+												{name: 'Cursive', family: 'FBCursive'},
 												{name: 'Pandora', family: 'Pandora'},
 												{name: 'Chalkboard', family: 'Chalkboard'},
 												{name: 'Handwriting', family: 'Handwriting'},
 												{name: 'Rough Script', family: 'RoughScript'},
 												{name: 'Chancery', family: 'Chancery'},
-												{name: 'Comic', family: 'Comic'},
+												{name: 'Comic', family: 'FBComic'},
 												{name: 'Blackletter', family: 'Blackletter'},
 												{name: 'Stencil', family: 'Stencil'},
 												{name: 'Pixel', family: 'Pixel'},
@@ -2779,7 +2780,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				}
 				else
 				{
-					self.dataTargets[settingDef.name]==function(v){};
+					self.dataTargets[settingDef.name]=function(v){};
 				}
 			}
 		};
@@ -3528,6 +3529,19 @@ globalSettingsSchema= {
 
                 "--main-font":{                   
                     type: "string",
+                    enum: ['FBSans','FBSerif','Chalkboard','Chancery','Pandora','RoughScript','Handwriting',"B612","FBMono","Blackletter","FBComic","Pixel","QTBlackForest","Pixel","FBCursive"]
+                },
+                "--title-font":{                   
+                    type: "string",
+                    enum: ['FBSans','FBSerif','Chalkboard','Chancery', 'Pandora','RoughScript','Handwriting',"B612","FBMono","Blackletter","FBComic","Pixel","QTBlackForest","Pixel","FBCursive"]
+                },
+                "--main-font-size":{                   
+                    type: "string",
+                    enum: ['small','medium','large','x-large','xx-large']
+                },
+                "--title-font-size":{                   
+                    type: "string",
+                    enum: ['small','medium','large','x-large','xx-large']
                 },
                 "--fg-color":
                 {                   

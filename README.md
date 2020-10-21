@@ -32,6 +32,7 @@ freeboard(fork!)
 * Clock widget has custom strftime string capability
 
 * Always-available libraries are now part of the core: Luxon, Raphael, Math, Keyboard, Strftime
+* The UI tries to render emoji with the Noto Color font(included) and supports FontAwesome glyphs wherever you want to paste them.
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 

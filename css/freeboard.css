@@ -637,6 +637,9 @@ div.CodeMirror-cursors {
 	--dialog-bg: rgba(0,0,0,0.25);
 	--highlight-color:  rgb(153, 235, 0);
 	--main-font: Helvetica, sans-serif;
+	--title-font: Helvetica, sans-serif;
+	--main-font-size: initial;
+	--title-font-size:initial;
 
 	--pane-border-radius: 1.2em;
 	--header-border-radius: 1.2em;
@@ -682,16 +685,24 @@ Note use of generic font names
         font-family: FontAwesome;
         src: url(fontawesome-webfont.woff2);
         font-weight: 400;
-        font-style: normal;
+		font-style: normal;
+		unicode-range:  U+E000-U+F8FF;
+	}
+
+	
+@font-face {
+		font-family: NotoColorEmoji;
+		src: url(fonts/NotoColorEmoji.woff);
+	}
+	
+@font-face {
+        font-family: FBSerif;
+		src: url(fonts/Lora-Regular.ttf);
+		font-size: ;
 	}
 
 @font-face {
-        font-family: serif;
-        src: url(fonts/Lora-Regular.ttf);
-	}
-
-@font-face {
-        font-family: monospace;
+        font-family: FBMono;
         src: url(fonts/Hack-Regular.ttf);
 
 	}
@@ -702,7 +713,7 @@ Note use of generic font names
 	}
 
 @font-face {
-        font-family: Comic;
+        font-family: FBComic;
         src: url(fonts/ComicRelief.ttf);
 
 	}
@@ -710,7 +721,6 @@ Note use of generic font names
 @font-face {
         font-family: Pandora;
         src: url(fonts/QTPandora.otf);
-
 	}
 
 @font-face {
@@ -743,7 +753,7 @@ Note use of generic font names
 	}
 
 @font-face {
-        font-family: cursive;
+        font-family: FBCursive;
         src: url(fonts/Tangerine-Regular.ttf);
 
 	}
@@ -824,7 +834,7 @@ html {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	font-family: var(--main-font); /* 1 */
+	font-family: var(--main-font), 'FontAwesome', 'NotoColorEmoji'; /* 1 */
 	-ms-text-size-adjust: 100%; /* 2 */
 	-webkit-text-size-adjust: 100%; /* 2 */
 }
@@ -1180,6 +1190,8 @@ html {
 
 {
 	background-color: var(--main-bg-color);
+	font-family: 'NotoColorEmoji', var(--title-font);
+	font-size: var(--title-font-size);
 	border-bottom: #000 1px solid;
 }
 .jsgrid-insert-row, .jsgrid-insert-row>.jsgrid-cell
@@ -1224,7 +1236,7 @@ body {
 	background-size: var(--main-bg-size);
 	
 	color: var(--fg-color);
-	font-family: var(--main-font), "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: var(--main-font), 'FontAwesome', 'NotoColorEmoji';
 	font-size: 14px;
 	line-height: 20px;
 	height: 100%;
@@ -1262,6 +1274,8 @@ body {
 	border-color: var(--border-color);
 	border-radius: var(--dialog-border-radius);
 	border-style: var(--border-style);
+	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-size: var(--title-font-size);
 }
 
 .modal footer {
@@ -1592,6 +1606,8 @@ a:focus {
 
 .gridster header {
 	background-color: var(--header-bg-color);
+	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-size: var(--title-font-size);
 	height: 30px;
 	margin: 0;
 	padding: 0 10px 0 10px;
@@ -1599,7 +1615,8 @@ a:focus {
 }
 
 header h1 {
-	font-size: 12px;
+	font-family: 'NotoColorEmoji', var(--title-font),'FontAwesome';
+	font-size: var(--title-font-size);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1736,7 +1753,9 @@ header h1 {
 }
 
 .sub-section h2 {
-	font-size: 14px;
+	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-size: var(--title-font-size);
+	
 	font-weight: normal;
 	padding: 0px;
 	margin: 0px;
@@ -1896,6 +1915,8 @@ ul, ol {
 	border-radius: var(--header-border-radius);
 	border-bottom-style: solid;
 	border-bottom-width: var(--header-line-width);
+	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-size: var(--title-font-size);
 	
 	border-color: var(--border-color);
 }
@@ -2761,7 +2782,8 @@ ul.datasource-input-suffix {
 }
 
 .title {
-	font-family: 'Helvetica-Neue', 'Helvetica', 'Arial', sans-serif;
+	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-size: var(--title-font-size);
 	vertical-align: baseline;
 	-webkit-font-smoothing: antialiased;
 	font-style: normal;
