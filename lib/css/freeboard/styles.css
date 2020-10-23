@@ -15,6 +15,8 @@
 	--main-bg-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='12' viewBox='0 0 20 12'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='charlie-brown' fill='%23302145' fill-opacity='0.2'%3E%3Cpath d='M9.8 12L0 2.2V.8l10 10 10-10v1.4L10.2 12h-.4zm-4 0L0 6.2V4.8L7.2 12H5.8zm8.4 0L20 6.2V4.8L12.8 12h1.4zM9.8 0l.2.2.2-.2h-.4zm-4 0L10 4.2 14.2 0h-1.4L10 2.8 7.2 0H5.8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 	--box-bg-color:#444659d7;
 	--widget-bg-color: #A1A1A1;
+	--widget-fg-color: black;
+
 	--border-color: #26362f;
 	--bar-bg-color: #534152;
 	--fg-color: #cfcfcf;
@@ -23,10 +25,10 @@
 	--greyout-color: rgba(200,200,200,0.8);
 	--dialog-bg: rgba(0,0,0,0.25);
 	--highlight-color:  rgb(153, 235, 0);
-	--main-font: Helvetica, sans-serif;
-	--title-font: Helvetica, sans-serif;
+	--main-font: FBSerif, sans-serif;
+	--title-font: DIN, sans-serif;
 	--main-font-size: initial;
-	--title-font-size:initial;
+	--title-font-size:large;
 
 	--pane-border-radius: 1.2em;
 	--header-border-radius: 1.2em;
@@ -35,12 +37,22 @@
 	--dialog-border-radius:2em;
 	--border-width:2px;
 	--border-style: solid;
-	--button-fg-color: #b1b1b1;
+	--widget-border-radius: 0.6em;
 
 
 	--header-fg-color: white;
 	--header-bg-color:#444659;
 	--error-color: red;
+	--widget-font: var(--main-font);
+	--widget-font-size: var(--main-font-size);
+
+	--label-bg-color: rgba(0,0,0,0);
+	--label-fg-color: var(--fg-color);
+
+	--title-shadow: rgba(0,0,0,0);
+
+	/*This value MUST be in pixels*/
+	--title-line-height: 20px;
   }
 
 #freeboard-extra-tools{
@@ -63,7 +75,7 @@
 
 /*JSON editor*/
 .je-modal{
-	background: var(--widget-bg-color);
+	background: var(--box-bg-color) !important;
 }
 /*
 Note use of generic font names
@@ -85,7 +97,6 @@ Note use of generic font names
 @font-face {
         font-family: FBSerif;
 		src: url(fonts/Lora-Regular.ttf);
-		font-size: ;
 	}
 
 @font-face {
@@ -107,7 +118,7 @@ Note use of generic font names
 
 @font-face {
         font-family: Pandora;
-        src: url(fonts/QTPandora.otf);
+		src: url(fonts/QTPandora.otf);
 	}
 
 @font-face {
@@ -118,8 +129,7 @@ Note use of generic font names
 
 @font-face {
         font-family: Chancery;
-        src: url(fonts/QTChanceryType-Italic.otf);
-
+		src: url(fonts/QTChanceryType-Italic.otf);
 	}
 @font-face {
         font-family: Blackletter;
@@ -129,8 +139,7 @@ Note use of generic font names
 
 @font-face {
         font-family: Handwriting;
-        src: url(fonts/QTHandwriting.otf);
-
+		src: url(fonts/QTHandwriting.otf);
 	}
 
 @font-face {
@@ -141,8 +150,7 @@ Note use of generic font names
 
 @font-face {
         font-family: FBCursive;
-        src: url(fonts/Tangerine-Regular.ttf);
-
+		src: url(fonts/Tangerine-Regular.ttf);
 	}
 
 @font-face {
@@ -160,6 +168,15 @@ Note use of generic font names
 @font-face {
 		font-family: B612;
 		src: url(fonts/B612-Regular.woff2);
+	}
+
+@font-face {
+		font-family: DIN;
+		src: url(fonts/Gidole-Regular.woff2);
+	}
+@font-face {
+		font-family: PenguinAttack;
+		src: url(fonts/PenguinAttack.woff2);
 	}
 article,
 aside,
@@ -443,8 +460,12 @@ input,
 select,
 textarea {
 	font-family: inherit; /* 1 */
-	font-size: 100%; /* 2 */
+	font-size: var(--widget-font-size); /* 2 */
 	margin: 0; /* 3 */
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: var(--widget-font);
+	border-radius: var(--widget-border-radius);
 }
 
 /**
@@ -624,7 +645,7 @@ body {
 	
 	color: var(--fg-color);
 	font-family: var(--main-font), 'FontAwesome', 'NotoColorEmoji';
-	font-size: 14px;
+	font-size: var(--main-font-size);
 	line-height: 20px;
 	height: 100%;
 	overflow-x: hidden;
@@ -716,10 +737,17 @@ body {
 	clear: both;
 }
 
+label{
+	font-weight: 500;
+	background-color: var(--label-bg-color);
+	color: var(--label-fg-color);
+
+	border-radius: var(--widget-border-radius);
+}
+
 .control-label {
 	padding-top: 5px;
 	text-align: right;
-	font-size: 11px;
 }
 
 .controls {
@@ -733,7 +761,9 @@ body {
 	padding: 4px 10px;
 	line-height: 23px;
 	vertical-align: middle;
-	font-size: 11px;
+
+
+	
 	min-width: 16px;
 }
 
@@ -748,7 +778,12 @@ body {
 select,
 textarea {
 	margin: 0;
-	font-size: 100%;
+
+	font-size: var(--widget-font-size); /* 2 */
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: var(--widget-font);
+	
 	vertical-align: middle;
 }
 
@@ -779,14 +814,17 @@ input[type="color"],
 	display: inline-block;
 	height: 20px;
 	padding: 4px 6px;
-	font-size: 14px;
 	line-height: 20px;
-	color: var(--fg-color);
 	vertical-align: middle;
 	-webkit-border-radius: 0px;
 	-moz-border-radius: 0px;
 	border-radius: -px;
 	width: 400px;
+
+	font-size: var(--widget-font-size); /* 2 */
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: var(--widget-font);
 }
 
 input,
@@ -874,6 +912,7 @@ h6 {
 	line-height: 20px;
 	color: inherit;
 	text-rendering: optimizelegibility;
+	text-shadow: 2px 2px 8px var(--title-shadow);
 }
 
 h1,
@@ -981,7 +1020,6 @@ a:active {
 }
 
 a {
-	color: var(--button-fg-color);
 	text-decoration: none;
 }
 
@@ -993,24 +1031,24 @@ a:focus {
 
 .gridster header {
 	background-color: var(--header-bg-color);
-	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-family: var(--title-font), 'FontAwesome','NotoColorEmoji';
 	font-size: var(--title-font-size);
-	height: 30px;
+	min-height: var(--title-line-height);
 	margin: 0;
 	padding: 0 10px 0 10px;
 	color: var(--header-fg-color);
 }
 
 header h1 {
-	font-family: 'NotoColorEmoji', var(--title-font),'FontAwesome';
+	font-family: var(--title-font),'FontAwesome','NotoColorEmoji';
 	font-size: var(--title-font-size);
 	white-space: nowrap;
-	overflow: hidden;
 	text-overflow: ellipsis;
 	padding: 0;
 	margin: 0;
-	line-height: 30px;
-}
+	line-height: var(--title-line-height);
+	font-weight: normal;
+	}
 
 .gridster section {
 	line-height: normal;
@@ -1140,7 +1178,7 @@ header h1 {
 }
 
 .sub-section h2 {
-	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-family: var(--title-font), 'FontAwesome','NotoColorEmoji';
 	font-size: var(--title-font-size);
 	
 	font-weight: normal;
@@ -1302,7 +1340,7 @@ ul, ol {
 	border-radius: var(--header-border-radius);
 	border-bottom-style: solid;
 	border-bottom-width: var(--header-line-width);
-	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-family: var(--title-font), 'FontAwesome','NotoColorEmoji';
 	font-size: var(--title-font-size);
 	
 	border-color: var(--border-color);
@@ -2021,14 +2059,14 @@ td.form-table-value > input[type="checkbox"] {
 }
 
 .value-editor-ds {
-	color: var(--button-fg-color);
+	color: var(--widget-fg-color);
 	cursor: pointer;
 }
 
 ul.board-toolbar {
 	padding: 0px;
 	margin: 0px;
-	font-size: 11px;
+	font-size: var(--main-font-size);
 }
 
 ul.board-toolbar.vertical {
@@ -2036,7 +2074,6 @@ ul.board-toolbar.vertical {
 }
 
 .board-toolbar li {
-	color: var(--button-fg-color);
 	float: left;
 	cursor: pointer;
 	margin: 0px 0px 0px 5px;
@@ -2074,7 +2111,11 @@ ul.board-toolbar.vertical {
 }
 
 .text-button {
-	color: var(--button-fg-color) ;
+	color: var(--widget-fg-color) ;
+	background-color: var(--widget-bg-color);
+	border-radius: var(--widget-border-radius);
+	font-family: var(--widget-font);
+	font-size: var(--widget-font-size);
 	cursor: pointer;
 }
 
@@ -2083,7 +2124,8 @@ ul.board-toolbar.vertical {
 }
 
 a:hover.text-button, a:focus.text-button {
-	color: var(--button-fg-color);
+	color: var(--widget-fg-color) ;
+	background-color: var(--widget-bg-color);
 	text-decoration: none;
 }
 
@@ -2169,7 +2211,7 @@ ul.datasource-input-suffix {
 }
 
 .title {
-	font-family: 'NotoColorEmoji', var(--title-font), 'FontAwesome';
+	font-family: var(--title-font), 'FontAwesome','NotoColorEmoji';
 	font-size: var(--title-font-size);
 	vertical-align: baseline;
 	-webkit-font-smoothing: antialiased;
@@ -2203,10 +2245,16 @@ h2.title {
 }
 
 .table-operation {
-	font-size: 11px;
+
 	padding-left: 5px;
 	padding-bottom: 5px;
 	padding-top: 1px;
+}
+
+/*Disable pull to refresh*/
+
+body {
+    overscroll-behavior: contain;
 }
 
 #add-pane {
@@ -2325,7 +2373,11 @@ h2.title {
 	}
 
 	.table-operation {
-		font-size: 11px;
+
+		font-size: var(--widget-font-size); /* 2 */
+		background-color: var(--widget-bg-color);
+		color: var(--widget-fg-color);
+		font-family: var(--widget-font);
 	}
 
 	textarea.calculated-value-input {
@@ -2501,8 +2553,12 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: var(--border-color);
+	border-color: var(--border-color);
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
 	-webkit-border-radius: 1ex;
+	border-radius: 1ex;
+	
 }
 
 ::-webkit-scrollbar-corner {
@@ -2627,7 +2683,7 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 
 @media screen and (max-width : 800px) {
 	.code-window-header {
-		font-size: 11px;
+		font-size: var(--main-font-size);
 	}
 }
 
