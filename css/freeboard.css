@@ -724,6 +724,22 @@ Note use of generic font names
 	}
 
 @font-face {
+        font-family: DSEG7;
+        src: url(fonts/DSEG7Classic-Regular.woff2);
+	}
+
+@font-face {
+        font-family: DSEG14;
+        src: url(fonts/DSEG14Classic-Regular.woff2);
+	}
+
+
+@font-face {
+        font-family: Pixel;
+        src: url(fonts/w95fa.woff2);
+	}
+
+@font-face {
         font-family: FBComic;
         src: url(fonts/ComicRelief.ttf);
 
@@ -1071,13 +1087,21 @@ legend {
 button,
 input,
 select,
-textarea {
-	font-family: inherit; /* 1 */
+{
 	font-size: var(--widget-font-size); /* 2 */
 	margin: 0; /* 3 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font);
+	border-radius: var(--widget-border-radius);
+}
+
+textarea{
+	font-size: var(--main-font-size); /* 2 */
+	margin: 0; /* 3 */
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: FBMono;
 	border-radius: var(--widget-border-radius);
 }
 
@@ -2730,6 +2754,16 @@ ul.board-toolbar.vertical {
 	font-family: var(--widget-font);
 	font-size: var(--widget-font-size);
 	cursor: pointer;
+	border-color:  var(--widget-fg-color);
+	border-width: 1px;
+	border-style: solid;
+}
+
+button{
+	font-size: var(--widget-font-size); /* 2 */
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: var(--widget-font);
 }
 
 .datasource-name {

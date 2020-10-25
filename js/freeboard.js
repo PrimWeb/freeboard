@@ -1749,7 +1749,9 @@ PluginEditor = function(jsEditor, valueEditor)
 												{name: 'Pixel', family: 'Pixel'},
 												{name: 'B612', family: 'B612'},
 												{name: 'DIN', family: 'DIN'},
-												{name: 'Penguin Attack', family: 'PenguinAttack'}
+												{name: 'Penguin Attack', family: 'PenguinAttack'},
+												{name: 'DSEG7', family: 'DSEG7'},
+												{name: 'DSEG14', family: 'DSEG14'}
 
 
 											]
@@ -3555,15 +3557,15 @@ globalSettingsSchema = {
 
                 "--main-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--title-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--widget-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--main-font-size": {
                     type: "string",
@@ -3648,6 +3650,26 @@ globalSettingsSchema = {
                         'colorpicker': {
                             'editorFormat': 'rgb',
                             'alpha': true
+                        }
+                    }
+                },
+                "--label-fg-color":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                        }
+                    }
+                },
+                "--title-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
                         }
                     }
                 },

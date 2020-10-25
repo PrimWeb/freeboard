@@ -1749,7 +1749,9 @@ PluginEditor = function(jsEditor, valueEditor)
 												{name: 'Pixel', family: 'Pixel'},
 												{name: 'B612', family: 'B612'},
 												{name: 'DIN', family: 'DIN'},
-												{name: 'Penguin Attack', family: 'PenguinAttack'}
+												{name: 'Penguin Attack', family: 'PenguinAttack'},
+												{name: 'DSEG7', family: 'DSEG7'},
+												{name: 'DSEG14', family: 'DSEG14'}
 
 
 											]
@@ -3555,15 +3557,15 @@ globalSettingsSchema = {
 
                 "--main-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--title-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--widget-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
                 },
                 "--main-font-size": {
                     type: "string",
@@ -3648,6 +3650,26 @@ globalSettingsSchema = {
                         'colorpicker': {
                             'editorFormat': 'rgb',
                             'alpha': true
+                        }
+                    }
+                },
+                "--label-fg-color":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                        }
+                    }
+                },
+                "--title-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
                         }
                     }
                 },
@@ -3877,22 +3899,28 @@ function uuidv4() {
 
 		self.arrayController =
 		{
-			insertItem: function(f){
-				self.data.push(f)
-			},
-			deleteItem: function(d){
-				self.data = _.without(self.data,d)
-			},
+		
 			deleteItem: function(d){
 				var x = 0
-				for(i in self.data)
+				for(i of self.data)
 				{
 					if(i._uuid==d._uuid)
 					{
 						self.data = _.without(self.data,i)
 					}
 				}
-				self.data.push(f)
+				self.dataTargets['data'](self.data)
+				
+			},
+			updateItem: function(d){
+				var x = 0
+				for(i of self.data)
+				{
+					if(i._uuid==d._uuid)
+					{
+						Object.assign(i,d);
+					}
+				}
 				self.dataTargets['data'](self.data)
 				
 			},
@@ -3926,6 +3954,23 @@ function uuidv4() {
 					return {data:d, itemsCount:self.data.length}
 				}
 				return f()
+			}
+
+		}
+
+
+		self.acceptData = function(x){
+			if(x==0)
+			{
+				x = self.data
+			}
+			
+			self.data=x;
+
+			//Normalize by adding the special DB properties.
+			for (f in self.data)
+			{
+				normalize(f)
 			}
 
 		}
@@ -3973,7 +4018,8 @@ function uuidv4() {
                 fields: self.currentSettings.columns||[]
                 
             });
-        }
+		}
+		$(theGridbox).jsGrid('refresh');
             
 
 
@@ -4022,9 +4068,6 @@ function uuidv4() {
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
-            $(theGridbox).attr('pattern', newSettings.pattern);
-            $(theGridbox).attr('placeholder', newSettings.placeholder);
-            $(theGridbox).attr('tooltip', newSettings.placeholder);
 
 		}
 
@@ -4044,7 +4087,11 @@ function uuidv4() {
 				{
 					newValue=newValue[0]
 				}
-                self.refreshGrid(newValue||[])
+				self.acceptData(newValue||[])
+				$(theGridbox).jsGrid('refresh');
+
+				
+	
 			}
 			
 		}
