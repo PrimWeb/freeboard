@@ -7,6 +7,43 @@
 // ├────────────────────────────────────────────────────────────────────┤ \\
 // │ Freeboard widget plugin.                                           │ \\
 // └────────────────────────────────────────────────────────────────────┘ \\
+
+
+var Button = function(config) {
+	jsGrid.Field.call(this, config);
+};
+ 
+Button.prototype = new jsGrid.Field({
+ 
+	align: "center", // redefine general property 'align'
+			  
+	sorter: function(date1, date2) {
+		return 0;
+	},
+ 
+	itemTemplate: function(value,item) {
+		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+	},
+ 
+	insertTemplate: function(value,item) {
+		return ""
+	},
+ 
+	editTemplate: function(value,item) {
+		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+	},
+ 
+	insertValue: function() {
+		return ''
+	},
+ 
+	editValue: function() {
+		return ''
+	}
+});
+ 
+jsGrid.fields.button = Button;
+
 function uuidv4() {
 	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
 	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -57,7 +94,14 @@ function uuidv4() {
 				"default_value": ""
             },
 			
-			
+			{
+				"name": "selection",
+				"display_name": "Selection",
+				'description':"Selection gets assigned here. If no selection, empty obj.  Set obj._arrival to save changes back to array(The data doesn't matter, it reads as the time when it was set.)",
+				"type": "target",
+				"default_value": ""
+			},
+				
 			{
 				"name": "data",
 				"display_name": "Direct data array",
@@ -141,7 +185,7 @@ function uuidv4() {
 
 		self.currentSettings = settings;
 
-		self.data = settings['data'] || [] 
+		self.data = []
 
 		var thisWidgetId = "datagrid-" + SLIDER_ID++;
 		var thisWidgetContainer = $('<div class="datagrid-widget datagrid-label" id="__' + thisWidgetId + '"></div>');
@@ -153,6 +197,38 @@ function uuidv4() {
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
+		self.backend = 0
+
+
+		//When operating with direct data, we wrap the row that we give to selection targets so
+		//that they can use it to edit stuff, and have the grid auto-update.
+
+		//When we use a backend, it is expected that the backend object will provide the listeners.
+		self.makeExternalEditRow= function(d){
+			var m={
+				set: function(o,k,v)
+				{
+
+					//We use time-triggered updates.
+					//Saving a record is done by putting a listener on the arrival time.
+					//The value we set is irrelevant, it is always set to the current time.
+					if (k=='_arrival')
+					{
+						o._arrival= Date.now()*1000
+						self.upsert(o)
+						$(theGridbox).jsGrid('refresh');
+					}
+					else{
+						//If we make a local change, update the timestamp to tell about it.
+						o.__time= Date.now()*1000
+						o[k]=v;
+					}
+				}
+			}
+
+			return new Proxy(d,m)
+		}
+
 		//Cleans up the data, so it has all the Freeboard DB spec required keys.
 		var normalize = function(f)
 		{
@@ -162,11 +238,49 @@ function uuidv4() {
 			f._arrival = f._arrival || f._time
 		}
 
+
+		self.upsert = function(d){
+			var x = 0
+			if(!d)
+			{
+				return;
+			}
+
+			for(i of self.data)
+			{
+				if(i._uuid==d._uuid)
+				{
+					//No need to do anything, user never actually updated anything.
+					if(_.isMatch(i, d))
+					{
+						return;
+					}
+					Object.assign(i,d);
+					self.dataTargets['data'](self.data)
+					return;
+				}
+			}
+
+			normalize(d)
+
+			if(self.data == undefined || self.data=='')
+			{
+				self.data = []
+			}
+			self.data.push(d)
+			self.dataTargets['data'](self.data)
+		}
+		
+
 		self.arrayController =
 		{
 		
 			deleteItem: function(d){
 				var x = 0
+				if(_.isMatch(i.selection, d))
+				{
+					self.setSelection({})
+				}
 				for(i of self.data)
 				{
 					if(i._uuid==d._uuid)
@@ -177,25 +291,8 @@ function uuidv4() {
 				self.dataTargets['data'](self.data)
 				
 			},
-			updateItem: function(d){
-				var x = 0
-				for(i of self.data)
-				{
-					if(i._uuid==d._uuid)
-					{
-						Object.assign(i,d);
-					}
-				}
-				self.dataTargets['data'](self.data)
-				
-			},
-			insertItem: function(f){
-				normalize(f)
-
-
-				self.data.push(f)
-				self.dataTargets['data'](self.data)
-			},
+			updateItem: self.upsert,
+			insertItem: self.upsert,
 			loadData: function(filter)
 			{
 				var q = nSQL(self.data||[]).query('select')
@@ -221,6 +318,10 @@ function uuidv4() {
 				return f()
 			}
 
+		}
+
+		self.setSelection = function(d){
+			self.dataTargets.selection(self.makeExternalEditRow(d))
 		}
 
 
@@ -262,6 +363,19 @@ function uuidv4() {
 			{
 				self.dataTargets['data']([self.data, Date.now()*1000]);
 			}
+
+
+			var columns = {}
+			for(i of self.currentSettings.columns||[])
+			{
+				var c = {}
+				Object.assign(c,i)
+
+				if(c.type=="SelectButton")
+				{
+					
+				}
+			}
             $(theGridbox).jsGrid({
                 width: "95%",
                 height: "250px",
@@ -275,12 +389,15 @@ function uuidv4() {
 				onItemDeleted: writebackData,
 				onItemUpdated: writebackData,
 				onItemInserted: writebackData,
+				rowClick: function(r){
+					self.setSelection(r.item)
+				},
 
 
          
-                controller: self.currentSettings.backend || self.arrayController,
+                controller: self.backend || self.arrayController,
          
-                fields: self.currentSettings.columns||[]
+                fields: columns
                 
             });
 		}
@@ -324,7 +441,7 @@ function uuidv4() {
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
-			if(settings.backend && settings.data)
+			if(newSettings.backend && newSettings.data)
 			{
 				throw new Error("Cannot use both the backend and the data options at the same time")
 			}
@@ -333,6 +450,8 @@ function uuidv4() {
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
+
+			self.setSelection({});
 
 		}
 
@@ -345,6 +464,14 @@ function uuidv4() {
                 self.refreshGrid(0)
 			}
 
+				
+			if(settingName=='backend')
+			{
+				self.backend=newValue;
+				self.refreshGrid(0)
+			}
+
+
 			if(settingName=='data')
 			{
 				//Value, timestamp pair
@@ -352,11 +479,9 @@ function uuidv4() {
 				{
 					newValue=newValue[0]
 				}
+
 				self.acceptData(newValue||[])
 				$(theGridbox).jsGrid('refresh');
-
-				
-	
 			}
 			
 		}
@@ -364,7 +489,7 @@ function uuidv4() {
 
 		// **onDispose()** (required) : Same as with datasource plugins.
 		self.onDispose = function () {
-            $(theGridbox).jsGrid('destroy');
+			$(theGridbox).jsGrid('destroy');
 		}
 	}
 }());
@@ -550,7 +675,7 @@ function uuidv4() {
 		var target;
 
 		self.clickCount = 0;
-		self.value = settings.value || ''
+		self.value = ''
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
@@ -2431,7 +2556,7 @@ freeboard.loadDatasourcePlugin({
                     // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
                     "display_name" : "Default Data(as JSON or JS expression)",
                     // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
-                    "type"         : "text",
+                    "type"         : "calculated",
                     // **default_value** : A default value for this setting.
                     "default_value": "={}",
                     "options" : function(){
@@ -2442,7 +2567,44 @@ freeboard.loadDatasourcePlugin({
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
                     "required" : true
 				},
+
+				 {
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "persist",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Persistance Mode",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "option",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "off",
+					'options':[
+						{
+							'name': 'Off',
+							'value': 'off'
+						},
+						{
+							'name': 'Board',
+							'value': 'board'
+						},
+					],
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "off: no persistance,  board: changes are passed to the Default Data field and can be exported with the board.",
+                    // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
+                    "required" : true
+				},
 				
+
+				{
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "lock",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Lock data(read only)",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "boolean",
+                    // **default_value** : A default value for this setting.
+                    "default_value": false,
+				},
+
 				{
                     // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
                     "name"         : "",
@@ -2452,15 +2614,54 @@ freeboard.loadDatasourcePlugin({
 					
                     // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
                     "type"         : "button",
-                    // **default_value** : A default value for this setting.
-                    "default_value": "={}",
+                    
                     'onclick': function(n,i){
 						freeboard.showDialog(JSON.stringify(i.data),"Debug data for: "+n+" (non-JSON not shown)","OK")
 					},
                     // **description** : Text that will be displayed below the setting to give the user any extra information.
                     "description"  : "",
                   
-                }
+				},
+				
+
+
+
+				{
+					  // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+					  "name"         : "",
+					  // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					  "display_name" : "",
+					  'html': "Show current data in JSON editor",
+					  
+					  // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+					  "type"         : "button",
+					
+					
+					  // **description** : Text that will be displayed below the setting to give the user any extra information.
+					  "description"  : "",
+
+					'onclick': function(n,i){
+						var x = []
+						freeboard.showDialog($('<div id="fb-global-json-editor">'),"Debug data for: "+n+" (non-JSON not shown)","OK","Cancel",
+						function(){
+							Object.assign(i.proxy, x[0].getValue());
+							x[0].destroy();
+						},
+						function(){
+							x[0].destroy();
+						}
+						)
+
+						var Editor = new JSONEditor(document.getElementById('fb-global-json-editor'), {schema:{}
+							
+						});
+						x.push(Editor);
+						Editor.setValue(i.data)
+					
+	
+
+					}
+				}
 			
 		],
 		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
@@ -2490,12 +2691,24 @@ freeboard.loadDatasourcePlugin({
         self.handler={
 			set: function(obj,prop,val)
 			{
+				if(currentSettings.lock)
+				{
+					throw new Error("Cannot change this. It is locked in the datasource settings")
+				}
 				obj[prop]=val;
-				updateCallback(self.proxy)
+				updateCallback(self.proxy);
+
+				//Update the default settings field
+				if (currentSettings.persist=='board')
+				{
+					currentSettings.data = "="+JSON.stringify(obj)
+					freeboard.setDatasourceSettings(currentSettings.name, obj)
+				}
+				return true;
 			}
 
         }
-        self.data=freeboard.eval(settings['data'])
+        self.data={}
         self.proxy = new Proxy(self.data, self.handler)
         
 
@@ -2518,9 +2731,18 @@ freeboard.loadDatasourcePlugin({
 		{
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
-            self.data =  freeboard.eval(newSettings['data']);
 
             updateCallback(self.proxy)
+		}
+		self.onCalculatedSettingChanged=function(k,v)
+		{
+			if(k=='data')
+			{
+				self.data = v;
+				self.proxy = new Proxy(self.data, self.handler)
+				updateCallback(self.proxy);
+
+			}
 		}
 
 		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
@@ -3049,7 +3271,7 @@ freeboard.loadDatasourcePlugin({
 		//console.log( "theTextbox ", theTextbox);
 
 		titleElement.html(self.currentSettings.title);
-		self.value = self.currentSettings.value || 0;
+		self.value = ''
 
 		var requestChange = false;
 		var target;

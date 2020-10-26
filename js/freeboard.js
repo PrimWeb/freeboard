@@ -28,7 +28,7 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 			}
 			catch(e)
 			{
-				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings")
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings","OK")
 				throw e;
 			}
 		}
@@ -47,6 +47,10 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 	this.type = '';
 	this.setType = async function(newValue)
 	{
+		if(self.type==newValue)
+		{
+			return;
+		}
 		self.type=newValue;
 
 		disposeDatasourceInstance();
@@ -214,7 +218,7 @@ DeveloperConsole = function(theFreeboardModel)
 	}
 }
 
-function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback)
+function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cancelCallback)
 {
 	var modal_width = 900;
 
@@ -261,6 +265,12 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback)
 	{
 		$('<span id="dialog-cancel" class="text-button">' + cancelTitle + '</span>').appendTo(footer).click(function()
 		{
+			if(_.isFunction(cancelCallback))
+			{
+				cancelCallback();
+			}
+
+
 			closeModal();
 		});
 	}
@@ -1444,18 +1454,13 @@ PluginEditor = function(jsEditor, valueEditor)
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
 			.mousedown(function(e) {
 				e.preventDefault();
-				if($(input).is(":focus"))
+	
+				if($(input).val().length==0)
 				{
-					if($(input).val().length=0)
-					{
-						$(input).insertAtCaret('=')
-					}
-					$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
+					$(input).insertAtCaret('=')
 				}
-				else
-				{
-					$(input).val("").focus().insertAtCaret("=datasources[\"").trigger("freeboard-eval");
-				}
+				$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
+	
 			});
 		}
 		datasourceToolbox.append(datasourceTool);
@@ -1554,7 +1559,7 @@ PluginEditor = function(jsEditor, valueEditor)
 
 							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
                             
-                                if(subSettingDef.type in ['text', 'datasource'] && subSettingDef.options)
+                                if(subSettingDef.type in ['text', 'datasource','target'] && subSettingDef.options)
                                 {
                                     $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
                                     $.each(subSettingDef.options(), function(i, item) {
@@ -2542,8 +2547,13 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	//Note that we don't have any way to wait on the newinstance function
 	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
 	//clearly doesn't care about waiting
-	this.setType = async function (newValue) {
+	this.setType = async function (newValue,settings) {
+		if(self.type==newValue)
+		{
+			return;
+		}
 		self.type=newValue
+
 		disposeWidgetInstance();
 		await self.updateCalculatedSettings();
 
@@ -2592,7 +2602,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
 			try{
-				await self.widgetInstance.onSettingsChanged(this.calculatedSettings);
+				await self.widgetInstance.onSettingsChanged(this.settings);
 			}
 			catch(e)
 			{
@@ -3460,9 +3470,9 @@ var freeboard = (function()
 		{
 			freeboardUI.showLoadingIndicator(show);
 		},
-		showDialog          : function(contentElement, title, okTitle, cancelTitle, okCallback)
+		showDialog          : function(contentElement, title, okTitle, cancelTitle, okCallback,cancelCallback)
 		{
-			new DialogBox(contentElement, title, okTitle, cancelTitle, okCallback);
+			new DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cancelCallback);
 		},
         getDatasourceSettings : function(datasourceName)
         {

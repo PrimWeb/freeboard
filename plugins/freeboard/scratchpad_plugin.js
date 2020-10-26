@@ -33,7 +33,7 @@
                     // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
                     "display_name" : "Default Data(as JSON or JS expression)",
                     // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
-                    "type"         : "text",
+                    "type"         : "calculated",
                     // **default_value** : A default value for this setting.
                     "default_value": "={}",
                     "options" : function(){
@@ -44,7 +44,44 @@
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
                     "required" : true
 				},
+
+				 {
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "persist",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Persistance Mode",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "option",
+                    // **default_value** : A default value for this setting.
+                    "default_value": "off",
+					'options':[
+						{
+							'name': 'Off',
+							'value': 'off'
+						},
+						{
+							'name': 'Board',
+							'value': 'board'
+						},
+					],
+                    // **description** : Text that will be displayed below the setting to give the user any extra information.
+                    "description"  : "off: no persistance,  board: changes are passed to the Default Data field and can be exported with the board.",
+                    // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
+                    "required" : true
+				},
 				
+
+				{
+                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+                    "name"         : "lock",
+                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+                    "display_name" : "Lock data(read only)",
+                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+                    "type"         : "boolean",
+                    // **default_value** : A default value for this setting.
+                    "default_value": false,
+				},
+
 				{
                     // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
                     "name"         : "",
@@ -54,15 +91,54 @@
 					
                     // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
                     "type"         : "button",
-                    // **default_value** : A default value for this setting.
-                    "default_value": "={}",
+                    
                     'onclick': function(n,i){
 						freeboard.showDialog(JSON.stringify(i.data),"Debug data for: "+n+" (non-JSON not shown)","OK")
 					},
                     // **description** : Text that will be displayed below the setting to give the user any extra information.
                     "description"  : "",
                   
-                }
+				},
+				
+
+
+
+				{
+					  // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+					  "name"         : "",
+					  // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					  "display_name" : "",
+					  'html': "Show current data in JSON editor",
+					  
+					  // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+					  "type"         : "button",
+					
+					
+					  // **description** : Text that will be displayed below the setting to give the user any extra information.
+					  "description"  : "",
+
+					'onclick': function(n,i){
+						var x = []
+						freeboard.showDialog($('<div id="fb-global-json-editor">'),"Debug data for: "+n+" (non-JSON not shown)","OK","Cancel",
+						function(){
+							Object.assign(i.proxy, x[0].getValue());
+							x[0].destroy();
+						},
+						function(){
+							x[0].destroy();
+						}
+						)
+
+						var Editor = new JSONEditor(document.getElementById('fb-global-json-editor'), {schema:{}
+							
+						});
+						x.push(Editor);
+						Editor.setValue(i.data)
+					
+	
+
+					}
+				}
 			
 		],
 		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
@@ -92,12 +168,24 @@
         self.handler={
 			set: function(obj,prop,val)
 			{
+				if(currentSettings.lock)
+				{
+					throw new Error("Cannot change this. It is locked in the datasource settings")
+				}
 				obj[prop]=val;
-				updateCallback(self.proxy)
+				updateCallback(self.proxy);
+
+				//Update the default settings field
+				if (currentSettings.persist=='board')
+				{
+					currentSettings.data = "="+JSON.stringify(obj)
+					freeboard.setDatasourceSettings(currentSettings.name, obj)
+				}
+				return true;
 			}
 
         }
-        self.data=freeboard.eval(settings['data'])
+        self.data={}
         self.proxy = new Proxy(self.data, self.handler)
         
 
@@ -120,9 +208,18 @@
 		{
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
-            self.data =  freeboard.eval(newSettings['data']);
 
             updateCallback(self.proxy)
+		}
+		self.onCalculatedSettingChanged=function(k,v)
+		{
+			if(k=='data')
+			{
+				self.data = v;
+				self.proxy = new Proxy(self.data, self.handler)
+				updateCallback(self.proxy);
+
+			}
 		}
 
 		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource

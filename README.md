@@ -15,7 +15,7 @@ freeboard(fork!)
 * If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
 * v,t pairs ensure data always changes on interaction.
 
-* There's a basic "scratchpad" data source for storing your variables
+* There's a basic "scratchpad" data source for storing your variables.  It even has a persistane option, that makes it's data exportable as part of the board.
 * Button, textbox, slider widgets
 
 * WidgetInstance.processCalculatedSetting(settingName) is a public API function that widgets can use to force a refresh of a Calculated value.  But it is async!!
@@ -26,8 +26,9 @@ freeboard(fork!)
 
 * We use FontAwesome.  Everything just works if you run directly, but if you embed, you may have to override the path to  @font-face FontAwesome with the right file.
 * Datasources have a new setting type: button.  It takes an 'html' content param and an 'onclick' function that gets passed the (settungs,instanceobj)
-* New widget setting type: trumbowyg-html, which works like text, except you get a WYSYWIG editor wiht drag and drop image support(cpnverts to data URI)
-* "Rich text content" widget, allows mustache templating withing WYSYWIG edited HTML
+
+* New widget setting type: trumbowyg-html, which works like the text widget, except you get a WYSYWIG editor wiht drag and drop image support(cpnverts to data URI)
+* The "Rich text content" widget allows mustache templating withing WYSYWIG edited HTML
 
 * Clock widget has custom strftime string capability
 
@@ -143,7 +144,7 @@ Show/hide the loading indicator. The loading indicator will display an indicator
 
 -------
 
-**freeboard.showDialog(contentElement, title, okButtonTitle, cancelButtonTitle, okCallback)**
+**freeboard.showDialog(contentElement, title, okButtonTitle, cancelButtonTitle, okCallback, cancelCallback)**
 
 Show a styled dialog box with custom content.
 

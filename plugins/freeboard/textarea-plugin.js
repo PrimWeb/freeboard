@@ -110,7 +110,7 @@
 		//console.log( "theTextbox ", theTextbox);
 
 		titleElement.html(self.currentSettings.title);
-		self.value = self.currentSettings.value || 0;
+		self.value = ''
 
 		var requestChange = false;
 		var target;

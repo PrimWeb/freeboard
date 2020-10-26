@@ -92,7 +92,7 @@
 		var target;
 
 		self.clickCount = 0;
-		self.value = settings.value || ''
+		self.value = ''
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
