@@ -64,7 +64,9 @@ module.exports = function(grunt) {
 					'lib/js/freeboard/ValueEditor.js',
 					'lib/js/freeboard/WidgetModel.js',
 					'lib/js/freeboard/freeboard.js',
-                    'lib/js/freeboard/globalSettingsSchema.js',
+                    'lib/js/freeboard/globalSettingsSchema.js',                  
+                    'lib/js/freeboard/help.js',
+
 
 				],
 				dest : 'js/freeboard.js'

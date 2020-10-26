@@ -249,11 +249,6 @@ audio:not([controls]) {
 
 html {
 	-webkit-touch-callout: none;
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 	font-family: var(--main-font), 'FontAwesome', 'NotoColorEmoji'; /* 1 */
 	-ms-text-size-adjust: 100%; /* 2 */
 	-webkit-text-size-adjust: 100%; /* 2 */
@@ -361,7 +356,7 @@ code,
 kbd,
 pre,
 samp {
-	font-family: monospace, serif;
+	font-family: FBMono, FBSerif,'FontAwesome', 'NotoSansEmoji';
 	font-size: 1em;
 }
 
@@ -479,7 +474,7 @@ select,
 	margin: 0; /* 3 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
-	font-family: var(--widget-font);
+	font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 	border-radius: var(--widget-border-radius);
 }
 
@@ -488,7 +483,7 @@ textarea{
 	margin: 0; /* 3 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
-	font-family: FBMono;
+	font-family: FBMono, NotoSansEmoji, FontAwesome;
 	border-radius: var(--widget-border-radius);
 }
 
@@ -806,7 +801,7 @@ textarea {
 	font-size: var(--widget-font-size); /* 2 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
-	font-family: var(--widget-font);
+	font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 	
 	vertical-align: middle;
 }
@@ -848,7 +843,7 @@ input[type="color"],
 	font-size: var(--widget-font-size); /* 2 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
-	font-family: var(--widget-font);
+	font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 }
 
 input,
@@ -2138,7 +2133,7 @@ ul.board-toolbar.vertical {
 	color: var(--widget-fg-color) ;
 	background-color: var(--widget-bg-color);
 	border-radius: var(--widget-border-radius);
-	font-family: var(--widget-font);
+	font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 	font-size: var(--widget-font-size);
 	cursor: pointer;
 	border-color:  var(--widget-fg-color);
@@ -2150,7 +2145,7 @@ button{
 	font-size: var(--widget-font-size); /* 2 */
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
-	font-family: var(--widget-font);
+	font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 }
 
 .datasource-name {
@@ -2411,7 +2406,7 @@ body {
 		font-size: var(--widget-font-size); /* 2 */
 		background-color: var(--widget-bg-color);
 		color: var(--widget-fg-color);
-		font-family: var(--widget-font);
+		font-family: var(--widget-font),'FontAwesome','NotoColorEmoji';
 	}
 
 	textarea.calculated-value-input {

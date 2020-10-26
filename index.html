@@ -20,6 +20,9 @@
         function showFreeboardHelp() {
             freeboard.showDialog(generateFreeboardHelp(), "Help", "Close")
         }
+        function showEmoji() {
+            freeboard.showDialog(generateFreeboardEmojiCheats(), "Help", "Close")
+        }
         head.js("js/freeboard_plugins.min.js",
             // *** Load more plugins here ***
             function () {
@@ -84,6 +87,8 @@
                     <div id="board-actions">
                         <ul class="board-toolbar vertical">
                             <li data-bind="click: showFreeboardHelp"><label>Show Help</label></li>
+                            <li data-bind="click: showEmoji"><label>Show Emoji</label></li>
+
                             <li data-bind="click: loadDashboardFromLocalFile"><i id="full-screen-icon"
                                     class="icon-folder-open icon-white"></i><label id="full-screen">Upload a
                                     board</label></li>
