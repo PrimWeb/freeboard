@@ -45,7 +45,9 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/keyboard.min.js',
                         'lib/js/thirdparty/math.min.js',
                         'lib/js/thirdparty/jsoneditor.min.js',
-                        'lib/js/thirdparty/vanillapicker.min.js'
+                        'lib/js/thirdparty/vanillapicker.min.js',
+                        'lib/js/thirdparty/howler.min.js'
+
 
                     ]
                 ],

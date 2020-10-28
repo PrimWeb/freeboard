@@ -453,7 +453,18 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	{
 		for(i in d.theme)
 		{
-				document.body.style.setProperty(i, d.theme[i])
+			var x = d.theme[i]
+
+			//Wrap URLs in the URL tag
+			if(i.includes('-image'))
+			{
+				if(x)
+				{
+					x = 'url('+x+')'
+				}
+
+			}
+			document.body.style.setProperty(i, x)
 		}
 	}
 
@@ -3316,6 +3327,25 @@ var freeboard = (function()
 		  globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		  globalSettings = theFreeboardModel.globalSettings,
 
+		  playSound : function(s){
+
+			//Allow sound theming
+			var st  = theFreeboardModel.globalSettings.soundTheme
+			if(st.externalSounds)
+			{
+				if(st.externalSounds[s])
+				{
+					s=st.externalSounds[s]
+				}
+			}
+			var sound = new Howl({
+				src: [s],
+				html5:(window.location.protocol=='file')
+			  })
+			sound.play()
+			  
+		  },
+
 		  getDatasourceInstance:function(n)
 		  {
 			for(var i of freeboard.model.datasources())
@@ -3563,6 +3593,10 @@ globalSettingsSchema = {
                 },
                 "--main-bg-image": {
                     type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
                 },
 
                 "--main-font": {
