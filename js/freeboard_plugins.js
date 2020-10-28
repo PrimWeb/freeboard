@@ -3792,9 +3792,6 @@ If the target is just the name of a field of a datasource, it will try to write 
 it will be interpreted as a function to call to handle new data.
 You can access the value itself simply by using the variable called 'value'.</p>
 
-<p>The actual data input widgets put there is always a list of two values, the first being
-    the value the user entered, the second being the timestamp that the interaction happened.</p>
-
 <h2>Calculated values</h2>
 
 <p>These update in real time if the value of the expression changes.
@@ -5507,7 +5504,7 @@ function uuidv4() {
 			
 			var writebackData = function()
 			{
-				self.dataTargets['data']([self.data, Date.now()*1000]);
+				self.dataTargets['data'](self.data);
 			}
 
 
@@ -5620,12 +5617,6 @@ function uuidv4() {
 
 			if(settingName=='data')
 			{
-				//Value, timestamp pair
-				if (newValue)
-				{
-					newValue=newValue[0]
-				}
-
 				self.acceptData(newValue||[])
 				$(theGridbox).jsGrid('refresh');
 			}
@@ -5855,7 +5846,7 @@ function uuidv4() {
 					}
 
 		
-					await self.dataTargets.target([v, Date.now() / 1000]);
+					await self.dataTargets.target(v);
 				
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
@@ -7178,11 +7169,7 @@ freeboard.loadDatasourcePlugin({
 
         this.onCalculatedValueChanged = function (settingName, value) {
             if (!_.isUndefined(gaugeObject)) {
-                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+              
                 gaugeObject.refresh(Number(value));
             }
         }
@@ -8061,7 +8048,7 @@ freeboard.loadDatasourcePlugin({
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(parseFloat(e.target.value));
 						}
 				});
             
@@ -8077,7 +8064,7 @@ freeboard.loadDatasourcePlugin({
 				
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
+							self.dataTargets.target(parseFloat(e.target.value));
 						}
 					
 				}
@@ -8119,12 +8106,7 @@ freeboard.loadDatasourcePlugin({
 				self.value = newValue
 				
 				var value= newValue
-				
-				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+
 
 				$(valueElement).html(value + currentSettings.unit);
 
@@ -8260,7 +8242,7 @@ freeboard.loadDatasourcePlugin({
 
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([self.isOn, Date.now()/1000]);
+							self.dataTargets.target(self.isOn);
 						}
                     
                 });
@@ -8279,12 +8261,8 @@ freeboard.loadDatasourcePlugin({
             console.log(settingName, newValue);
             
              if (settingName == "target") {
-                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
                 var value = newValue
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+				
 
                 self.isOn = Boolean(value);
             }
@@ -8442,7 +8420,7 @@ freeboard.loadDatasourcePlugin({
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(e.target.value);
 						}
 				});
             
@@ -8459,7 +8437,7 @@ freeboard.loadDatasourcePlugin({
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(e.target.value);
 						}
 					}
 				}
@@ -8504,12 +8482,7 @@ freeboard.loadDatasourcePlugin({
 				
 				var value= newValue;
 				
-				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0];
-                }
-
+			
 
 				//Attempt to break l00ps
 				if(value!=$(theTextbox).val())

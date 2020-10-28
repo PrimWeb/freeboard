@@ -409,11 +409,7 @@
 
         this.onCalculatedValueChanged = function (settingName, value) {
             if (!_.isUndefined(gaugeObject)) {
-                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+              
                 gaugeObject.refresh(Number(value));
             }
         }

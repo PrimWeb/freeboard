@@ -126,7 +126,7 @@
 					}
 
 		
-					await self.dataTargets.target([v, Date.now() / 1000]);
+					await self.dataTargets.target(v);
 				
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);

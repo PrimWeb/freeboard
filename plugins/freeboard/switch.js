@@ -92,7 +92,7 @@
 
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([self.isOn, Date.now()/1000]);
+							self.dataTargets.target(self.isOn);
 						}
                     
                 });
@@ -111,12 +111,8 @@
             console.log(settingName, newValue);
             
              if (settingName == "target") {
-                //Handle either "input widget spec" value, timestamp pairs or straight numbers.
                 var value = newValue
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+				
 
                 self.isOn = Boolean(value);
             }

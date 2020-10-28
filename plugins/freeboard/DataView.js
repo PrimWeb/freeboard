@@ -361,7 +361,7 @@ function uuidv4() {
 			
 			var writebackData = function()
 			{
-				self.dataTargets['data']([self.data, Date.now()*1000]);
+				self.dataTargets['data'](self.data);
 			}
 
 
@@ -474,12 +474,6 @@ function uuidv4() {
 
 			if(settingName=='data')
 			{
-				//Value, timestamp pair
-				if (newValue)
-				{
-					newValue=newValue[0]
-				}
-
 				self.acceptData(newValue||[])
 				$(theGridbox).jsGrid('refresh');
 			}

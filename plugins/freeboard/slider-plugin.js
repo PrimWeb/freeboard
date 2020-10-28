@@ -151,7 +151,7 @@
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(parseFloat(e.target.value));
 						}
 				});
             
@@ -167,7 +167,7 @@
 				
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([parseFloat(e.target.value), Date.now()/1000]);
+							self.dataTargets.target(parseFloat(e.target.value));
 						}
 					
 				}
@@ -209,12 +209,7 @@
 				self.value = newValue
 				
 				var value= newValue
-				
-				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0]
-                }
+
 
 				$(valueElement).html(value + currentSettings.unit);
 

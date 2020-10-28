@@ -11,9 +11,7 @@ freeboard(fork!)
 * But if they include an assignment or a function call, they are interpreted as literal javascript, so alert(value) works.
 * Your widget instance can just call datatargets['settingName'](theValue) to set whatever target the user gave
 
-* The "spec" for input widgets is simple:  The data is always a value,timestamp tuple, with the time in floating point seconds.
-* If input widgets also act as data outputs, where possible they must accept either value,timestamp, or pure value.
-* v,t pairs ensure data always changes on interaction.
+* Input widgets just get or set exactly the raw data you enter(Previous versions of my fork used val, timestamp pairs, this caused trouple for future DB addons)
 
 * There's a basic "scratchpad" data source for storing your variables.  It even has a persistane option, that makes it's data exportable as part of the board.
 * Button, textbox, slider widgets

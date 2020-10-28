@@ -135,7 +135,7 @@
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(e.target.value);
 						}
 				});
             
@@ -152,7 +152,7 @@
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
-							self.dataTargets.target([e.target.value, Date.now()/1000]);
+							self.dataTargets.target(e.target.value);
 						}
 					}
 				}
@@ -197,12 +197,7 @@
 				
 				var value= newValue;
 				
-				//Handle either "input widget spec" value, timestamp pairs or straight numbers.
-				if(typeof(value)=='object')
-                {
-                    value=value[0];
-                }
-
+			
 
 				//Attempt to break l00ps
 				if(value!=$(theTextbox).val())
