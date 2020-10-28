@@ -1570,7 +1570,7 @@ PluginEditor = function(jsEditor, valueEditor)
 
 							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
                             
-                                if(subSettingDef.type in ['text', 'datasource','target'] && subSettingDef.options)
+                                if((['text', 'datasource','target'].indexOf(subSettingDef.type)>-1) && subSettingDef.options)
                                 {
                                     $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
                                     $.each(subSettingDef.options(), function(i, item) {
