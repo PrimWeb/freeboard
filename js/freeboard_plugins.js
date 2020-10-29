@@ -1389,53 +1389,46 @@ function PaneModel(theFreeboardModel, widgetPlugins) {
 	}
 }
 
-PluginEditor = function(jsEditor, valueEditor)
-{
-	function _displayValidationError(settingName, errorMessage)
-	{
+PluginEditor = function (jsEditor, valueEditor) {
+	function _displayValidationError(settingName, errorMessage) {
 		var errorElement = $('<div class="validation-error"></div>').html(errorMessage);
 		$("#setting-value-container-" + settingName).append(errorElement);
 	}
 
-	function _removeSettingsRows()
-	{
-		if($("#setting-row-instance-name").length)
-		{
+	function _removeSettingsRows() {
+		if ($("#setting-row-instance-name").length) {
 			$("#setting-row-instance-name").nextAll().remove();
 		}
-		else
-		{
+		else {
 			$("#setting-row-plugin-types").nextAll().remove();
 		}
 	}
 
-	function _isNumerical(n)
-	{
+	function _isNumerical(n) {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	}
 
-	function _appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, includeRemove,target)
-	{
+	function _appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, includeRemove, target) {
 		var input = $('<textarea></textarea>');
 
-		if(settingDef.multi_input) {
-			input.change(function() {
+		if (settingDef.multi_input) {
+			input.change(function () {
 				var arrayInput = [];
-				$(valueCell).find('textarea').each(function() {
+				$(valueCell).find('textarea').each(function () {
 					var thisVal = $(this).val();
-					if(thisVal) {
+					if (thisVal) {
 						arrayInput = arrayInput.concat(thisVal);
 					}
 				});
 				newSettings.settings[settingDef.name] = arrayInput;
 			});
 		} else {
-			input.change(function() {
+			input.change(function () {
 				newSettings.settings[settingDef.name] = $(this).val();
 			});
 		}
 
-		if(currentValue) {
+		if (currentValue) {
 			input.val(currentValue);
 		}
 
@@ -1445,43 +1438,37 @@ PluginEditor = function(jsEditor, valueEditor)
 		var wrapperDiv = $('<div class="calculated-setting-row"></div>');
 		wrapperDiv.append(input).append(datasourceToolbox);
 
-		if(target)
-		{
+		if (target) {
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATATARGET</label></li>')
-				.mousedown(function(e) {
+				.mousedown(function (e) {
 					e.preventDefault();
-					if($(input).is(":focus"))
-					{
+					if ($(input).is(":focus")) {
 						$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
 					}
-					else
-					{
+					else {
 						$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
-					}				
+					}
 				});
 		}
-		else
-		{
+		else {
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
-			.mousedown(function(e) {
-				e.preventDefault();
-	
-				if($(input).val().length==0)
-				{
-					$(input).insertAtCaret('=')
-				}
-				$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
-	
-			});
+				.mousedown(function (e) {
+					e.preventDefault();
+
+					if ($(input).val().length == 0) {
+						$(input).insertAtCaret('=')
+					}
+					$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
+
+				});
 		}
 		datasourceToolbox.append(datasourceTool);
 
-		if(!target)
-		{
+		if (!target) {
 			var jsEditorTool = $('<li><i class="icon-fullscreen icon-white"></i><label>.JS EDITOR</label></li>')
-				.mousedown(function(e) {
+				.mousedown(function (e) {
 					e.preventDefault();
-					jsEditor.displayJSEditor(input.val(), function(result) {
+					jsEditor.displayJSEditor(input.val(), function (result) {
 						input.val(result);
 						input.change();
 					});
@@ -1489,9 +1476,9 @@ PluginEditor = function(jsEditor, valueEditor)
 			datasourceToolbox.append(jsEditorTool);
 		}
 
-		if(includeRemove) {
+		if (includeRemove) {
 			var removeButton = $('<li class="remove-setting-row"><i class="icon-minus icon-white"></i><label></label></li>')
-				.mousedown(function(e) {
+				.mousedown(function (e) {
 					e.preventDefault();
 					wrapperDiv.remove();
 					$(valueCell).find('textarea:first').change();
@@ -1502,15 +1489,13 @@ PluginEditor = function(jsEditor, valueEditor)
 		$(valueCell).append(wrapperDiv);
 	}
 
-	function createPluginEditor(title, pluginTypes, currentTypeName, currentSettingsValues, settingsSavedCallback)
-	{
+	function createPluginEditor(title, pluginTypes, currentTypeName, currentSettingsValues, settingsSavedCallback) {
 		var newSettings = {
-			type    : currentTypeName,
+			type: currentTypeName,
 			settings: {}
 		};
 
-		function createSettingRow(name, displayName,regex)
-		{
+		function createSettingRow(name, displayName, regex) {
 			var tr = $('<div id="setting-row-' + name + '" class="form-row"></div>').appendTo(form);
 
 			tr.append('<div class="form-label"><label class="control-label">' + displayName + '</label></div>');
@@ -1522,635 +1507,614 @@ PluginEditor = function(jsEditor, valueEditor)
 
 		var pluginDescriptionElement = $('<div id="plugin-description"></div>').hide();
 		form.append(pluginDescriptionElement);
-        
-        var toDestroy = []
 
-		function createSettingsFromDefinition(settingsDefs, typeaheadSource, typeaheadDataSegment)
-		{
-			_.each(settingsDefs, function(settingDef)
-			{
+		var toDestroy = []
+
+		function createSettingsFromDefinition(settingsDefs, typeaheadSource, typeaheadDataSegment) {
+			_.each(settingsDefs, function (settingDef) {
 				// Set a default value if one doesn't exist
-				if(!_.isUndefined(settingDef.default_value) && _.isUndefined(currentSettingsValues[settingDef.name]))
-				{
+				if (!_.isUndefined(settingDef.default_value) && _.isUndefined(currentSettingsValues[settingDef.name])) {
 					currentSettingsValues[settingDef.name] = settingDef.default_value;
 				}
 
 				var displayName = settingDef.name;
 
-				if(!_.isUndefined(settingDef.display_name))
-				{
+				if (!_.isUndefined(settingDef.display_name)) {
 					displayName = settingDef.display_name;
 				}
 
 
 				var valueCell = createSettingRow(settingDef.name, displayName);
 
-				switch (settingDef.type)
-				{
+				switch (settingDef.type) {
 					case "array":
-					{
-						var subTableDiv = $('<div class="form-table-value-subtable"></div>').appendTo(valueCell);
-
-						var subTable = $('<table class="table table-condensed sub-table"></table>').appendTo(subTableDiv);
-						var subTableHead = $("<thead></thead>").hide().appendTo(subTable);
-						var subTableHeadRow = $("<tr></tr>").appendTo(subTableHead);
-						var subTableBody = $('<tbody></tbody>').appendTo(subTable);
-
-						var currentSubSettingValues = [];
-
-						// Create our headers
-						_.each(settingDef.settings, function(subSettingDef)
 						{
-							var subsettingDisplayName = subSettingDef.name;
+							var subTableDiv = $('<div class="form-table-value-subtable"></div>').appendTo(valueCell);
 
-							if(!_.isUndefined(subSettingDef.display_name))
-							{
-								subsettingDisplayName = subSettingDef.display_name;
-							}
+							var subTable = $('<table class="table table-condensed sub-table"></table>').appendTo(subTableDiv);
+							var subTableHead = $("<thead></thead>").hide().appendTo(subTable);
+							var subTableHeadRow = $("<tr></tr>").appendTo(subTableHead);
+							var subTableBody = $('<tbody></tbody>').appendTo(subTable);
 
-							$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
-                            
-                                if((['text', 'datasource','target'].indexOf(subSettingDef.type)>-1) && subSettingDef.options)
-                                {
-                                    $('<datalist></datalist>').attr("id",settingDef.name+subSettingDef.name+"ac").appendTo(subTableHeadRow);
-                                    $.each(subSettingDef.options(), function(i, item) {
-                                        $("#"+settingDef.name+subSettingDef.name+"ac").append($("<option>").attr('value', i).text(item));
-                                        });
-                                }
-						});
+							var currentSubSettingValues = [];
 
-						if(settingDef.name in currentSettingsValues)
-						{
-							currentSubSettingValues = currentSettingsValues[settingDef.name];
-						}
+							// Create our headers
+							_.each(settingDef.settings, function (subSettingDef) {
+								var subsettingDisplayName = subSettingDef.name;
 
-						function processHeaderVisibility()
-						{
-							if(newSettings.settings[settingDef.name].length > 0)
-							{
-								subTableHead.show();
-							}
-							else
-							{
-								subTableHead.hide();
-							}
-						}
-
-						function createSubsettingRow(subsettingValue)
-						{
-							var subsettingRow = $('<tr></tr>').appendTo(subTableBody);
-
-							var newSetting = {};
-
-							if(!_.isArray(newSettings.settings[settingDef.name]))
-							{
-								newSettings.settings[settingDef.name] = [];
-							}
-
-							newSettings.settings[settingDef.name].push(newSetting);
-                            
-                            
-              
-
-							_.each(settingDef.settings, function(subSettingDef)
-							{
-								var subsettingCol = $('<td></td>').appendTo(subsettingRow);
-								var subsettingValueString = "";
-
-								if(!_.isUndefined(subsettingValue[subSettingDef.name]))
-								{
-									subsettingValueString = subsettingValue[subSettingDef.name];
+								if (!_.isUndefined(subSettingDef.display_name)) {
+									subsettingDisplayName = subSettingDef.display_name;
 								}
 
-								newSetting[subSettingDef.name] = subsettingValueString;
+								$('<th>' + subsettingDisplayName + '</th>').appendTo(subTableHeadRow);
 
-								if(subSettingDef.type== "option")
-									{				
-										var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(subsettingCol)).change(function()
-										{
+								if ((['text', 'datasource', 'target'].indexOf(subSettingDef.type) > -1) && subSettingDef.options) {
+									$('<datalist></datalist>').attr("id", settingDef.name + subSettingDef.name + "ac").appendTo(subTableHeadRow);
+									$.each(subSettingDef.options(), function (i, item) {
+										$("#" + settingDef.name + subSettingDef.name + "ac").append($("<option>").attr('value', i).text(item));
+									});
+								}
+							});
+
+							if (settingDef.name in currentSettingsValues) {
+								currentSubSettingValues = currentSettingsValues[settingDef.name];
+							}
+
+							function processHeaderVisibility() {
+								if (newSettings.settings[settingDef.name].length > 0) {
+									subTableHead.show();
+								}
+								else {
+									subTableHead.hide();
+								}
+							}
+
+							function createSubsettingRow(subsettingValue) {
+								var subsettingRow = $('<tr></tr>').appendTo(subTableBody);
+
+								var newSetting = {};
+
+								if (!_.isArray(newSettings.settings[settingDef.name])) {
+									newSettings.settings[settingDef.name] = [];
+								}
+
+								newSettings.settings[settingDef.name].push(newSetting);
+
+
+
+
+								_.each(settingDef.settings, function (subSettingDef) {
+									var subsettingCol = $('<td></td>').appendTo(subsettingRow);
+									var subsettingValueString = "";
+
+									if (!_.isUndefined(subsettingValue[subSettingDef.name])) {
+										subsettingValueString = subsettingValue[subSettingDef.name];
+									}
+
+									newSetting[subSettingDef.name] = subsettingValueString;
+
+									if (subSettingDef.type == "option") {
+										var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(subsettingCol)).change(function () {
 											newSetting[subSettingDef.name] = $(this).val();
 
 										});
-				
-										_.each(subSettingDef.options, function(option)
-										{
-				
+
+										_.each(subSettingDef.options, function (option) {
+
 											var optionName;
 											var optionValue;
-				
-											if(_.isObject(option))
-											{
+
+											if (_.isObject(option)) {
 												optionName = option.name;
 												optionValue = option.value;
 											}
-											else
-											{
+											else {
 												optionName = option;
 											}
-				
-											if(_.isUndefined(optionValue))
-											{
+
+											if (_.isUndefined(optionValue)) {
 												optionValue = optionName;
 											}
-				
-											if(_.isUndefined(defaultValue))
-											{
+
+											if (_.isUndefined(defaultValue)) {
 												defaultValue = optionValue;
 											}
-				
+
 											$("<option></option>").text(optionName).attr("value", optionValue).appendTo(input);
 										});
-				
-								
-											input.val(currentSettingsValues[subsettingValueString]);
-						
+
+
+										input.val(currentSettingsValues[subsettingValueString]);
+
 									}
-								else{
-								$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).attr('list',settingDef.name+subSettingDef.name+"ac").change(function()
-								{
-									newSetting[subSettingDef.name] = $(this).val();
+									else if (subSettingDef.type == 'color') {
+
+
+										var color = $('<div>EDIT</div>').attr('id', subSettingDef.name + '-picker').appendTo(valueCell);
+
+										var parent = document.querySelector('#' + subSettingDef.name + '-picker');
+										var currentcolor = subsettingValueString || 'black';
+
+
+										color.css({ 'color': currentcolor })
+										var picker = new Picker({ parent: parent, color: currentcolor });
+
+										newSetting[subSettingDef.name] = subsettingValueString || 'rgb(0,0,0)'
+
+
+										picker.onChange = function (color) {
+											newSetting[subSettingDef.name] = color.rgbastring;
+											color.css({ 'color': color.rgbastring })
+
+										};
+
+									}
+									else {
+										$('<input class="table-row-value" type="text">').appendTo(subsettingCol).val(subsettingValueString).attr('list', settingDef.name + subSettingDef.name + "ac").change(function () {
+											newSetting[subSettingDef.name] = $(this).val();
+										});
+									}
 								});
-								}
+
+								subsettingRow.append($('<td class="table-row-operation"></td>').append($('<ul class="board-toolbar"></ul>').append($('<li></li>').append($('<i class="icon-trash icon-white"></i>').click(function () {
+									var subSettingIndex = newSettings.settings[settingDef.name].indexOf(newSetting);
+
+									if (subSettingIndex != -1) {
+										newSettings.settings[settingDef.name].splice(subSettingIndex, 1);
+										subsettingRow.remove();
+										processHeaderVisibility();
+									}
+								})))));
+
+								subTableDiv.scrollTop(subTableDiv[0].scrollHeight);
+
+								processHeaderVisibility();
+							}
+
+							$('<div class="table-operation text-button">ADD</div>').appendTo(valueCell).click(function () {
+								var newSubsettingValue = {};
+
+								_.each(settingDef.settings, function (subSettingDef) {
+									newSubsettingValue[subSettingDef.name] = "";
+								});
+
+								createSubsettingRow(newSubsettingValue);
 							});
 
-							subsettingRow.append($('<td class="table-row-operation"></td>').append($('<ul class="board-toolbar"></ul>').append($('<li></li>').append($('<i class="icon-trash icon-white"></i>').click(function()
-							{
-								var subSettingIndex = newSettings.settings[settingDef.name].indexOf(newSetting);
+							// Create our rows
+							_.each(currentSubSettingValues, function (currentSubSettingValue, subSettingIndex) {
+								createSubsettingRow(currentSubSettingValue);
+							});
 
-								if(subSettingIndex != -1)
-								{
-									newSettings.settings[settingDef.name].splice(subSettingIndex, 1);
-									subsettingRow.remove();
-									processHeaderVisibility();
-								}
-							})))));
-
-							subTableDiv.scrollTop(subTableDiv[0].scrollHeight);
-
-							processHeaderVisibility();
+							break;
 						}
 
-						$('<div class="table-operation text-button">ADD</div>').appendTo(valueCell).click(function()
-						{
-							var newSubsettingValue = {};
-
-							_.each(settingDef.settings, function(subSettingDef)
-							{
-								newSubsettingValue[subSettingDef.name] = "";
-							});
-
-							createSubsettingRow(newSubsettingValue);
-						});
-
-						// Create our rows
-						_.each(currentSubSettingValues, function(currentSubSettingValue, subSettingIndex)
-						{
-							createSubsettingRow(currentSubSettingValue);
-						});
-
-						break;
-					}
-					
 					case "html-wysywig":
-					{
-                        //We use font awesome instead of the SVG
-                        $.trumbowyg.svgPath = false;
-                        $.trumbowyg.hideButtonTexts = true;
-                        
-						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
-
-						var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="'+settingDef.name+'-trumbo"></textarea></div>').appendTo(valueCell);
-                        var l= ["ffffff","000000","eeece1","1f497d","4f81bd","c0504d","9bbb59","8064a2","4bacc6","f79646","ffff00","f2f2f2","7f7f7f","ddd9c3","c6d9f0","dbe5f1","f2dcdb","ebf1dd"]
-                        $('#'+settingDef.name+'-trumbo').trumbowyg({
-                               btns: [
-                                        ['viewHTML'],
-                                        ['undo', 'redo'], // Only supported in Blink browsers
-                                        ['formatting'],
-                                        ['strong', 'em', 'del'],
-                                        ['superscript', 'subscript'],
-                                        ['foreColor', 'backColor'],
-                                        ['link'],
-                                        ['base64'],
-                                        ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
-                                        ['unorderedList', 'orderedList'],
-                                        ['horizontalRule'],
-                                        ['removeformat'],
-                                        ['fullscreen'],
-                                        ['fontsize','fontfamily','preformatted'],
-                                        ['emoji','table','specialChars']
-                                    ],
-                                    plugins: {
-                                        colors: {
-                                            displayAsList: true,
-                                            foreColorList: l,
-                                            backColorList: l,
-                                            
-										},
-										fontfamily:
-										{
-											fontList:[
-												{name: 'Seriff', family: 'FBSerif'},
-												{name: 'Color Emoji', family: 'NotoColorEmoji'},
-												{name: 'Sans', family: 'FBSans'},
-												{name: 'Monospace', family: 'FBMono'},
-												{name: 'Cursive', family: 'FBCursive'},
-												{name: 'Pandora', family: 'Pandora'},
-												{name: 'Chalkboard', family: 'Chalkboard'},
-												{name: 'Handwriting', family: 'Handwriting'},
-												{name: 'Rough Script', family: 'RoughScript'},
-												{name: 'Chancery', family: 'Chancery'},
-												{name: 'Comic', family: 'FBComic'},
-												{name: 'Blackletter', family: 'Blackletter'},
-												{name: 'Stencil', family: 'Stencil'},
-												{name: 'Pixel', family: 'Pixel'},
-												{name: 'B612', family: 'B612'},
-												{name: 'DIN', family: 'DIN'},
-												{name: 'Penguin Attack', family: 'PenguinAttack'},
-												{name: 'DSEG7', family: 'DSEG7'},
-												{name: 'DSEG14', family: 'DSEG14'}
-
-
-											]
-										}
-                                    }
-                        });
-                       
-                        
-						$('#'+settingDef.name+'-trumbo').on('tbwchange',function(e)
 						{
-							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
-						});
-                        $('#'+settingDef.name+'-trumbo').on('tbwblur',function(e)
-						{
-							newSettings.settings[settingDef.name] =  $('#'+settingDef.name+'-trumbo').trumbowyg('html')
-						});
+							//We use font awesome instead of the SVG
+							$.trumbowyg.svgPath = false;
+							$.trumbowyg.hideButtonTexts = true;
+
+							newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
+
+							var text = $('<div><label>' + settingDef.name + '</label> <br> <textarea id="' + settingDef.name + '-trumbo"></textarea></div>').appendTo(valueCell);
+							var l = ["ffffff", "000000", "eeece1", "1f497d", "4f81bd", "c0504d", "9bbb59", "8064a2", "4bacc6", "f79646", "ffff00", "f2f2f2", "7f7f7f", "ddd9c3", "c6d9f0", "dbe5f1", "f2dcdb", "ebf1dd"]
+							$('#' + settingDef.name + '-trumbo').trumbowyg({
+								btns: [
+									['viewHTML'],
+									['undo', 'redo'], // Only supported in Blink browsers
+									['formatting'],
+									['strong', 'em', 'del'],
+									['superscript', 'subscript'],
+									['foreColor', 'backColor'],
+									['link'],
+									['base64'],
+									['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+									['unorderedList', 'orderedList'],
+									['horizontalRule'],
+									['removeformat'],
+									['fullscreen'],
+									['fontsize', 'fontfamily', 'preformatted'],
+									['emoji', 'table', 'specialChars']
+								],
+								plugins: {
+									colors: {
+										displayAsList: true,
+										foreColorList: l,
+										backColorList: l,
+
+									},
+									fontfamily:
+									{
+										fontList: [
+											{ name: 'Seriff', family: 'FBSerif' },
+											{ name: 'Color Emoji', family: 'NotoColorEmoji' },
+											{ name: 'Sans', family: 'FBSans' },
+											{ name: 'Monospace', family: 'FBMono' },
+											{ name: 'Cursive', family: 'FBCursive' },
+											{ name: 'Pandora', family: 'Pandora' },
+											{ name: 'Chalkboard', family: 'Chalkboard' },
+											{ name: 'Handwriting', family: 'Handwriting' },
+											{ name: 'Rough Script', family: 'RoughScript' },
+											{ name: 'Chancery', family: 'Chancery' },
+											{ name: 'Comic', family: 'FBComic' },
+											{ name: 'Blackletter', family: 'Blackletter' },
+											{ name: 'Stencil', family: 'Stencil' },
+											{ name: 'Pixel', family: 'Pixel' },
+											{ name: 'B612', family: 'B612' },
+											{ name: 'DIN', family: 'DIN' },
+											{ name: 'Penguin Attack', family: 'PenguinAttack' },
+											{ name: 'DSEG7', family: 'DSEG7' },
+											{ name: 'DSEG14', family: 'DSEG14' }
 
 
-						if(settingDef.name in currentSettingsValues)
-						{
-							 $('#'+settingDef.name+'-trumbo').trumbowyg('html',currentSettingsValues[settingDef.name])
+										]
+									}
+								}
+							});
+
+
+							$('#' + settingDef.name + '-trumbo').on('tbwchange', function (e) {
+								newSettings.settings[settingDef.name] = $('#' + settingDef.name + '-trumbo').trumbowyg('html')
+							});
+							$('#' + settingDef.name + '-trumbo').on('tbwblur', function (e) {
+								newSettings.settings[settingDef.name] = $('#' + settingDef.name + '-trumbo').trumbowyg('html')
+							});
+
+
+							if (settingDef.name in currentSettingsValues) {
+								$('#' + settingDef.name + '-trumbo').trumbowyg('html', currentSettingsValues[settingDef.name])
+							}
+							toDestroy.push($('#editor').trumbowyg)
+
+							break;
 						}
-						toDestroy.push($('#editor').trumbowyg)
 
-						break;
-					}
-					
 					case "boolean":
-					{
-						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
-
-						var onOffSwitch = $('<div class="onoffswitch"><label class="onoffswitch-label" for="' + settingDef.name + '-onoff"><div class="onoffswitch-inner"><span class="on">YES</span><span class="off">NO</span></div><div class="onoffswitch-switch"></div></label></div>').appendTo(valueCell);
-
-						var input = $('<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="' + settingDef.name + '-onoff">').prependTo(onOffSwitch).change(function()
 						{
-							newSettings.settings[settingDef.name] = this.checked;
-						});
+							newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
-						if(settingDef.name in currentSettingsValues)
-						{
-							input.prop("checked", currentSettingsValues[settingDef.name]);
+							var onOffSwitch = $('<div class="onoffswitch"><label class="onoffswitch-label" for="' + settingDef.name + '-onoff"><div class="onoffswitch-inner"><span class="on">YES</span><span class="off">NO</span></div><div class="onoffswitch-switch"></div></label></div>').appendTo(valueCell);
+
+							var input = $('<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="' + settingDef.name + '-onoff">').prependTo(onOffSwitch).change(function () {
+								newSettings.settings[settingDef.name] = this.checked;
+							});
+
+							if (settingDef.name in currentSettingsValues) {
+								input.prop("checked", currentSettingsValues[settingDef.name]);
+							}
+
+							break;
 						}
 
-						break;
-					}
-
-										
-					case "button":
-					{
-						var input = $('<button></button>').appendTo($('<div class="styled-select"></div>').appendTo(valueCell)).html(settingDef.html).on('click',function()
+					case "json":
 						{
-							settingDef.onclick(currentSettingsValues,freeboard.getDatasourceInstance(currentSettingsValues.name));
-						});
+							newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
-						break;
-					}
+							var input = $('<button>EDIT</button>').appendTo(valueCell).on('click',
+								function () {
+									var x = [];
+									freeboard.showDialog($('<div id="fb-global-json-editor">'), settingDef, name, "OK", "Cancel",
+										function () {
+											newSettings.settings[settingDef.name] = x[0].getValue()
+											x[0].destroy();
+										},
+										function () {
+											x[0].destroy();
+										}
+									)
+
+									var Editor = new JSONEditor(document.getElementById('fb-global-json-editor'), { schema: settingDef.schema });
+									x.push(Editor);
+									try {
+										Editor.setValue(newSettings.settings[settingDef.name]|| {})
+									}
+									catch (e) {
+										console.log(e)
+									}
+
+								})
+							break;
+		}
+
+
+					case "button":
+		{
+			var input = $('<button></button>').appendTo($('<div class="styled-select"></div>').appendTo(valueCell)).html(settingDef.html).on('click', function () {
+				settingDef.onclick(currentSettingsValues, freeboard.getDatasourceInstance(currentSettingsValues.name));
+			});
+
+			break;
+		}
 
 					case "option":
-					{
-						var defaultValue = currentSettingsValues[settingDef.name];
+		{
+			var defaultValue = currentSettingsValues[settingDef.name];
 
-						var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(valueCell)).change(function()
-						{
-							newSettings.settings[settingDef.name] = $(this).val();
-						});
+			var input = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(valueCell)).change(function () {
+				newSettings.settings[settingDef.name] = $(this).val();
+			});
 
-						_.each(settingDef.options, function(option)
-						{
+			_.each(settingDef.options, function (option) {
 
-							var optionName;
-							var optionValue;
+				var optionName;
+				var optionValue;
 
-							if(_.isObject(option))
-							{
-								optionName = option.name;
-								optionValue = option.value;
-							}
-							else
-							{
-								optionName = option;
-							}
+				if (_.isObject(option)) {
+					optionName = option.name;
+					optionValue = option.value;
+				}
+				else {
+					optionName = option;
+				}
 
-							if(_.isUndefined(optionValue))
-							{
-								optionValue = optionName;
-							}
+				if (_.isUndefined(optionValue)) {
+					optionValue = optionName;
+				}
 
-							if(_.isUndefined(defaultValue))
-							{
-								defaultValue = optionValue;
-							}
+				if (_.isUndefined(defaultValue)) {
+					defaultValue = optionValue;
+				}
 
-							$("<option></option>").text(optionName).attr("value", optionValue).appendTo(input);
-						});
+				$("<option></option>").text(optionName).attr("value", optionValue).appendTo(input);
+			});
 
-						newSettings.settings[settingDef.name] = defaultValue;
+			newSettings.settings[settingDef.name] = defaultValue;
 
-						if(settingDef.name in currentSettingsValues)
-						{
-							input.val(currentSettingsValues[settingDef.name]);
-						}
+			if (settingDef.name in currentSettingsValues) {
+				input.val(currentSettingsValues[settingDef.name]);
+			}
 
-						break;
-					}
+			break;
+		}
 					default:
-					{
-						newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
+		{
+			newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
-						if(settingDef.type == "calculated" || settingDef.type == "target")
-						{
-							var target=settingDef.type == "target";
+			if (settingDef.type == "calculated" || settingDef.type == "target") {
+				var target = settingDef.type == "target";
 
-							if(settingDef.name in currentSettingsValues) {
-								var currentValue = currentSettingsValues[settingDef.name];
-								if(settingDef.multi_input && _.isArray(currentValue)) {
-									var includeRemove = false;
-									for(var i=0; i<currentValue.length; i++) {
-										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue[i], includeRemove,target);
-										includeRemove = true;
-									}
-								} else {
-									_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, false,target);
-								}
-							} else {
-								_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, false,target);
-							}
-
-							if(settingDef.multi_input) {
-								var inputAdder = $('<ul class="board-toolbar"><li class="add-setting-row"><i class="icon-plus icon-white"></i><label>ADD</label></li></ul>')
-									.mousedown(function(e) {
-										e.preventDefault();
-										_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, true,target);
-									});
-								$(valueCell).siblings('.form-label').append(inputAdder);
-							}
+				if (settingDef.name in currentSettingsValues) {
+					var currentValue = currentSettingsValues[settingDef.name];
+					if (settingDef.multi_input && _.isArray(currentValue)) {
+						var includeRemove = false;
+						for (var i = 0; i < currentValue.length; i++) {
+							_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue[i], includeRemove, target);
+							includeRemove = true;
 						}
-						else
-						{
+					} else {
+						_appendCalculatedSettingRow(valueCell, newSettings, settingDef, currentValue, false, target);
+					}
+				} else {
+					_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, false, target);
+				}
+
+				if (settingDef.multi_input) {
+					var inputAdder = $('<ul class="board-toolbar"><li class="add-setting-row"><i class="icon-plus icon-white"></i><label>ADD</label></li></ul>')
+						.mousedown(function (e) {
+							e.preventDefault();
+							_appendCalculatedSettingRow(valueCell, newSettings, settingDef, null, true, target);
+						});
+					$(valueCell).siblings('.form-label').append(inputAdder);
+				}
+			}
+			else {
 
 
-							if (settingDef.name=='name')
-							{
-								//Discourage names that are not valid identifiers
-								var defaultregex='[a-zA-Z][a-zA-Z0-9_]+'
+				if (settingDef.name == 'name') {
+					//Discourage names that are not valid identifiers
+					var defaultregex = '[a-zA-Z][a-zA-Z0-9_]+'
+				}
+				else {
+					var defaultregex = null;
+				}
+
+				var regex = settingDef.regex;
+				if (_.isUndefined(settingDef.regex)) {
+					regex = defaultregex;
+				}
+
+
+				if (settingDef.options) {
+					$('<datalist></datalist>').attr("id", settingDef.name + "ac").appendTo(valueCell);
+					$.each(settingDef.options(), function (i, item) {
+						$("#" + settingDef.name + "ac").append($("<option>").attr('value', i).text(item || i));
+					});
+				}
+
+
+				var input = $('<input type="text">').appendTo(valueCell).attr('pattern', regex).attr('list', settingDef.name + "ac").change(function () {
+					if (settingDef.type == "number") {
+						newSettings.settings[settingDef.name] = Number($(this).val());
+					}
+					else {
+						newSettings.settings[settingDef.name] = $(this).val();
+					}
+				});
+
+				if (settingDef.type == "integer") {
+					input.attr('type', 'number')
+				}
+
+				if (settingDef.name in currentSettingsValues) {
+					input.val(currentSettingsValues[settingDef.name]);
+				}
+
+				if (typeaheadSource && settingDef.typeahead_data_field) {
+					input.addClass('typeahead_data_field-' + settingDef.typeahead_data_field);
+				}
+
+				if (typeaheadSource && settingDef.typeahead_field) {
+					var typeaheadValues = [];
+
+					input.keyup(function (event) {
+						if (event.which >= 65 && event.which <= 91) {
+							input.trigger('change');
+						}
+					});
+
+					$(input).autocomplete({
+						source: typeaheadValues,
+						select: function (event, ui) {
+							input.val(ui.item.value);
+							input.trigger('change');
+						}
+					});
+
+					input.change(function (event) {
+						var value = input.val();
+						var source = _.template(typeaheadSource)({ input: value });
+						$.get(source, function (data) {
+							if (typeaheadDataSegment) {
+								data = data[typeaheadDataSegment];
 							}
-							else{
-								var defaultregex=null;
-							}
-							
-							var regex = settingDef.regex;
-							if(_.isUndefined(settingDef.regex))
-							{
-								regex=defaultregex;
-							}
-							
-							      
-                            if(settingDef.options)
-                                {
-                                    $('<datalist></datalist>').attr("id",settingDef.name+"ac").appendTo(valueCell);
-                                    $.each(settingDef.options(), function(i, item) {
-                                        $("#"+settingDef.name+"ac").append($("<option>").attr('value', i).text(item || i));
-                                        });
-                                }
-
-
-							var input = $('<input type="text">').appendTo(valueCell).attr('pattern',regex).attr('list',settingDef.name+"ac").change(function()
-							{
-								if(settingDef.type == "number")
-								{
-									newSettings.settings[settingDef.name] = Number($(this).val());
-								}
-								else
-								{
-									newSettings.settings[settingDef.name] = $(this).val();
-								}
+							data = _.select(data, function (elm) {
+								return elm[settingDef.typeahead_field][0] == value[0];
 							});
 
-							if(settingDef.type == "integer")
-							{
-								input.attr('type','number')
-							}
+							typeaheadValues = _.map(data, function (elm) {
+								return elm[settingDef.typeahead_field];
+							});
+							$(input).autocomplete("option", "source", typeaheadValues);
 
-							if(settingDef.name in currentSettingsValues)
-							{
-								input.val(currentSettingsValues[settingDef.name]);
-							}
-
-							if(typeaheadSource && settingDef.typeahead_data_field){
-								input.addClass('typeahead_data_field-' + settingDef.typeahead_data_field);
-							}
-
-							if(typeaheadSource && settingDef.typeahead_field){
-								var typeaheadValues = [];
-
-								input.keyup(function(event){
-									if(event.which >= 65 && event.which <= 91) {
-										input.trigger('change');
-									}
-								});
-
-								$(input).autocomplete({
-									source: typeaheadValues,
-									select: function(event, ui){
-										input.val(ui.item.value);
-										input.trigger('change');
-									}
-								});
-
-								input.change(function(event){
-									var value = input.val();
-									var source = _.template(typeaheadSource)({input: value});
-									$.get(source, function(data){
-										if(typeaheadDataSegment){
-											data = data[typeaheadDataSegment];
-										}
-										data  = _.select(data, function(elm){
-											return elm[settingDef.typeahead_field][0] == value[0];
-										});
-
-										typeaheadValues = _.map(data, function(elm){
-											return elm[settingDef.typeahead_field];
-										});
-										$(input).autocomplete("option", "source", typeaheadValues);
-
-										if(data.length == 1){
-											data = data[0];
-											//we found the one. let's use it to populate the other info
-											for(var field in data){
-												if(data.hasOwnProperty(field)){
-													var otherInput = $(_.template('input.typeahead_data_field-<%= field %>')({field: field}));
-													if(otherInput){
-														otherInput.val(data[field]);
-														if(otherInput.val() != input.val()) {
-															otherInput.trigger('change');
-														}
-													}
-												}
+							if (data.length == 1) {
+								data = data[0];
+								//we found the one. let's use it to populate the other info
+								for (var field in data) {
+									if (data.hasOwnProperty(field)) {
+										var otherInput = $(_.template('input.typeahead_data_field-<%= field %>')({ field: field }));
+										if (otherInput) {
+											otherInput.val(data[field]);
+											if (otherInput.val() != input.val()) {
+												otherInput.trigger('change');
 											}
 										}
-									});
-								});
+									}
+								}
 							}
-						}
-
-						break;
-					}
-				}
-
-				if(!_.isUndefined(settingDef.suffix))
-				{
-					valueCell.append($('<div class="input-suffix">' + settingDef.suffix + '</div>'));
-				}
-
-				if(!_.isUndefined(settingDef.description))
-				{
-					valueCell.append($('<div class="setting-description">' + settingDef.description + '</div>'));
-				}
-			});
-		}
-
-
-		new DialogBox(form, title, "Save", "Cancel", function()
-		{
-			$(".validation-error").remove();
-
-			// Loop through each setting and validate it
-			for(var index = 0; index < selectedType.settings.length; index++)
-			{
-				var settingDef = selectedType.settings[index];
-
-				if(settingDef.required && (_.isUndefined(newSettings.settings[settingDef.name]) || newSettings.settings[settingDef.name] == ""))
-				{
-					_displayValidationError(settingDef.name, "This is required.");
-					return true;
-				}
-				else if(settingDef.type == "integer" && (newSettings.settings[settingDef.name] % 1 !== 0))
-				{
-					_displayValidationError(settingDef.name, "Must be a whole number.");
-					return true;
-				}
-				else if(settingDef.type == "number" && !_isNumerical(newSettings.settings[settingDef.name]))
-				{
-					_displayValidationError(settingDef.name, "Must be a number.");
-					return true;
+						});
+					});
 				}
 			}
 
-			if(_.isFunction(settingsSavedCallback))
-			{
-				settingsSavedCallback(newSettings);
-			}
-		});
-        
-        for (var i of toDestroy)
-        {
-            i('destroy')
-        }
-
-		// Create our body
-		var pluginTypeNames = _.keys(pluginTypes);
-		var typeSelect;
-
-		if(pluginTypeNames.length > 1)
-		{
-			var typeRow = createSettingRow("plugin-types", "Type");
-			typeSelect = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(typeRow));
-
-			typeSelect.append($("<option>Select a type...</option>").attr("value", "undefined"));
-
-			_.each(pluginTypes, function(pluginType)
-			{
-				typeSelect.append($("<option></option>").text(pluginType.display_name).attr("value", pluginType.type_name));
-			});
-
-			typeSelect.change(function()
-			{
-				newSettings.type = $(this).val();
-				newSettings.settings = {};
-
-				// Remove all the previous settings
-				_removeSettingsRows();
-
-				selectedType = pluginTypes[typeSelect.val()];
-
-				if(_.isUndefined(selectedType))
-				{
-					$("#setting-row-instance-name").hide();
-					$("#dialog-ok").hide();
-				}
-				else
-				{
-					$("#setting-row-instance-name").show();
-
-					if(selectedType.description && selectedType.description.length > 0)
-					{
-						pluginDescriptionElement.html(selectedType.description).show();
-					}
-					else
-					{
-						pluginDescriptionElement.hide();
-					}
-
-					$("#dialog-ok").show();
-					createSettingsFromDefinition(selectedType.settings, selectedType.typeahead_source, selectedType.typeahead_data_segment);
-				}
-			});
-		}
-		else if(pluginTypeNames.length == 1)
-		{
-			selectedType = pluginTypes[pluginTypeNames[0]];
-			newSettings.type = selectedType.type_name;
-			newSettings.settings = {};
-			createSettingsFromDefinition(selectedType.settings);
-		}
-
-		if(typeSelect)
-		{
-			if(_.isUndefined(currentTypeName))
-			{
-				$("#setting-row-instance-name").hide();
-				$("#dialog-ok").hide();
-			}
-			else
-			{
-				$("#dialog-ok").show();
-				typeSelect.val(currentTypeName).trigger("change");
-			}
+			break;
 		}
 	}
 
-	// Public API
-	return {
-		createPluginEditor : function(
-			title,
-			pluginTypes,
-			currentInstanceName,
-			currentTypeName,
-			currentSettingsValues,
-			settingsSavedCallback)
-		{
-			createPluginEditor(title, pluginTypes, currentInstanceName, currentTypeName, currentSettingsValues, settingsSavedCallback);
+	if (!_.isUndefined(settingDef.suffix)) {
+		valueCell.append($('<div class="input-suffix">' + settingDef.suffix + '</div>'));
+	}
+
+	if (!_.isUndefined(settingDef.description)) {
+		valueCell.append($('<div class="setting-description">' + settingDef.description + '</div>'));
+	}
+});
+		}
+
+
+new DialogBox(form, title, "Save", "Cancel", function () {
+	$(".validation-error").remove();
+
+	// Loop through each setting and validate it
+	for (var index = 0; index < selectedType.settings.length; index++) {
+		var settingDef = selectedType.settings[index];
+
+		if (settingDef.required && (_.isUndefined(newSettings.settings[settingDef.name]) || newSettings.settings[settingDef.name] == "")) {
+			_displayValidationError(settingDef.name, "This is required.");
+			return true;
+		}
+		else if (settingDef.type == "integer" && (newSettings.settings[settingDef.name] % 1 !== 0)) {
+			_displayValidationError(settingDef.name, "Must be a whole number.");
+			return true;
+		}
+		else if (settingDef.type == "number" && !_isNumerical(newSettings.settings[settingDef.name])) {
+			_displayValidationError(settingDef.name, "Must be a number.");
+			return true;
 		}
 	}
+
+	if (_.isFunction(settingsSavedCallback)) {
+		settingsSavedCallback(newSettings);
+	}
+});
+
+for (var i of toDestroy) {
+	i('destroy')
+}
+
+// Create our body
+var pluginTypeNames = _.keys(pluginTypes);
+var typeSelect;
+
+if (pluginTypeNames.length > 1) {
+	var typeRow = createSettingRow("plugin-types", "Type");
+	typeSelect = $('<select></select>').appendTo($('<div class="styled-select"></div>').appendTo(typeRow));
+
+	typeSelect.append($("<option>Select a type...</option>").attr("value", "undefined"));
+
+	_.each(pluginTypes, function (pluginType) {
+		typeSelect.append($("<option></option>").text(pluginType.display_name).attr("value", pluginType.type_name));
+	});
+
+	typeSelect.change(function () {
+		newSettings.type = $(this).val();
+		newSettings.settings = {};
+
+		// Remove all the previous settings
+		_removeSettingsRows();
+
+		selectedType = pluginTypes[typeSelect.val()];
+
+		if (_.isUndefined(selectedType)) {
+			$("#setting-row-instance-name").hide();
+			$("#dialog-ok").hide();
+		}
+		else {
+			$("#setting-row-instance-name").show();
+
+			if (selectedType.description && selectedType.description.length > 0) {
+				pluginDescriptionElement.html(selectedType.description).show();
+			}
+			else {
+				pluginDescriptionElement.hide();
+			}
+
+			$("#dialog-ok").show();
+			createSettingsFromDefinition(selectedType.settings, selectedType.typeahead_source, selectedType.typeahead_data_segment);
+		}
+	});
+}
+else if (pluginTypeNames.length == 1) {
+	selectedType = pluginTypes[pluginTypeNames[0]];
+	newSettings.type = selectedType.type_name;
+	newSettings.settings = {};
+	createSettingsFromDefinition(selectedType.settings);
+}
+
+if (typeSelect) {
+	if (_.isUndefined(currentTypeName)) {
+		$("#setting-row-instance-name").hide();
+		$("#dialog-ok").hide();
+	}
+	else {
+		$("#dialog-ok").show();
+		typeSelect.val(currentTypeName).trigger("change");
+	}
+}
+	}
+
+// Public API
+return {
+	createPluginEditor: function (
+		title,
+		pluginTypes,
+		currentInstanceName,
+		currentTypeName,
+		currentSettingsValues,
+		settingsSavedCallback) {
+		createPluginEditor(title, pluginTypes, currentInstanceName, currentTypeName, currentSettingsValues, settingsSavedCallback);
+	}
+}
 }
 
 ValueEditor = function(theFreeboardModel)
@@ -2877,6 +2841,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 // └────────────────────────────────────────────────────────────────────┘ \\
 
 // Jquery plugin to watch for attribute changes
+
 (function($)
 {
 	function isDOMAttrModifiedSupported()
@@ -3330,7 +3295,7 @@ var freeboard = (function()
 		  playSound : function(s){
 
 			//Allow sound theming
-			var st  = theFreeboardModel.globalSettings.soundTheme
+			var st  = theFreeboardModel.globalSettings
 			if(st.externalSounds)
 			{
 				if(st.externalSounds[s])
@@ -3338,6 +3303,15 @@ var freeboard = (function()
 					s=st.externalSounds[s]
 				}
 			}
+
+			if(st.soundData)
+			{
+				if(st.soundData[s])
+				{
+					s=st.soundData[s]
+				}
+			}
+
 			var sound = new Howl({
 				src: [s],
 				html5:(window.location.protocol=='file')
@@ -3568,6 +3542,19 @@ globalSettingsSchema = {
     type: "object",
     title: "Settings",
     properties: {
+
+        soundData: {
+            type: "object",
+            title: "Sounds(saved as part of board)",
+            additionalProperties: {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                    },
+                },
+            },
+
+
         theme: {
             type: "object",
             title: "Theme",
@@ -4092,7 +4079,7 @@ function generateFreeboardEmojiCheats(){
   </p>
   <p>💐🌸🌷🍀🌹🌻🌺🍁🍃🍂🌿🌾🍄🌵🌴🌲🌳🌰🌱🌼</p>
   <h2>Earth and Space</h2>
-  <p>🌐🌞🌝🌚🌑🌒🌓🌔🌕🌖🌗🌘🌜🌛🌙🌍🌎🌏🌋🌌🌠⭐️☀️⛅️☁️⚡️☔️❄️⛄️🌁🌀🌈🌊</p>
+  <p>🌐🌞🌝🌚🌑🌒🌓🌔🌕🌖🌗🌘🌜🌛🌙🌍🌎🌏🌋🌌🌠⭐️☀️⛅️☁️⚡️☔️❄️⛄️🌁🌀🌈🌊❄️</p>
   <p><br></p>
   <h2>Parties</h2>
   <p>💝🎎🎒🎓🎓🎏🎆🎇🎐🎑🎃👻🎅🎄🎁🎋🎉🎊🎈</p>
@@ -4134,6 +4121,34 @@ function generateFreeboardEmojiCheats(){
   <p>✖️➕➖➗💮♦️♣️♥️♠️💯✔️☑️🔘🔗◼️🔱〽️〰➰◻️▪️▫️⚪️⚫️🔳🔲🔺🔴🔵⬛️🔹🔸🔷🔶<br></p>
   
   
+<h2>Pictographs</h2>
+☀︎ ☼ ☽ ☾ ☁︎ ☂︎ ☔︎ ☃︎ ☇ ☈ ☻ ☹︎ ☺︎ ☕︎ ✌︎ ✍︎ ✎ ✏︎ ✐ ✑ ✒︎ ✁ ✂︎ ✃ ✄ ⚾︎ ✇ ✈︎ ⚓︎ ♨︎<br>
+ ♈︎ ♉︎ ♊︎ ♋︎ ♌︎ ♍︎ ♎︎ ♏︎ ♐︎ ♑︎ ♒︎ ♓︎ ☉ ☿ ♀︎ ♁ ♂︎ ♃ ♄ ♅ ⛢ ♆ ♇ ☄︎ ⚲ ⚢ ⚣ ⚤ <br>
+ ⚦ ⚧ ⚨ ⚩ ⚬ ⚭ ⚮ ⚯ ⚰︎ ⚱︎ ☊ ☋ ☌ ☍ ✦ ✧ ✙ ✚ ✛ ✜ ✝︎ ✞ ✟ ✠ ☦︎ ☨ ☩ ☥<br>
+  ♰ ♱ ☓ ⚜︎ ☤ ⚚ ⚕︎ ⚖︎ ⚗︎ ⚙︎ ⚘ ☘︎ ⚛︎ ☧ ⚒︎ ☭ ☪︎ ☫ ☬ ⚑ ⚐ ☮︎ ☯︎ ☸︎ ⚔︎ ☗ ☖ ■ □ <br>
+  ☐ ☑︎ ☒ ▪︎ ▫︎ ◻︎ ◼︎ ◘ ◆ ◇ ❖ ✓ ✔︎ ✕ ✖︎ ✗ ✘ ﹅ ﹆ ❍ ❏ ❐ ❑ ❒ ✰ ❤︎ ❥ ☙ <br>
+  ❧ ❦ ❡ 🞡 🞢 🞣 🞤 🞥 🞦 🞧 🞨 🞩 🞪 🞫 🞬 🞭 🞮<br>
+
+
+
+<h2>Currency Symbols</h2>
+$ € ¥ ¢ £ ₽ ₨ ₩ ฿ ₺ ₮ ₱ ₭ ₴ ₦ ৲ ৳ ૱ ௹ ﷼ ₹ ₲ ₪ ₡ ₫ ៛ ₵ ₢ ₸ ₤ ₳ ₥ ₠ ₣ ₰ ₧ ₯ ₶ ₷
+
+
+<h2>Stars and Circles</h2>
+✢ ✣ ✤ ✥ ✦ ✧ ★ ☆ ✯ ✡︎ ✩ ✪ ✫ ✬ ✭ ✮ ✶ ✷ ✵ ✸ ✹ ✺ ❊ ✻ ✽ ✼<br>
+ ❉ ✱ ✲ ✾ ❃ ❋ ✳︎ ✴︎ ❇︎ ❈ ※ ❅ ❆ ❄︎ ⚙︎ ✿ ❀ ❁ ❂ 🟀 🟁 🟂 🟃 🟄 🟅<br>
+  🟆 🟇 🟈 🟉 🟊 🟋 🟌 🟍 🟎 🟏 🟐 🟑 🟒 🟓 🟔 ∙ • ・ ◦ ● ○ ◎ ◉ ⦿ ⁌ ⁍<br>
+
+<h2>Nature</h2>
+🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐽 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🦆<br>
+ 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🦟 🦗 🕷 🕸 🦂 🐢 🐍 🦎 🦖 🦕 🐙 🦑 🦐 🦞 🦀 <br>
+ 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦧 🐘 🦛 🦏 🐪 🐫 🦒 🦘 🐃 🐂 🐄 🐎 🐖 🐏 🐑 🦙 <br>
+ 🐐 🦌 🐕 🐩 🦮 🐕‍🦺 🐈 🐓 🦃 🦚 🦜 🦢 🦩 🕊 🐇 🦝 🦨 🦡 🦦 🦥 🐁 🐀 🐿 🦔 🐾 🐉 🐲<br>
+  🌵 🎄 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🎍 🎋 🍃 🍂 🍁 🍄 🐚 🌾 💐 🌷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌛<br> 
+  🌜 🌚 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌙 🌎 🌍 🌏 🪐 💫 ⭐️ 🌟 ✨ ⚡️ ☄️ 💥 🔥 🌪 <br>
+  🌈 ☀️ 🌤 ⛅️ 🌥 ☁️ 🌦 🌧 ⛈ 🌩 🌨 ❄️ ☃️ ⛄️ 🌬 💨 💧 💦 ☔️ ☂️ 🌊 🌫<br>
+
   <h2>FontAwesome symbols(Adapted from the official cheetsheet)</h2>
   <pre>
   	ad	f641
@@ -6767,13 +6782,15 @@ freeboard.loadDatasourcePlugin({
 // │ Licensed under the MIT license.                                    │ \\
 // └────────────────────────────────────────────────────────────────────┘ \\
 
+//const { set } = require("grunt");
+
 (function () {
-	var SPARKLINE_HISTORY_LENGTH = 100;
-	var SPARKLINE_COLORS = ["#FF9900", "#FFFFFF", "#B3B4B4", "#6B6B6B", "#28DE28", "#13F7F9", "#E6EE18", "#C41204", "#CA3CB8", "#0B1CFB"];
+    var SPARKLINE_HISTORY_LENGTH = 100;
+    var SPARKLINE_COLORS = ["#FF9900", "#FFFFFF", "#B3B4B4", "#6B6B6B", "#28DE28", "#13F7F9", "#E6EE18", "#C41204", "#CA3CB8", "#0B1CFB"];
 
     function easeTransitionText(newValue, textElement, duration) {
 
-		var currentValue = $(textElement).text();
+        var currentValue = $(textElement).text();
 
         if (currentValue == newValue)
             return;
@@ -6793,7 +6810,7 @@ freeboard.loadDatasourcePlugin({
                 startingPrecision = numParts[1].length;
             }
 
-            jQuery({transitionValue: Number(currentValue), precisionValue: startingPrecision}).animate({transitionValue: Number(newValue), precisionValue: endingPrecision}, {
+            jQuery({ transitionValue: Number(currentValue), precisionValue: startingPrecision }).animate({ transitionValue: Number(newValue), precisionValue: endingPrecision }, {
                 duration: duration,
                 step: function () {
                     $(textElement).text(this.transitionValue.toFixed(this.precisionValue));
@@ -6808,219 +6825,210 @@ freeboard.loadDatasourcePlugin({
         }
     }
 
-	function addSparklineLegend(element, legend) {
-		var legendElt = $("<div class='sparkline-legend'></div>");
-		for(var i=0; i<legend.length; i++) {
-			var color = SPARKLINE_COLORS[i % SPARKLINE_COLORS.length];
-			var label = legend[i];
-			legendElt.append("<div class='sparkline-legend-value'><span style='color:" +
-							 color + "'>&#9679;</span>" + label + "</div>");
-		}
-		element.empty().append(legendElt);
+    function addSparklineLegend(element, legend) {
+        var legendElt = $("<div class='sparkline-legend'></div>");
+        for (var i = 0; i < legend.length; i++) {
+            var color = SPARKLINE_COLORS[i % SPARKLINE_COLORS.length];
+            var label = legend[i];
+            legendElt.append("<div class='sparkline-legend-value'><span style='color:" +
+                color + "'>&#9679;</span>" + label + "</div>");
+        }
+        element.empty().append(legendElt);
 
-		freeboard.addStyle('.sparkline-legend', "margin:5px;");
-		freeboard.addStyle('.sparkline-legend-value',
-			'color:white; font:10px arial,san serif; float:left; overflow:hidden; width:50%;');
-		freeboard.addStyle('.sparkline-legend-value span',
-			'font-weight:bold; padding-right:5px;');
-	}
+        freeboard.addStyle('.sparkline-legend', "margin:5px;");
+        freeboard.addStyle('.sparkline-legend-value',
+            'color:white; font:10px arial,san serif; float:left; overflow:hidden; width:50%;');
+        freeboard.addStyle('.sparkline-legend-value span',
+            'font-weight:bold; padding-right:5px;');
+    }
 
-	function addValueToSparkline(element, value, legend) {
-		var values = $(element).data().values;
-		var valueMin = $(element).data().valueMin;
-		var valueMax = $(element).data().valueMax;
-		if (!values) {
-			values = [];
-			valueMin = undefined;
-			valueMax = undefined;
-		}
+    function addValueToSparkline(element, value, legend) {
+        var values = $(element).data().values;
+        var valueMin = $(element).data().valueMin;
+        var valueMax = $(element).data().valueMax;
+        if (!values) {
+            values = [];
+            valueMin = undefined;
+            valueMax = undefined;
+        }
 
-		var collateValues = function(val, plotIndex) {
-			if(!values[plotIndex]) {
-				values[plotIndex] = [];
-			}
-			if (values[plotIndex].length >= SPARKLINE_HISTORY_LENGTH) {
-				values[plotIndex].shift();
-			}
-			values[plotIndex].push(Number(val));
+        var collateValues = function (val, plotIndex) {
+            if (!values[plotIndex]) {
+                values[plotIndex] = [];
+            }
+            if (values[plotIndex].length >= SPARKLINE_HISTORY_LENGTH) {
+                values[plotIndex].shift();
+            }
+            values[plotIndex].push(Number(val));
 
-			if(valueMin === undefined || val < valueMin) {
-				valueMin = val;
-			}
-			if(valueMax === undefined || val > valueMax) {
-				valueMax = val;
-			}
-		}
+            if (valueMin === undefined || val < valueMin) {
+                valueMin = val;
+            }
+            if (valueMax === undefined || val > valueMax) {
+                valueMax = val;
+            }
+        }
 
-		if(_.isArray(value)) {
-			_.each(value, collateValues);
-		} else {
-			collateValues(value, 0);
-		}
-		$(element).data().values = values;
-		$(element).data().valueMin = valueMin;
-		$(element).data().valueMax = valueMax;
+        if (_.isArray(value)) {
+            _.each(value, collateValues);
+        } else {
+            collateValues(value, 0);
+        }
+        $(element).data().values = values;
+        $(element).data().valueMin = valueMin;
+        $(element).data().valueMax = valueMax;
 
-		var tooltipHTML = '<span style="color: {{color}}">&#9679;</span> {{y}}';
+        var tooltipHTML = '<span style="color: {{color}}">&#9679;</span> {{y}}';
 
-		var composite = false;
-		_.each(values, function(valueArray, valueIndex) {
-			$(element).sparkline(valueArray, {
-				type: "line",
-				composite: composite,
-				height: "100%",
-				width: "100%",
-				fillColor: false,
-				lineColor: SPARKLINE_COLORS[valueIndex % SPARKLINE_COLORS.length],
-				lineWidth: 2,
-				spotRadius: 3,
-				spotColor: false,
-				minSpotColor: "#78AB49",
-				maxSpotColor: "#78AB49",
-				highlightSpotColor: "#9D3926",
-				highlightLineColor: "#9D3926",
-				chartRangeMin: valueMin,
-				chartRangeMax: valueMax,
-				tooltipFormat: (legend && legend[valueIndex])?tooltipHTML + ' (' + legend[valueIndex] + ')':tooltipHTML
-			});
-			composite = true;
-		});
-	}
+        var composite = false;
+        _.each(values, function (valueArray, valueIndex) {
+            $(element).sparkline(valueArray, {
+                type: "line",
+                composite: composite,
+                height: "100%",
+                width: "100%",
+                fillColor: false,
+                lineColor: SPARKLINE_COLORS[valueIndex % SPARKLINE_COLORS.length],
+                lineWidth: 2,
+                spotRadius: 3,
+                spotColor: false,
+                minSpotColor: "#78AB49",
+                maxSpotColor: "#78AB49",
+                highlightSpotColor: "#9D3926",
+                highlightLineColor: "#9D3926",
+                chartRangeMin: valueMin,
+                chartRangeMax: valueMax,
+                tooltipFormat: (legend && legend[valueIndex]) ? tooltipHTML + ' (' + legend[valueIndex] + ')' : tooltipHTML
+            });
+            composite = true;
+        });
+    }
 
-	var valueStyle = freeboard.getStyleString("values");
+    var valueStyle = freeboard.getStyleString("values");
 
-	freeboard.addStyle('.widget-big-text', valueStyle + "font-size:75px;");
+    freeboard.addStyle('.widget-big-text', valueStyle + "font-size:75px;");
 
-	freeboard.addStyle('.tw-display', 'width: 100%; height:100%; display:table; table-layout:fixed;');
+    freeboard.addStyle('.tw-display', 'width: 100%; height:100%; display:table; table-layout:fixed;');
 
-	freeboard.addStyle('.tw-tr',
-		'display:table-row;');
+    freeboard.addStyle('.tw-tr',
+        'display:table-row;');
 
-	freeboard.addStyle('.tw-tg',
-		'display:table-row-group;');
+    freeboard.addStyle('.tw-tg',
+        'display:table-row-group;');
 
-	freeboard.addStyle('.tw-tc',
-		'display:table-caption;');
+    freeboard.addStyle('.tw-tc',
+        'display:table-caption;');
 
-	freeboard.addStyle('.tw-td',
-		'display:table-cell;');
+    freeboard.addStyle('.tw-td',
+        'display:table-cell;');
 
-	freeboard.addStyle('.tw-value',
-		valueStyle +
-		'overflow: hidden;' +
-		'display: inline-block;' +
-		'text-overflow: ellipsis;');
+    freeboard.addStyle('.tw-value',
+        valueStyle +
+        'overflow: hidden;' +
+        'display: inline-block;' +
+        'text-overflow: ellipsis;');
 
-	freeboard.addStyle('.tw-unit',
-		'display: inline-block;' +
-		'padding-left: 10px;' +
-		'padding-bottom: 1.1em;' +
-		'vertical-align: bottom;');
+    freeboard.addStyle('.tw-unit',
+        'display: inline-block;' +
+        'padding-left: 10px;' +
+        'padding-bottom: 1.1em;' +
+        'vertical-align: bottom;');
 
-	freeboard.addStyle('.tw-value-wrapper',
-		'position: relative;' +
-		'vertical-align: middle;' +
-		'height:100%;');
+    freeboard.addStyle('.tw-value-wrapper',
+        'position: relative;' +
+        'vertical-align: middle;' +
+        'height:100%;');
 
-	freeboard.addStyle('.tw-sparkline',
-		'height:20px;');
+    freeboard.addStyle('.tw-sparkline',
+        'height:20px;');
 
     var textWidget = function (settings) {
 
         var self = this;
 
         var currentSettings = settings;
-		var displayElement = $('<div class="tw-display"></div>');
-		var titleElement = $('<h2 class="section-title tw-title tw-td"></h2>');
+        var displayElement = $('<div class="tw-display"></div>');
+        var titleElement = $('<h2 class="section-title tw-title tw-td"></h2>');
         var valueElement = $('<div class="tw-value"></div>');
         var unitsElement = $('<div class="tw-unit"></div>');
         var sparklineElement = $('<div class="tw-sparkline tw-td"></div>');
 
-		function updateValueSizing()
-		{
-			if(!_.isUndefined(currentSettings.units) && currentSettings.units != "") // If we're displaying our units
-			{
-				valueElement.css("max-width", (displayElement.innerWidth() - unitsElement.outerWidth(true)) + "px");
-			}
-			else
-			{
-				valueElement.css("max-width", "100%");
-			}
-		}
+        function updateValueSizing() {
+            if (!_.isUndefined(currentSettings.units) && currentSettings.units != "") // If we're displaying our units
+            {
+                valueElement.css("max-width", (displayElement.innerWidth() - unitsElement.outerWidth(true)) + "px");
+            }
+            else {
+                valueElement.css("max-width", "100%");
+            }
+        }
 
         this.render = function (element) {
-			$(element).empty();
+            $(element).empty();
 
-			$(displayElement)
-				.append($('<div class="tw-tr"></div>').append(titleElement))
-				.append($('<div class="tw-tr"></div>').append($('<div class="tw-value-wrapper tw-td"></div>').append(valueElement).append(unitsElement)))
-				.append($('<div class="tw-tr"></div>').append(sparklineElement));
+            $(displayElement)
+                .append($('<div class="tw-tr"></div>').append(titleElement))
+                .append($('<div class="tw-tr"></div>').append($('<div class="tw-value-wrapper tw-td"></div>').append(valueElement).append(unitsElement)))
+                .append($('<div class="tw-tr"></div>').append(sparklineElement));
 
-			$(element).append(displayElement);
+            $(element).append(displayElement);
 
-			updateValueSizing();
+            updateValueSizing();
         }
 
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
 
-			var shouldDisplayTitle = (!_.isUndefined(newSettings.title) && newSettings.title != "");
-			var shouldDisplayUnits = (!_.isUndefined(newSettings.units) && newSettings.units != "");
+            var shouldDisplayTitle = (!_.isUndefined(newSettings.title) && newSettings.title != "");
+            var shouldDisplayUnits = (!_.isUndefined(newSettings.units) && newSettings.units != "");
 
-			if(newSettings.sparkline)
-			{
-				sparklineElement.attr("style", null);
-			}
-			else
-			{
-				delete sparklineElement.data().values;
-				sparklineElement.empty();
-				sparklineElement.hide();
-			}
+            if (newSettings.sparkline) {
+                sparklineElement.attr("style", null);
+            }
+            else {
+                delete sparklineElement.data().values;
+                sparklineElement.empty();
+                sparklineElement.hide();
+            }
 
-			if(shouldDisplayTitle)
-			{
-				titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
-				titleElement.attr("style", null);
-			}
-			else
-			{
-				titleElement.empty();
-				titleElement.hide();
-			}
+            if (shouldDisplayTitle) {
+                titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
+                titleElement.attr("style", null);
+            }
+            else {
+                titleElement.empty();
+                titleElement.hide();
+            }
 
-			if(shouldDisplayUnits)
-			{
-				unitsElement.html((_.isUndefined(newSettings.units) ? "" : newSettings.units));
-				unitsElement.attr("style", null);
-			}
-			else
-			{
-				unitsElement.empty();
-				unitsElement.hide();
-			}
+            if (shouldDisplayUnits) {
+                unitsElement.html((_.isUndefined(newSettings.units) ? "" : newSettings.units));
+                unitsElement.attr("style", null);
+            }
+            else {
+                unitsElement.empty();
+                unitsElement.hide();
+            }
 
-			var valueFontSize = 30;
 
-			if(newSettings.size == "big")
-			{
-				valueFontSize = 75;
+            if (newSettings.size == "big") {
+                valueFontSize = '60px';
+            }
+            else if (newSettings.size == "regular") {
+                valueFontSize = '30px';
+            }
+            else {
+                valueFontSize = newSettings.size;
+            }
 
-				if(newSettings.sparkline)
-				{
-					valueFontSize = 60;
-				}
-			}
 
-			valueElement.css({"font-size" : valueFontSize + "px"});
+            valueElement.css({ "font-size": valueFontSize });
 
-			updateValueSizing();
+            updateValueSizing();
         }
 
-		this.onSizeChanged = function()
-		{
-			updateValueSizing();
-		}
+        this.onSizeChanged = function () {
+            updateValueSizing();
+        }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
             if (settingName == "value") {
@@ -7075,6 +7083,34 @@ freeboard.loadDatasourcePlugin({
                     {
                         name: "Big",
                         value: "big"
+                    },
+                    {
+                        name: "Small",
+                        value: "small"
+                    },
+                    {
+                        name: "Medium",
+                        value: "Medium"
+                    },
+                    {
+                        name: "Large",
+                        value: "large"
+                    },
+                    {
+                        name: "Extra Large",
+                        value: "x-large"
+                    },
+                    {
+                        name: "32px",
+                        value: "32px"
+                    },
+                    {
+                        name: "48px",
+                        value: "48px"
+                    },
+                    {
+                        name: "64px",
+                        value: "64px"
                     }
                 ]
             },
@@ -7098,16 +7134,44 @@ freeboard.loadDatasourcePlugin({
                 name: "units",
                 display_name: "Units",
                 type: "text",
-                options:function(){return{
-                    'lbs':'',
-                    'kgs':'',
-                    'psi':'',
-                    'meters':'',
-                    'feet':'',
-                    'mm':'',
-                    'degC':'',
-                    'degF':'',
-                }}
+                options: function () {
+                    return {
+                        'lbs': '',
+                        'kgs': '',
+                        'psi': '',
+                        'meters': '',
+                        'feet': '',
+                        'mm': '',
+                        'degC': '',
+                        'degF': '',
+                    }
+                }
+            },
+
+            {
+                name: "font",
+                display_name: "Font",
+                type: "text",
+                options: function () {
+                    return {
+                        'FBMono': '',
+                        'FBSans': '',
+                        'DSEG7': '',
+                        'DSEG14': '',
+                        'Pandora': '',
+                        'FBCursive': '',
+                        'FBSerif': '',
+                        'DIN': '',
+                        'FBComic': '',
+                        'QTBlackForest': '',
+                        'PenguinAttack': '',
+                        'Chancery': '',
+                        'Pixel': '',
+                        'Handwriting': '',
+                        'Chalkboard': '',
+                        'RoughScript': '',
+                    }
+                }
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -7116,20 +7180,21 @@ freeboard.loadDatasourcePlugin({
     });
 
     var gaugeID = 0;
-	freeboard.addStyle('.gauge-widget-wrapper', "width: 100%;text-align: center;");
-	freeboard.addStyle('.gauge-widget', "width:200px;height:160px;display:inline-block;");
+    freeboard.addStyle('.gauge-widget-wrapper', "width: 100%;text-align: center;");
 
     var gaugeWidget = function (settings) {
         var self = this;
 
         var thisGaugeID = "gauge-" + gaugeID++;
         var titleElement = $('<h2 class="section-title"></h2>');
-        var gaugeElement = $('<div class="gauge-widget" id="' + thisGaugeID + '"></div>');
+        var gaugeElement = $('<canvas width=160 height=160 id="' + thisGaugeID + '"></canvas>');
 
         var gaugeObject;
         var rendered = false;
 
-        var currentSettings = settings;
+        self.currentSettings = settings;
+
+        settings.style=settings.style || {}
 
         function createGauge() {
             if (!rendered) {
@@ -7138,15 +7203,36 @@ freeboard.loadDatasourcePlugin({
 
             gaugeElement.empty();
 
-            gaugeObject = new JustGage({
-                id: thisGaugeID,
-                value: (_.isUndefined(currentSettings.min_value) ? 0 : currentSettings.min_value),
-                min: (_.isUndefined(currentSettings.min_value) ? 0 : currentSettings.min_value),
-                max: (_.isUndefined(currentSettings.max_value) ? 0 : currentSettings.max_value),
-                label: currentSettings.units,
-                showInnerShadow: false,
-                valueFontColor: "#d3d4d4"
-            });
+            var opts = {
+                angle: self.currentSettings.style.angle || -0.15, // The span of the gauge arc
+                lineWidth: self.currentSettings.style.width || 0.15, // The line thickness
+                radiusScale: self.currentSettings.style.radius || 0.8, // Relative radius
+                pointer: {
+                    length: self.currentSettings.style.pointerLength||0.6, // // Relative to gauge radius
+                    strokeWidth: self.currentSettings.style.pointerWidth||0.035, // The thickness
+                    color: self.currentSettings.style.pointerColor || '#000000' // Fill color
+                },
+                limitMax: true,     // If false, max value increases automatically if value > maxValue
+                limitMin: true,     // If true, the min value of the gauge will be fixed
+                colorStart: '#6FADCF',   // Colors
+                colorStop: '#8FC0DA',    // just experiment with them
+                strokeColor: self.currentSettings.style.arcColor || '#000000',  // to see which ones work best for you
+                generateGradient: true,
+                highDpiSupport: true,     // High resolution support
+                valueText : self.currentSettings.units || ''
+
+            };
+
+            var target = document.getElementById(thisGaugeID); // your canvas element
+            var gauge = new Gauge(target).setOptions(opts); // create sexy gauge!
+            gauge.maxValue = self.currentSettings.max_value || 100; // set max gauge value
+            gauge.setMinValue(self.currentSettings.min_value || 0);  // Prefer setter over gauge.minValue = 0
+            gauge.animationSpeed = 1; // set animation speed (32 is default value)
+
+
+            gaugeObject = gauge
+
+
         }
 
         this.render = function (element) {
@@ -7156,25 +7242,22 @@ freeboard.loadDatasourcePlugin({
         }
 
         this.onSettingsChanged = function (newSettings) {
-            if (newSettings.min_value != currentSettings.min_value || newSettings.max_value != currentSettings.max_value || newSettings.units != currentSettings.units) {
-                currentSettings = newSettings;
-                createGauge();
-            }
-            else {
-                currentSettings = newSettings;
-            }
+
+            self.currentSettings = newSettings;
+            createGauge();
 
             titleElement.html(newSettings.title);
         }
 
         this.onCalculatedValueChanged = function (settingName, value) {
             if (!_.isUndefined(gaugeObject)) {
-              
-                gaugeObject.refresh(Number(value));
+
+                gaugeObject.set(Number(value));
             }
         }
 
         this.onDispose = function () {
+
         }
 
         this.getHeight = function () {
@@ -7193,6 +7276,73 @@ freeboard.loadDatasourcePlugin({
                 display_name: "Title",
                 type: "text"
             },
+
+            {
+                name: 'style',
+                type: 'json',
+                display_name: "Theming",
+                schema: {
+                    type: "object",
+                    title: "Theme",
+                    properties: {
+                        "pointerColor": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+                        },
+                        "arcColor": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+                        },
+                        "width": {
+                            type: "number",
+                            min:0,
+                            max:1,
+                        },
+                        "pointerWidth": {
+                            type: "number",
+                            min:0.001,
+                            max:0.1,
+                        },
+                        "pointerLength": {
+                            type: "number",
+                            min:0.1,
+                            max:2,
+                        },
+                        "radius": {
+                            type: "number",
+                            min:-0.3,
+                            max:1,
+                        },
+                        "angle": {
+                            type: "number",
+                            min:-1,
+                            max:1,
+                        }
+                    }
+                },
+            
+                default_value: {
+                    pointerColor:'#000000',
+                    pointerLength: 1,
+                    arcColor:'#E0DEBC',
+                    width: 0.15,
+                    angle: -0.15,
+                    radius:1
+                }
+            },
+
+
+
             {
                 name: "value",
                 display_name: "Value",
@@ -7222,50 +7372,50 @@ freeboard.loadDatasourcePlugin({
     });
 
 
-	freeboard.addStyle('.sparkline', "width:100%;height: 75px;");
+    freeboard.addStyle('.sparkline', "width:100%;height: 75px;");
     var sparklineWidget = function (settings) {
         var self = this;
 
         var titleElement = $('<h2 class="section-title"></h2>');
         var sparklineElement = $('<div class="sparkline"></div>');
-		var sparklineLegend = $('<div></div>');
-		var currentSettings = settings;
+        var sparklineLegend = $('<div></div>');
+        var currentSettings = settings;
 
         this.render = function (element) {
             $(element).append(titleElement).append(sparklineElement).append(sparklineLegend);
         }
 
         this.onSettingsChanged = function (newSettings) {
-			currentSettings = newSettings;
+            currentSettings = newSettings;
             titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 
-			if(newSettings.include_legend) {
-				addSparklineLegend(sparklineLegend,  newSettings.legend.split(","));
-			}
+            if (newSettings.include_legend) {
+                addSparklineLegend(sparklineLegend, newSettings.legend.split(","));
+            }
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
-			if (currentSettings.legend) {
-				addValueToSparkline(sparklineElement, newValue, currentSettings.legend.split(","));
-			} else {
-				addValueToSparkline(sparklineElement, newValue);
-			}
+            if (currentSettings.legend) {
+                addValueToSparkline(sparklineElement, newValue, currentSettings.legend.split(","));
+            } else {
+                addValueToSparkline(sparklineElement, newValue);
+            }
         }
 
         this.onDispose = function () {
         }
 
         this.getHeight = function () {
-			var legendHeight = 0;
-			if (currentSettings.include_legend && currentSettings.legend) {
-				var legendLength = currentSettings.legend.split(",").length;
-				if (legendLength > 4) {
-					legendHeight = Math.floor((legendLength-1) / 4) * 0.5;
-				} else if (legendLength) {
-					legendHeight = 0.5;
-				}
-			}
-			return 2 + legendHeight;
+            var legendHeight = 0;
+            if (currentSettings.include_legend && currentSettings.legend) {
+                var legendLength = currentSettings.legend.split(",").length;
+                if (legendLength > 4) {
+                    legendHeight = Math.floor((legendLength - 1) / 4) * 0.5;
+                } else if (legendLength) {
+                    legendHeight = 0.5;
+                }
+            }
+            return 2 + legendHeight;
         }
 
         this.onSettingsChanged(settings);
@@ -7284,26 +7434,26 @@ freeboard.loadDatasourcePlugin({
                 name: "value",
                 display_name: "Value",
                 type: "calculated",
-				multi_input: "true"
+                multi_input: "true"
             },
-			{
-				name: "include_legend",
-				display_name: "Include Legend",
-				type: "boolean"
-			},
-			{
-				name: "legend",
-				display_name: "Legend",
-				type: "text",
-				description: "Comma-separated for multiple sparklines"
-			}
+            {
+                name: "include_legend",
+                display_name: "Include Legend",
+                type: "boolean"
+            },
+            {
+                name: "legend",
+                display_name: "Legend",
+                type: "text",
+                description: "Comma-separated for multiple sparklines"
+            }
         ],
         newInstance: function (settings, newInstanceCallback) {
             newInstanceCallback(new sparklineWidget(settings));
         }
     });
 
-	freeboard.addStyle('div.pointer-value', "position:absolute;height:95px;margin: auto;top: 0px;bottom: 0px;width: 100%;text-align:center;");
+    freeboard.addStyle('div.pointer-value', "position:absolute;height:95px;margin: auto;top: 0px;bottom: 0px;width: 100%;text-align:center;");
     var pointerWidget = function (settings) {
         var self = this;
         var paper;
@@ -7359,7 +7509,7 @@ freeboard.loadDatasourcePlugin({
                         //direction = "l";
                     }
 
-                    triangle.animate({transform: "r" + newValue + "," + (width / 2) + "," + (height / 2)}, 250, "bounce");
+                    triangle.animate({ transform: "r" + newValue + "," + (width / 2) + "," + (height / 2) }, 250, "bounce");
                 }
 
                 currentValue = newValue;
@@ -7405,79 +7555,67 @@ freeboard.loadDatasourcePlugin({
         }
     });
 
-    var pictureWidget = function(settings)
-    {
+    var pictureWidget = function (settings) {
         var self = this;
         var widgetElement;
         var timer;
         var imageURL;
 
-        function stopTimer()
-        {
-            if(timer)
-            {
+        function stopTimer() {
+            if (timer) {
                 clearInterval(timer);
                 timer = null;
             }
         }
 
-        function updateImage()
-        {
-            if(widgetElement && imageURL)
-            {
+        function updateImage() {
+            if (widgetElement && imageURL) {
                 //var cacheBreakerURL = imageURL + (imageURL.indexOf("?") == -1 ? "?" : "&") + Date.now();
-                
+
                 //Overriding cache is generally a bad thing if there is polling happening.  If needed, fix your cache settings.
-                var cacheBreakerURL = imageURL 
-                
+                var cacheBreakerURL = imageURL
+
 
                 $(widgetElement).css({
-                    "background-image" :  "url(" + cacheBreakerURL + ")"
+                    "background-image": "url(" + cacheBreakerURL + ")"
                 });
-                
+
 
             }
         }
 
-        this.render = function(element)
-        {
+        this.render = function (element) {
             $(element).css({
-                width : "100%",
+                width: "100%",
                 height: "100%",
-                "background-size" : "cover",
-                "background-position" : "center"
+                "background-size": "cover",
+                "background-position": "center"
             });
 
             widgetElement = element;
         }
 
-        this.onSettingsChanged = function(newSettings)
-        {
+        this.onSettingsChanged = function (newSettings) {
             stopTimer();
 
-            if(newSettings.refresh && newSettings.refresh > 0)
-            {
+            if (newSettings.refresh && newSettings.refresh > 0) {
                 timer = setInterval(updateImage, Number(newSettings.refresh) * 1000);
             }
         }
 
-        this.onCalculatedValueChanged = function(settingName, newValue)
-        {
-            if(settingName == "src")
-            {
+        this.onCalculatedValueChanged = function (settingName, newValue) {
+            if (settingName == "src") {
                 imageURL = newValue;
             }
 
             updateImage();
         }
 
-        this.onDispose = function()
-        {
+        this.onDispose = function () {
             stopTimer();
         }
 
-        this.getHeight = function()
-        {
+        this.getHeight = function () {
             return 4;
         }
 
@@ -7499,7 +7637,7 @@ freeboard.loadDatasourcePlugin({
                 "display_name": "Refresh every",
                 "name": "refresh",
                 "suffix": "seconds",
-                "description":"Leave blank if the image doesn't need to be refreshed"
+                "description": "Leave blank if the image doesn't need to be refreshed"
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -7507,9 +7645,9 @@ freeboard.loadDatasourcePlugin({
         }
     });
 
-	freeboard.addStyle('.indicator-light', "border-radius:50%;width:22px;height:22px;border:2px solid #3d3d3d;margin-top:5px;float:left;background-color:#222;margin-right:10px;");
-	freeboard.addStyle('.indicator-light.on', "background-color:#FFC773;box-shadow: 0px 0px 15px #FF9900;border-color:#FDF1DF;");
-	freeboard.addStyle('.indicator-text', "margin-top:10px;");
+    freeboard.addStyle('.indicator-light', "border-radius:50%;width:22px;height:22px;border:2px solid #3d3d3d;margin-top:5px;float:left;background-color:#222;margin-right:10px;");
+    freeboard.addStyle('.indicator-light.on', "background-color:#FFC773;box-shadow: 0px 0px 15px #FF9900;border-color:#FDF1DF;");
+    freeboard.addStyle('.indicator-text', "margin-top:10px;");
     var indicatorWidget = function (settings) {
         var self = this;
         var titleElement = $('<h2 class="section-title"></h2>');
@@ -7569,26 +7707,26 @@ freeboard.loadDatasourcePlugin({
         type_name: "indicator",
         display_name: "Indicator Light",
         settings: [
-	        {
-	            name: "title",
-	            display_name: "Title",
-	            type: "text"
-	        },
-	        {
-	            name: "value",
-	            display_name: "Value",
-	            type: "calculated"
-	        },
-	        {
-	            name: "on_text",
-	            display_name: "On Text",
-	            type: "calculated"
-	        },
-	        {
-	            name: "off_text",
-	            display_name: "Off Text",
-	            type: "calculated"
-	        }
+            {
+                name: "title",
+                display_name: "Title",
+                type: "text"
+            },
+            {
+                name: "value",
+                display_name: "Value",
+                type: "calculated"
+            },
+            {
+                name: "on_text",
+                display_name: "On Text",
+                type: "calculated"
+            },
+            {
+                name: "off_text",
+                display_name: "Off Text",
+                type: "calculated"
+            }
         ],
         newInstance: function (settings, newInstanceCallback) {
             newInstanceCallback(new indicatorWidget(settings));

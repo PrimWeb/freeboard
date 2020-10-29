@@ -15,9 +15,7 @@ module.exports = function(grunt) {
                     [
                         'lib/js/thirdparty/head.js',
                         'lib/js/thirdparty/jquery.js',
-                        'lib/js/thirdparty/jquery-ui.js',
-                        'lib/js/thirdparty/raphael.2.1.0.min.js',
-                        'lib/js/thirdparty/justgage.1.0.1.js',
+                        'lib/js/thirdparty/gauge.min.js',
                         'lib/js/thirdparty/jquery.sparkline.min.js',
                         'lib/js/thirdparty/knockout.js',
                         'lib/js/thirdparty/underscore.js',

@@ -33,6 +33,8 @@ freeboard(fork!)
 * Always-available libraries are now part of the core: Luxon, Raphael, Math, Keyboard, Strftime
 * The UI tries to render emoji with the Noto Color font(included) and supports FontAwesome glyphs wherever you want to paste them.
 
+* freeboard.playSound function plays sounds either from a URL, or defined in the soundData global settings namespace.   There's a UI in settings to upload files.
+
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 
 1. the distance between the waterline and the main deck or weather deck of a ship or between the level of the water and the upper edge of the side of a small boat.
