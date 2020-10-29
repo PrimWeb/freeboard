@@ -2045,32 +2045,48 @@ freeboard.loadDatasourcePlugin({
 
             gaugeElement.empty();
 
-            var opts = {
-                angle: self.currentSettings.style.angle || -0.15, // The span of the gauge arc
-                lineWidth: self.currentSettings.style.width || 0.15, // The line thickness
-                radiusScale: self.currentSettings.style.radius || 0.8, // Relative radius
-                pointer: {
-                    length: self.currentSettings.style.pointerLength||0.6, // // Relative to gauge radius
-                    strokeWidth: self.currentSettings.style.pointerWidth||0.035, // The thickness
-                    color: self.currentSettings.style.pointerColor || '#000000' // Fill color
-                },
-                limitMax: true,     // If false, max value increases automatically if value > maxValue
-                limitMin: true,     // If true, the min value of the gauge will be fixed
-                colorStart: '#6FADCF',   // Colors
-                colorStop: '#8FC0DA',    // just experiment with them
-                strokeColor: self.currentSettings.style.arcColor || '#000000',  // to see which ones work best for you
-                generateGradient: true,
-                highDpiSupport: true,     // High resolution support
-                valueText : self.currentSettings.units || ''
-
-            };
-
+            if (gaugeObject)
+            {
+                gaugeObject.destroy();
+            }
             var target = document.getElementById(thisGaugeID); // your canvas element
-            var gauge = new Gauge(target).setOptions(opts); // create sexy gauge!
-            gauge.maxValue = self.currentSettings.max_value || 100; // set max gauge value
-            gauge.setMinValue(self.currentSettings.min_value || 0);  // Prefer setter over gauge.minValue = 0
-            gauge.animationSpeed = 1; // set animation speed (32 is default value)
 
+            var ops={
+                renderTo:target,
+                width: 160,
+                height: 160,
+                units: self.currentSettings.units,
+                title: false,
+                value: 0,
+                minValue: self.currentSettings.min_value,
+                maxValue: self.currentSettings.max_value,
+                majorTicks: [
+                ],
+                minorTicks: 0,
+                strokeTicks: false,
+                highlights: [
+                ],
+                colorPlate: '#222',
+                colorMajorTicks: '#f5f5f5',
+                colorMinorTicks: '#ddd',
+                colorTitle: '#fff',
+                colorUnits: '#ccc',
+                colorNumbers: '#eee',
+                colorNeedle: self.currentSettings.style.pointerColor,
+                colorNeedleEnd: 'rgba(255, 160, 122, .9)',
+                valueBox: true,
+                animationRule: 'bounce',
+                animationDuration: 500,
+                animation:false
+            }
+
+        
+            var gauge = new RadialGauge(ops);
+            gauge.draw()
+
+
+
+      
 
             gaugeObject = gauge
 
@@ -2094,12 +2110,15 @@ freeboard.loadDatasourcePlugin({
         this.onCalculatedValueChanged = function (settingName, value) {
             if (!_.isUndefined(gaugeObject)) {
 
-                gaugeObject.set(Number(value));
+                gaugeObject.value= (Number(value));
             }
         }
 
         this.onDispose = function () {
-
+            if (gaugeObject)
+            {
+                gaugeObject.destroy();
+            }
         }
 
         this.getHeight = function () {
@@ -2206,6 +2225,12 @@ freeboard.loadDatasourcePlugin({
                 display_name: "Maximum",
                 type: "text",
                 default_value: 100
+            },
+            {
+                name: "majorTicks",
+                display_name: "Tick Spacing",
+                type: "text",
+                default_value: 10
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
