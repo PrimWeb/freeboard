@@ -7187,14 +7187,17 @@ freeboard.loadDatasourcePlugin({
 
         var thisGaugeID = "gauge-" + gaugeID++;
         var titleElement = $('<h2 class="section-title"></h2>');
-        var gaugeElement = $('<canvas width=160 height=160 id="' + thisGaugeID + '"></canvas>');
+    
+        var gaugeElement = $('<canvas width=180 height=180 id="' + thisGaugeID + '"></canvas>')
 
         var gaugeObject;
         var rendered = false;
 
+        self.value = 0
+
         self.currentSettings = settings;
 
-        settings.style=settings.style || {}
+        settings.style = settings.style || {}
 
         function createGauge() {
             if (!rendered) {
@@ -7203,48 +7206,104 @@ freeboard.loadDatasourcePlugin({
 
             gaugeElement.empty();
 
-            if (gaugeObject)
-            {
+            if (gaugeObject) {
                 gaugeObject.destroy();
             }
+
+            //10px just for extra margin
+            var tlh = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--title-line-height'))+10;
+            gaugeElement.attr('width', parseInt(settings.style.size) * 60-tlh).attr('height', parseInt(settings.style.size)* 60-tlh);
             var target = document.getElementById(thisGaugeID); // your canvas element
 
-            var ops={
-                renderTo:target,
-                width: 160,
-                height: 160,
+            //Decimals to contain the max possible value
+            var places = String(self.currentSettings.max_value||100).split('.')[0].length
+
+
+
+
+            var ops = {
+                renderTo: target,
+                width: (Number(settings.style.size) * 60)-tlh,
+                height: Number(settings.style.size) * 60-tlh,
                 units: self.currentSettings.units,
-                title: false,
-                value: 0,
+                title: self.currentSettings.title,
+                value: self.value,
                 minValue: self.currentSettings.min_value,
                 maxValue: self.currentSettings.max_value,
                 majorTicks: [
                 ],
-                minorTicks: 0,
+                minorTicks: self.currentSettings.minorTicks,
                 strokeTicks: false,
                 highlights: [
                 ],
-                colorPlate: '#222',
-                colorMajorTicks: '#f5f5f5',
-                colorMinorTicks: '#ddd',
-                colorTitle: '#fff',
-                colorUnits: '#ccc',
-                colorNumbers: '#eee',
+                colorBorderOuter: self.currentSettings.style.borderOuter,
+                colorBorderOuterEnd: self.currentSettings.style.borderOuterEnd,
+                colorBorderMiddle: self.currentSettings.style.borderMiddle,
+                colorBorderMiddleEnd: self.currentSettings.style.borderMiddleEnd,
+                colorBorderInner: self.currentSettings.style.borderInner,
+                colorBorderInnerEnd: self.currentSettings.style.borderInnerEnd,
+
+                borderInnerWidth: self.currentSettings.style.borderInnerWidth,
+                borderMiddleWidth: self.currentSettings.style.borderMiddleWidth,
+                borderOuterWidth: self.currentSettings.style.borderOuterWidth,
+
+
+                colorBorderShadow: self.currentSettings.style.borderShadow,
+
+
+
+                
+
+                colorPlate: self.currentSettings.style.plateColor,
+                colorPlateEnd: self.currentSettings.style.plateColorEnd,
+
+                colorMajorTicks: self.currentSettings.style.fgColor,
+                colorMinorTicks: self.currentSettings.style.fgColor,
+                colorTitle: self.currentSettings.style.fgColor,
+                colorUnits: self.currentSettings.style.fgColor,
+                colorNumbers: self.currentSettings.style.fgColor,
                 colorNeedle: self.currentSettings.style.pointerColor,
-                colorNeedleEnd: 'rgba(255, 160, 122, .9)',
-                valueBox: true,
+                colorNeedleShadowUp: self.currentSettings.style.pointerShadowTop,
+                colorNeedleShadowBottom: self.currentSettings.style.pointerShadowBottom,
+
+
+                colorNeedleEnd: self.currentSettings.style.pointerTipColor,
+
+                colorNeedleCircleOuter: self.currentSettings.style.pointerCircleOuter,
+                colorNeedleCircleOuterEnd: self.currentSettings.style.pointerCircleOuterEnd,
+                colorNeedleCircleInner: self.currentSettings.style.pointerCircleInner,
+                colorNeedleCircleInnerEnd: self.currentSettings.style.pointerCircleInnerEnd,
+
+
+                fontTitleSize: self.currentSettings.style.fontTitleSize,
+                fontUnitsSize: self.currentSettings.style.fontTitleSize,
+
+                fontValueSize: self.currentSettings.style.fontValueSize,
+
+
+                valueBox: self.currentSettings.digits>0,
+                valueInt: places,
+                valueDec: Math.max(self.currentSettings.digits-places,0),
                 animationRule: 'bounce',
                 animationDuration: 500,
-                animation:false
+                animation: false
             }
 
-        
+            var tick = parseInt(self.currentSettings.min_value)
+
+
+            while (tick <= parseInt(self.currentSettings.max_value)) {
+                ops.majorTicks.push(String(tick));
+                tick += parseInt(self.currentSettings.tick_interval);
+            }
+
+
             var gauge = new RadialGauge(ops);
             gauge.draw()
 
 
 
-      
+
 
             gaugeObject = gauge
 
@@ -7262,25 +7321,33 @@ freeboard.loadDatasourcePlugin({
             self.currentSettings = newSettings;
             createGauge();
 
-            titleElement.html(newSettings.title);
+            titleElement.html(newSettings.heading || '');
         }
 
         this.onCalculatedValueChanged = function (settingName, value) {
+            self.value = value
             if (!_.isUndefined(gaugeObject)) {
 
-                gaugeObject.value= (Number(value));
+                gaugeObject.value = (Number(value));
+                gaugeElement.attr('title', String(value)+(self.currentSettings.units||''))
+
             }
         }
 
         this.onDispose = function () {
-            if (gaugeObject)
-            {
+            if (gaugeObject) {
                 gaugeObject.destroy();
             }
         }
 
         this.getHeight = function () {
-            return 3;
+            try {
+                return self.currentSettings.style.size;
+            }
+            catch (e) { 
+                console.log(e);
+                return 3
+             }
         }
 
         this.onSettingsChanged(settings);
@@ -7293,6 +7360,11 @@ freeboard.loadDatasourcePlugin({
             {
                 name: "title",
                 display_name: "Title",
+                type: "text"
+            },
+            {
+                name: "heading",
+                display_name: "Heading",
                 type: "text"
             },
 
@@ -7313,7 +7385,103 @@ freeboard.loadDatasourcePlugin({
                                 }
                             }
                         },
-                        "arcColor": {
+                        "pointerTipColor": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+                        "pointerCircleInner": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+                        "pointerCircleInnerEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+                        "pointerCircleOuter": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+                        "pointerCircleOuterEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+                        "pointerShadowBottom": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        }, 
+                        "pointerShadowTop": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
+
+                        },
+
+                        "fgColor": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                        },
+                        "borderInner": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                        }, "borderInnerEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                        }, "borderMiddle": {
                             type: "string",
                             format: 'color',
                             'options': {
@@ -7322,41 +7490,129 @@ freeboard.loadDatasourcePlugin({
                                 }
                             }
                         },
-                        "width": {
-                            type: "number",
-                            min:0,
-                            max:1,
+
+                        "borderMiddleEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                        }, "borderOuter": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                        }, "borderOuterEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            }
                         },
-                        "pointerWidth": {
+                        "borderInnerWidth": {
                             type: "number",
-                            min:0.001,
-                            max:0.1,
+                            min: 0,
+                            max: 12,
                         },
-                        "pointerLength": {
+                        "borderMiddleWidth": {
                             type: "number",
-                            min:0.1,
-                            max:2,
+                            min: 0,
+                            max: 12,
                         },
-                        "radius": {
+                        "borderOuterWidth": {
                             type: "number",
-                            min:-0.3,
-                            max:1,
+                            min: 0,
+                            max: 12,
                         },
-                        "angle": {
+                        "size": {
                             type: "number",
-                            min:-1,
-                            max:1,
+                            min: 1,
+                            max: 8,
+                        },
+
+
+                        "borderShadow": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                    alpha: true
+                                }
+                            },
+                        },
+                        "plateColor": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                            default_value: "rgb(0,0,0)"
+
+                        },
+                        "plateColorEnd": {
+                            type: "string",
+                            format: 'color',
+                            'options': {
+                                'colorpicker': {
+                                    'editorFormat': 'rgb',
+                                }
+                            },
+                            default_value: "rgb(0,0,0)"
+
+                        },
+
+                        "fontTitleSize": {
+                            type: "number",
+                            min: 8,
+                            max: 64
+                        },
+                        "fontValueSize": {
+                            type: "number",
+                            min: 8,
+                            max: 64
                         }
                     }
                 },
-            
+
                 default_value: {
-                    pointerColor:'#000000',
-                    pointerLength: 1,
-                    arcColor:'#E0DEBC',
-                    width: 0.15,
-                    angle: -0.15,
-                    radius:1
+                    "pointerCircleInner": "rgb(57,43,21)",
+                    "pointerCircleInnerEnd": "rgb(57,43,21)",
+                    "pointerCircleOuter": "rgb(87,63,41)",
+                    "pointerCircleOuterEnd": "rgb(57,43,21)",
+
+                    "pointerShadowTop": "#000000",
+                    "pointerShadowBottom": "#000000",
+
+                    "pointerColor": "#000000",
+                    "pointerTipColor": "#002000",
+                    "fgColor": "rgb(57,43,21)",
+                    "borderInner": "rgb(77,68,56)",
+                    "borderInnerEnd": "rgb(59,44,36)",
+                    "borderMiddle": "rgb(202,192,155)",
+                    "borderMiddleEnd": "rgb(163,145,96)",
+                    "borderOuter": "rgb(102,90,67)",
+                    "borderOuterEnd": "rgb(57,41,34)",
+                    "borderInnerWidth": 2,
+                    "borderMiddleWidth": 3,
+                    "borderOuterWidth": 2,
+                    "borderShadow": "#000000",
+                    "plateColor": "rgb(204,198,190)",
+                    "plateColorEnd": "rgb(195,190,180)",
+
+                    "fontTitleSize": 32,
+                    "fontValueSize": 32,
+
+                    size: 3
                 }
             },
 
@@ -7367,6 +7623,7 @@ freeboard.loadDatasourcePlugin({
                 display_name: "Value",
                 type: "calculated"
             },
+
             {
                 name: "units",
                 display_name: "Units",
@@ -7385,10 +7642,22 @@ freeboard.loadDatasourcePlugin({
                 default_value: 100
             },
             {
-                name: "majorTicks",
+                name: "tick_interval",
                 display_name: "Tick Spacing",
                 type: "text",
                 default_value: 10
+            },
+            {
+                name: "minor_ticks",
+                display_name: "Tick divisions",
+                type: "text",
+                default_value: 5
+            },
+            {
+                name: "digits",
+                display_name: "Show digits",
+                type: "number",
+                default_value: 4
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
