@@ -493,13 +493,14 @@ function uuidv4() {
         var self = this;
         var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
         var currentSettings = settings;
+
+        self.data = {}
         
         this.updateData=function()
         {
-            self.data = {};
-            if(currentSettings.data && typeof(currentSettings.data)=='object')
+            if(self.data && typeof(self.data)=='object')
             {
-                htmlElement.html(Mustache.render(currentSettings.html, currentSettings.data));
+                htmlElement.html(Mustache.render(currentSettings.html, self.data));
             }
             else
             {
@@ -523,7 +524,7 @@ function uuidv4() {
                 self.updateData();
             }
             if (settingName == "data") {
-                      currentSettings.data=newValue
+                      self.data=newValue
                 self.updateData();
             }
         }
@@ -2452,9 +2453,9 @@ freeboard.loadDatasourcePlugin({
                     "plateColorEnd": "rgb(195,190,180)",
 
                     "fontTitleSize": 32,
-                    "fontValueSize": 32,
+                    "fontValueSize": 40,
 
-                    size: 3
+                    size: 4
                 }
             },
 

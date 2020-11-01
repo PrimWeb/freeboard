@@ -3,13 +3,14 @@
         var self = this;
         var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
         var currentSettings = settings;
+
+        self.data = {}
         
         this.updateData=function()
         {
-            self.data = {};
-            if(currentSettings.data && typeof(currentSettings.data)=='object')
+            if(self.data && typeof(self.data)=='object')
             {
-                htmlElement.html(Mustache.render(currentSettings.html, currentSettings.data));
+                htmlElement.html(Mustache.render(currentSettings.html, self.data));
             }
             else
             {
@@ -33,7 +34,7 @@
                 self.updateData();
             }
             if (settingName == "data") {
-                      currentSettings.data=newValue
+                      self.data=newValue
                 self.updateData();
             }
         }

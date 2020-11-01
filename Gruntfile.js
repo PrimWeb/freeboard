@@ -15,6 +15,7 @@ module.exports = function(grunt) {
                     [
                         'lib/js/thirdparty/head.js',
                         'lib/js/thirdparty/jquery.js',
+                        'lib/js/thirdparty/raphael.2.1.0.min.js',
                         'lib/js/thirdparty/gauge.min.js',
                         'lib/js/thirdparty/jquery.sparkline.min.js',
                         'lib/js/thirdparty/knockout.js',
@@ -44,9 +45,10 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/math.min.js',
                         'lib/js/thirdparty/jsoneditor.min.js',
                         'lib/js/thirdparty/vanillapicker.min.js',
-                        'lib/js/thirdparty/howler.min.js'
-
-
+                        'lib/js/thirdparty/howler.min.js',
+                        'lib/js/thirdparty/leaflet.js',
+                        'lib/js/thirdparty/leaflet.tilelayer.fallback.js',
+                        'lib/js/thirdparty/leaflet-realtime.js'
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
