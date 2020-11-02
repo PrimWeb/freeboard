@@ -1722,7 +1722,7 @@ legend {
 
 button,
 input,
-select,
+select
 {
 	font-size: var(--widget-font-size); /* 2 */
 	margin: 0; /* 3 */
@@ -2089,9 +2089,8 @@ input[type="color"],
 	padding: 4px 6px;
 	line-height: 20px;
 	vertical-align: middle;
-	-webkit-border-radius: 0px;
-	-moz-border-radius: 0px;
-	border-radius: -px;
+
+	border-radius: var(--widget-border-radius);
 	width: 400px;
 
 	font-size: var(--widget-font-size); /* 2 */
