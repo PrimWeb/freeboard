@@ -6155,7 +6155,8 @@ function uuidv4() {
             if (settingName == 'target') {
                 var x = toCSSColor(newValue)
 
-                var e= chroma(x).rgba()
+                var c= chroma(x)
+                var e = c.rgba()
 
 
                 if (_.isEqual(self.value, e)) {
@@ -6164,7 +6165,7 @@ function uuidv4() {
                 self.value = e
 
 
-                $(inputElement).spectrum('set', (x))
+                $(inputElement).spectrum('set', (c.css()))
             }
 
             if (settingName == 'title') {
