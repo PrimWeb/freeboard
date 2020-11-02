@@ -30,7 +30,7 @@
 		// Same stuff here as with datasource plugin.
 		"type_name": "textbox_plugin",
 		"display_name": "Text Box",
-		"description": "Interactive Textbox Plugin with 2-way data binding.  Value is a list of 2 items, the value and the timestamp.",
+		"description": "Interactive Textbox Plugin with 2-way data binding.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 
 		// **fill_size** : If this is set to true, the widget will fill be allowed to fill the entire space given it, otherwise it will contain an automatic padding of around 10 pixels around it.
@@ -79,7 +79,7 @@
 			{
 				name: "target",
 				display_name: "Data target when value changes. ",
-                description:'Value pushed will be a value, timestamp pair.',
+                description:'Value pushed will be the text',
 				type: "target"
 			}
 		],

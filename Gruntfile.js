@@ -48,7 +48,11 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/howler.min.js',
                         'lib/js/thirdparty/leaflet.js',
                         'lib/js/thirdparty/leaflet.tilelayer.fallback.js',
-                        'lib/js/thirdparty/leaflet-realtime.js'
+                        'lib/js/thirdparty/leaflet-realtime.js',
+                        'lib/js/thirdparty/chroma.js',
+                        'lib/js/thirdparty/spectrum.min.js',
+                     
+
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
