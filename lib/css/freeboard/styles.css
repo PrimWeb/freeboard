@@ -49,10 +49,15 @@
 	--label-bg-color: rgba(0,0,0,0);
 	--label-fg-color: var(--fg-color);
 
-	--title-shadow: rgba(0,0,0,0);
+	--title-shadow: rgba(0,0,0,0.5);
+	--pane-shadow: rgba(0,0,0,0.5);
 
 	/*This value MUST be in pixels*/
 	--title-line-height: 20px;
+
+	--logo-text: "freeboard";
+	--logo-image: "";
+	--logo-border-radius: 1em;
   }
 
 #freeboard-extra-tools{
@@ -1351,6 +1356,8 @@ ul, ol {
 	-moz-user-select: text;
 	-ms-user-select: text;
 	user-select: text;
+	box-shadow: 3px 3px 12px var(--pane-shadow);
+
 }
 
 .gridster .gs_w header{
@@ -2252,6 +2259,28 @@ ul.datasource-input-suffix {
 	display: inline-block;
 	padding: 2px 17px 2px 17px;
 	line-height: 39px;
+}
+
+.title.freeboard-branding {
+	display: inline-block;
+	padding: 2px 2px 2px 2px;
+	line-height: 59px;
+	background-image: var(--logo-image);
+	border-radius: var(--logo-border-radius);
+	background-size: contain;
+	background-position: center;
+	width: 120px;
+	height: 60px;
+	text-align: center;
+	font-size: 150%;
+	background-repeat: no-repeat;
+	text-shadow: 2px 2px 8px var(--title-shadow);
+}
+
+
+#board-logo::before
+{
+	content: var(--logo-text);
 }
 
 h1.title {

@@ -3585,7 +3585,17 @@ globalSettingsSchema = {
                         "type": "img/png"
                     },
                 },
-
+                "--logo-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--logo-text": {
+                    type: "string",
+                },
+          
                 "--main-font": {
                     type: "string",
                     enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
@@ -3701,6 +3711,18 @@ globalSettingsSchema = {
                     'options': {
                         'colorpicker': {
                             'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+                "--pane-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
                         }
                     }
                 },
@@ -3713,7 +3735,12 @@ globalSettingsSchema = {
                 "--header-border-radius":
                 {
                     type: "string",
-                    enum: ['0em', '1em', '2em', '3em', '4em', '5em']
+                    enum: ['0em',  '0.3em', '0.6em', '1em', '2em', '3em', '4em', '5em']
+                },
+                "--logo-border-radius":
+                {
+                    type: "string",
+                    enum: ['0em', '0.3em', '0.6em','1em', '2em', '3em', '4em', '5em']
                 },
                 "--header-line-width":
                 {
