@@ -637,9 +637,16 @@ function uuidv4() {
 			{
 				name: "target",
 				display_name: "Data target when clicked",
-				description: '"value" pushed will be a value,timestamp pair. Value defaults to a click counter',
+				description: '"value" pushed defaults to a click counter',
 				type: "target"
-			}
+			},
+			{
+                name: "sound",
+                display_name: "Sound(URL or builtin)",
+                type: "text",
+                default_value: '',
+                options: freeboard.getAvailableSounds
+            },
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -708,7 +715,7 @@ function uuidv4() {
 				
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
-
+					freeboard.playSound(self.currentSettings.sound)
 					
 				}
 					
@@ -3703,6 +3710,14 @@ freeboard.loadDatasourcePlugin({
                 type: "text",
                 default_value: 'Off'
             },
+            {
+                name: "sound",
+                display_name: "Sound(URL or builtin)",
+                type: "text",
+                default_value: '',
+                options: freeboard.getAvailableSounds
+            },
+
 
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -3750,6 +3765,8 @@ freeboard.loadDatasourcePlugin({
 
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
+                            freeboard.playSound(currentSettings.sound)
+
 							self.dataTargets.target(self.isOn);
 						}
                     
@@ -3770,9 +3787,15 @@ freeboard.loadDatasourcePlugin({
             
              if (settingName == "target") {
                 var value = newValue
-				
 
-                self.isOn = Boolean(value);
+
+                var x = Boolean(value);
+
+                if(x!=self.isOn)
+                {
+                    self.isOn=x;
+                    freeboard.playSound(currentSettings.sound)
+                }
             }
             
             updateState();

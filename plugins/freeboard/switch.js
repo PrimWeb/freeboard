@@ -45,6 +45,14 @@
                 type: "text",
                 default_value: 'Off'
             },
+            {
+                name: "sound",
+                display_name: "Sound(URL or builtin)",
+                type: "text",
+                default_value: '',
+                options: freeboard.getAvailableSounds
+            },
+
 
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -92,6 +100,8 @@
 
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
+                            freeboard.playSound(currentSettings.sound)
+
 							self.dataTargets.target(self.isOn);
 						}
                     
@@ -112,9 +122,15 @@
             
              if (settingName == "target") {
                 var value = newValue
-				
 
-                self.isOn = Boolean(value);
+
+                var x = Boolean(value);
+
+                if(x!=self.isOn)
+                {
+                    self.isOn=x;
+                    freeboard.playSound(currentSettings.sound)
+                }
             }
             
             updateState();

@@ -3291,8 +3291,40 @@ var freeboard = (function()
 		  setGlobalSettings = theFreeboardModel.setGlobalSettings,
 		  globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		  globalSettings = theFreeboardModel.globalSettings,
+		  defaultSounds={
+			  'low-click':"sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
+			  'scifi-beep':'sounds/220176__gameaudio__confirm-click-spacey.opus',
+			  'error': 'sounds/423166__plasterbrain__minimalist-sci-fi-ui-error.opus',
+			  'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
+			  'drop': 'sounds/DM-CGS-32.opus',
+			  'bamboo': 'sounds/DM-CGS-50.opus',
+
+		  },
+		  getAvailableSounds=function () {
+			  var r = {}
+			var st = theFreeboardModel.globalSettings
+
+
+			for(var i in freeboard.defaultSounds)
+			{
+				r[i]='Builtin'
+			}
+
+			if (st.soundData) {
+				for(var i in st.soundData)
+				{
+					r[i]='Custom'
+				}			
+			}
+			return r
+
+		},
 
 		  playSound : function(s){
+			  if(!s)
+			  {
+				  return
+			  }
 
 			//Allow sound theming
 			var st  = theFreeboardModel.globalSettings
@@ -3304,7 +3336,7 @@ var freeboard = (function()
 				}
 			}
 
-			if(st.soundData)
+			else if(st.soundData)
 			{
 				if(st.soundData[s])
 				{
@@ -3312,9 +3344,16 @@ var freeboard = (function()
 				}
 			}
 
+			else{
+				if(freeboard.defaultSounds[s])
+				{
+					s=freeboard.defaultSounds[s]
+				}
+			}
+
 			var sound = new Howl({
 				src: [s],
-				html5:(window.location.protocol=='file')
+				html5:(window.location.protocol=='file:')
 			  })
 			sound.play()
 			  
@@ -3750,13 +3789,13 @@ globalSettingsSchema = {
                 "--pane-padding":
                 {
                     type: "string",
-                    enum: ['0.3em', '0.6em', '1.2em', '2.4em']
+                    enum: ['0.1em', '0.2em',' 0.3em', '0.6em', '1.2em', '2.4em']
                 },
 
                 "--pane-border-radius":
                 {
                     type: "string",
-                    enum: ['0.3em', '0.6em', '1.2em', '2.4em']
+                    enum: ['0.1em','0.2em','0.3em', '0.6em', '1.2em', '2.4em']
                 },
 
                 "--widget-border-radius":
