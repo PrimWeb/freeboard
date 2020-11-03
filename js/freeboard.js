@@ -3806,6 +3806,32 @@ to a scratchpad data source, and use the usual controls to edit that selection. 
 
 <p>The tableview widget itself will act as the backend if you use the raw data array mode.</p>
 
+
+<h2>Using Global Settings</h2>
+
+<p>There are many "hidden" settings. If you click "Object properties", you will see a list of ones to enable.  Most in the theme category are fairly obvious</p>
+
+<p>In addition, the settings panel is used to store images and sounds directly in the board config data.</p>
+
+<h3>Images</h3>
+<p>Images are stored as CSS data URLs. to upload one, to the main "properties" and enable imageData.</p>
+
+<p>Each image within the imageData section is it's own "Setting" you can enable, using the "add" toolbar in the propperties</p>
+
+<p>Image names must start with --, as in --my-awesome-background.  Once you have added the image, there will be a prompt to upload a file.</p>
+
+<p>The image will now be available in the Rich Text widget backgrounds list. Other uses coming soon!</p>
+
+<h3>Sounds</h3>
+
+<p>Sounds work the same way. Enable the soundData category, add a setting, upload.  The sound will be available in the Button and Switch widgets as a sound effect.</p>
+
+<p>This feature makes it very easy to create a basic "sound board"</p>
+
+
+
+
+
 <h2>Mustache Templates(Use in the rich text edit component,  3rdparty doc, MIT)</h2>
 <pre>
 NAME
