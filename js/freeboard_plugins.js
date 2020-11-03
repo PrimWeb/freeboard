@@ -466,6 +466,20 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			}
 			document.body.style.setProperty(i, x)
 		}
+
+		d.imageData = d.imageData||{}
+
+		for(i in d.imageData)
+		{
+			var x = d.imageData[i]
+	
+			if(x)
+			{
+				x = 'url('+x+')'
+			}
+
+			document.body.style.setProperty(i, x)
+		}
 	}
 
 	this.deserialize = async function(object, finishedCallback)
@@ -2842,29 +2856,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 // Jquery plugin to watch for attribute changes
 
-(function($)
-{
-	function isDOMAttrModifiedSupported()
-	{
+(function ($) {
+	function isDOMAttrModifiedSupported() {
 		var p = document.createElement('p');
 		var flag = false;
 
-		if(p.addEventListener)
-		{
-			p.addEventListener('DOMAttrModified', function()
-			{
+		if (p.addEventListener) {
+			p.addEventListener('DOMAttrModified', function () {
 				flag = true
 			}, false);
 		}
-		else if(p.attachEvent)
-		{
-			p.attachEvent('onDOMAttrModified', function()
-			{
+		else if (p.attachEvent) {
+			p.attachEvent('onDOMAttrModified', function () {
 				flag = true
 			});
 		}
-		else
-		{
+		else {
 			return false;
 		}
 
@@ -2873,16 +2880,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		return flag;
 	}
 
-	function checkAttributes(chkAttr, e)
-	{
-		if(chkAttr)
-		{
+	function checkAttributes(chkAttr, e) {
+		if (chkAttr) {
 			var attributes = this.data('attr-old-value');
 
-			if(e.attributeName.indexOf('style') >= 0)
-			{
-				if(!attributes['style'])
-				{
+			if (e.attributeName.indexOf('style') >= 0) {
+				if (!attributes['style']) {
 					attributes['style'] = {};
 				} //initialize
 				var keys = e.attributeName.split('.');
@@ -2891,8 +2894,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				e.newValue = keys[1] + ':' + this.prop("style")[$.camelCase(keys[1])]; //new value
 				attributes['style'][keys[1]] = e.newValue;
 			}
-			else
-			{
+			else {
 				e.oldValue = attributes[e.attributeName];
 				e.newValue = this.attr(e.attributeName);
 				attributes[e.attributeName] = e.newValue;
@@ -2905,31 +2907,25 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	//initialize Mutation Observer
 	var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
-	$.fn.attrchange = function(o)
-	{
+	$.fn.attrchange = function (o) {
 
 		var cfg = {
 			trackValues: false,
-			callback   : $.noop
+			callback: $.noop
 		};
 
 		//for backward compatibility
-		if(typeof o === "function")
-		{
+		if (typeof o === "function") {
 			cfg.callback = o;
 		}
-		else
-		{
+		else {
 			$.extend(cfg, o);
 		}
 
-		if(cfg.trackValues)
-		{ //get attributes old value
-			$(this).each(function(i, el)
-			{
+		if (cfg.trackValues) { //get attributes old value
+			$(this).each(function (i, el) {
 				var attributes = {};
-				for(var attr, i = 0, attrs = el.attributes, l = attrs.length; i < l; i++)
-				{
+				for (var attr, i = 0, attrs = el.attributes, l = attrs.length; i < l; i++) {
 					attr = attrs.item(i);
 					attributes[attr.nodeName] = attr.value;
 				}
@@ -2938,27 +2934,23 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 			});
 		}
 
-		if(MutationObserver)
-		{ //Modern Browsers supporting MutationObserver
+		if (MutationObserver) { //Modern Browsers supporting MutationObserver
 			/*
 			 Mutation Observer is still new and not supported by all browsers.
 			 http://lists.w3.org/Archives/Public/public-webapps/2011JulSep/1622.html
 			 */
 			var mOptions = {
-				subtree          : false,
-				attributes       : true,
+				subtree: false,
+				attributes: true,
 				attributeOldValue: cfg.trackValues
 			};
 
-			var observer = new MutationObserver(function(mutations)
-			{
-				mutations.forEach(function(e)
-				{
+			var observer = new MutationObserver(function (mutations) {
+				mutations.forEach(function (e) {
 					var _this = e.target;
 
 					//get new value if trackValues is true
-					if(cfg.trackValues)
-					{
+					if (cfg.trackValues) {
 						/**
 						 * @KNOWN_ISSUE: The new value is buggy for STYLE attribute as we don't have
 						 * any additional information on which style is getting updated.
@@ -2970,19 +2962,15 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				});
 			});
 
-			return this.each(function()
-			{
+			return this.each(function () {
 				observer.observe(this, mOptions);
 			});
 		}
-		else if(isDOMAttrModifiedSupported())
-		{ //Opera
+		else if (isDOMAttrModifiedSupported()) { //Opera
 			//Good old Mutation Events but the performance is no good
 			//http://hacks.mozilla.org/2012/05/dom-mutationobserver-reacting-to-dom-changes-without-killing-browser-performance/
-			return this.on('DOMAttrModified', function(event)
-			{
-				if(event.originalEvent)
-				{
+			return this.on('DOMAttrModified', function (event) {
+				if (event.originalEvent) {
 					event = event.originalEvent;
 				} //jQuery normalization is not required for us
 				event.attributeName = event.attrName; //property names to be consistent with MutationObserver
@@ -2990,10 +2978,8 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				cfg.callback.call(this, event);
 			});
 		}
-		else if('onpropertychange' in document.body)
-		{ //works only in IE
-			return this.on('propertychange', function(e)
-			{
+		else if ('onpropertychange' in document.body) { //works only in IE
+			return this.on('propertychange', function (e) {
 				e.attributeName = window.event.propertyName;
 				//to set the attr old value
 				checkAttributes.call($(this), cfg.trackValues, e);
@@ -3005,34 +2991,33 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	}
 })(jQuery);
 
-(function(jQuery) {
+(function (jQuery) {
 
-    jQuery.eventEmitter = {
-        _JQInit: function() {
-            this._JQ = jQuery(this);
-        },
-        emit: function(evt, data) {
-            !this._JQ && this._JQInit();
-            this._JQ.trigger(evt, data);
-        },
-        once: function(evt, handler) {
-            !this._JQ && this._JQInit();
-            this._JQ.one(evt, handler);
-        },
-        on: function(evt, handler) {
-            !this._JQ && this._JQInit();
-            this._JQ.bind(evt, handler);
-        },
-        off: function(evt, handler) {
-            !this._JQ && this._JQInit();
-            this._JQ.unbind(evt, handler);
-        }
-    };
+	jQuery.eventEmitter = {
+		_JQInit: function () {
+			this._JQ = jQuery(this);
+		},
+		emit: function (evt, data) {
+			!this._JQ && this._JQInit();
+			this._JQ.trigger(evt, data);
+		},
+		once: function (evt, handler) {
+			!this._JQ && this._JQInit();
+			this._JQ.one(evt, handler);
+		},
+		on: function (evt, handler) {
+			!this._JQ && this._JQInit();
+			this._JQ.bind(evt, handler);
+		},
+		off: function (evt, handler) {
+			!this._JQ && this._JQInit();
+			this._JQ.unbind(evt, handler);
+		}
+	};
 
 }(jQuery));
 
-var freeboard = (function()
-{
+var freeboard = (function () {
 	var datasourcePlugins = {};
 	var widgetPlugins = {};
 
@@ -3048,93 +3033,74 @@ var freeboard = (function()
 	var currentStyle = {
 		values: {
 			"font-family": '"HelveticaNeue-UltraLight", "Helvetica Neue Ultra Light", "Helvetica Neue", sans-serif',
-			"color"      : "#d3d4d4",
+			"color": "#d3d4d4",
 			"font-weight": 100
 		}
 	};
 
 	ko.bindingHandlers.pluginEditor = {
-		init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
+		init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			var options = ko.unwrap(valueAccessor());
 
 			var types = {};
 			var settings = undefined;
 			var title = "";
 
-			if(options.type == 'datasource')
-			{
+			if (options.type == 'datasource') {
 				types = datasourcePlugins;
 				title = "Datasource";
 			}
-			else if(options.type == 'widget')
-			{
+			else if (options.type == 'widget') {
 				types = widgetPlugins;
 				title = "Widget";
 			}
-			else if(options.type == 'pane')
-			{
+			else if (options.type == 'pane') {
 				title = "Pane";
 			}
 
-			$(element).click(function(event)
-			{
-				if(options.operation == 'delete')
-				{
+			$(element).click(function (event) {
+				if (options.operation == 'delete') {
 					var phraseElement = $('<p>Are you sure you want to delete this ' + title + '?</p>');
-					new DialogBox(phraseElement, "Confirm Delete", "Yes", "No", function()
-					{
+					new DialogBox(phraseElement, "Confirm Delete", "Yes", "No", function () {
 
-						if(options.type == 'datasource')
-						{
+						if (options.type == 'datasource') {
 							theFreeboardModel.deleteDatasource(viewModel);
 						}
-						else if(options.type == 'widget')
-						{
+						else if (options.type == 'widget') {
 							theFreeboardModel.deleteWidget(viewModel);
 						}
-						else if(options.type == 'pane')
-						{
+						else if (options.type == 'pane') {
 							theFreeboardModel.deletePane(viewModel);
 						}
 
 					});
 				}
-				else
-				{
+				else {
 					var instanceType = undefined;
 
-					if(options.type == 'datasource')
-					{
-						if(options.operation == 'add')
-						{
+					if (options.type == 'datasource') {
+						if (options.operation == 'add') {
 							settings = {};
 						}
-						else
-						{
+						else {
 							instanceType = viewModel.type;
 							settings = viewModel.settings;
 							settings.name = viewModel.name();
 						}
 					}
-					else if(options.type == 'widget')
-					{
-						if(options.operation == 'add')
-						{
+					else if (options.type == 'widget') {
+						if (options.operation == 'add') {
 							settings = {};
 						}
-						else
-						{
+						else {
 							instanceType = viewModel.type;
 							settings = viewModel.settings;
 						}
 					}
-					else if(options.type == 'pane')
-					{
+					else if (options.type == 'pane') {
 						settings = {};
 
-						if(options.operation == 'edit')
-						{
+						if (options.operation == 'edit') {
 							settings.title = viewModel.title();
 							settings.col_width = viewModel.col_width();
 						}
@@ -3143,28 +3109,25 @@ var freeboard = (function()
 							settings: {
 								settings: [
 									{
-										name        : "title",
+										name: "title",
 										display_name: "Title",
-										type        : "text"
+										type: "text"
 									},
 									{
-										name : "col_width",
-										display_name : "Columns",
-										type : "integer",
-										default_value : 1,
-										required : true
+										name: "col_width",
+										display_name: "Columns",
+										type: "integer",
+										default_value: 1,
+										required: true
 									}
 								]
 							}
 						}
 					}
 
-					pluginEditor.createPluginEditor(title, types, instanceType, settings, async function(newSettings)
-					{
-						if(options.operation == 'add')
-						{
-							if(options.type == 'datasource')
-							{
+					pluginEditor.createPluginEditor(title, types, instanceType, settings, async function (newSettings) {
+						if (options.operation == 'add') {
+							if (options.type == 'datasource') {
 								var newViewModel = new DatasourceModel(theFreeboardModel, datasourcePlugins);
 								theFreeboardModel.addDatasource(newViewModel);
 
@@ -3174,8 +3137,7 @@ var freeboard = (function()
 								await newViewModel.setSettings(newSettings.settings);
 								await newViewModel.setType(newSettings.type);
 							}
-							else if(options.type == 'widget')
-							{
+							else if (options.type == 'widget') {
 								var newViewModel = new WidgetModel(theFreeboardModel, widgetPlugins);
 								await newViewModel.setSettings(newSettings.settings);
 								await newViewModel.setType(newSettings.type);
@@ -3185,18 +3147,14 @@ var freeboard = (function()
 								freeboardUI.attachWidgetEditIcons(element);
 							}
 						}
-						else if(options.operation == 'edit')
-						{
-							if(options.type == 'pane')
-							{
+						else if (options.operation == 'edit') {
+							if (options.type == 'pane') {
 								viewModel.title(newSettings.settings.title);
 								viewModel.col_width(newSettings.settings.col_width);
 								freeboardUI.processResize(false);
 							}
-							else
-							{
-								if(options.type == 'datasource')
-								{
+							else {
+								if (options.type == 'datasource') {
 									viewModel.name(newSettings.settings.name);
 									delete newSettings.settings.name;
 								}
@@ -3213,27 +3171,22 @@ var freeboard = (function()
 
 	ko.virtualElements.allowedBindings.datasourceTypeSettings = true;
 	ko.bindingHandlers.datasourceTypeSettings = {
-		update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
+		update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			processPluginSettings(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext);
 		}
 	}
 
 	ko.bindingHandlers.pane = {
-		init  : function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
-			if(theFreeboardModel.isEditing())
-			{
-				$(element).css({cursor: "pointer"});
+		init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+			if (theFreeboardModel.isEditing()) {
+				$(element).css({ cursor: "pointer" });
 			}
 
 			freeboardUI.addPane(element, viewModel, bindingContext.$root.isEditing());
 		},
-		update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
+		update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			// If pane has been removed
-			if(theFreeboardModel.panes.indexOf(viewModel) == -1)
-			{
+			if (theFreeboardModel.panes.indexOf(viewModel) == -1) {
 				freeboardUI.removePane(element);
 			}
 			freeboardUI.updatePane(element, viewModel);
@@ -3241,241 +3194,223 @@ var freeboard = (function()
 	}
 
 	ko.bindingHandlers.widget = {
-		init  : function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
-			if(theFreeboardModel.isEditing())
-			{
+		init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+			if (theFreeboardModel.isEditing()) {
 				freeboardUI.attachWidgetEditIcons($(element).parent());
 			}
 		},
-		update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
-			if(viewModel.shouldRender())
-			{
+		update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+			if (viewModel.shouldRender()) {
 				$(element).empty();
 				viewModel.render(element);
 			}
 		}
 	}
 
-	function getParameterByName(name)
-	{
+	function getParameterByName(name) {
 		name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
 		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex.exec(location.search);
 		return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 	}
 
-	$(function()
-	{ //DOM Ready
+	$(function () { //DOM Ready
 		// Show the loading indicator when we first load
 		freeboardUI.showLoadingIndicator(true);
 
-        var resizeTimer;
+		var resizeTimer;
 
-        function resizeEnd()
-        {
-            freeboardUI.processResize(true);
-        }
+		function resizeEnd() {
+			freeboardUI.processResize(true);
+		}
 
-        $(window).resize(function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(resizeEnd, 500);
-        });
+		$(window).resize(function () {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(resizeEnd, 500);
+		});
 
 	});
 
 	// PUBLIC FUNCTIONS
 	return {
-		  model: theFreeboardModel,
+		model: theFreeboardModel,
 
-		  setGlobalSettings = theFreeboardModel.setGlobalSettings,
-		  globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
-		  globalSettings = theFreeboardModel.globalSettings,
-		  defaultSounds={
-			  'low-click':"sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
-			  'scifi-beep':'sounds/220176__gameaudio__confirm-click-spacey.opus',
-			  'error': 'sounds/423166__plasterbrain__minimalist-sci-fi-ui-error.opus',
-			  'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
-			  'drop': 'sounds/DM-CGS-32.opus',
-			  'bamboo': 'sounds/DM-CGS-50.opus',
+		setGlobalSettings = theFreeboardModel.setGlobalSettings,
+		globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
+		globalSettings = theFreeboardModel.globalSettings,
+		defaultSounds={
+			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
+			'scifi-beep': 'sounds/220176__gameaudio__confirm-click-spacey.opus',
+			'error': 'sounds/423166__plasterbrain__minimalist-sci-fi-ui-error.opus',
+			'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
+			'drop': 'sounds/DM-CGS-32.opus',
+			'bamboo': 'sounds/DM-CGS-50.opus',
 
-		  },
-		  getAvailableSounds=function () {
-			  var r = {}
+		},
+
+		getAvailableCSSImageVars=function () {
+			var r = {}
 			var st = theFreeboardModel.globalSettings
 
-
-			for(var i in freeboard.defaultSounds)
-			{
-				r[i]='Builtin'
-			}
-
-			if (st.soundData) {
-				for(var i in st.soundData)
-				{
-					r[i]='Custom'
-				}			
+			if (st.imageData) {
+				for (var i in st.imageData) {
+					r['var('+i+')'] = 'Uploaded Image'
+				}
 			}
 			return r
 
 		},
+		getAvailableSounds=function () {
+			var r = {}
+			var st = theFreeboardModel.globalSettings
 
-		  playSound : function(s){
-			  if(!s)
-			  {
-				  return
-			  }
+
+			for (var i in freeboard.defaultSounds) {
+				r[i] = 'Builtin'
+			}
+
+			if (st.soundData) {
+				for (var i in st.soundData) {
+					r[i] = 'Custom'
+				}
+			}
+			return r
+
+		},
+		//https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid
+		genUUID: function () {
+			return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+				(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+			)
+		},
+
+		playSound: function (s, volume) {
+			if (!s) {
+				return
+			}
+			volume = volume || 0.8;
 
 			//Allow sound theming
-			var st  = theFreeboardModel.globalSettings
-			if(st.externalSounds)
-			{
-				if(st.externalSounds[s])
-				{
-					s=st.externalSounds[s]
+			var st = theFreeboardModel.globalSettings
+			if (st.externalSounds) {
+				if (st.externalSounds[s]) {
+					s = st.externalSounds[s]
 				}
 			}
 
-			else if(st.soundData)
-			{
-				if(st.soundData[s])
-				{
-					s=st.soundData[s]
+			else if (st.soundData) {
+				if (st.soundData[s]) {
+					s = st.soundData[s]
 				}
 			}
 
-			else{
-				if(freeboard.defaultSounds[s])
-				{
-					s=freeboard.defaultSounds[s]
+			else {
+				if (freeboard.defaultSounds[s]) {
+					s = freeboard.defaultSounds[s]
 				}
 			}
 
 			var sound = new Howl({
 				src: [s],
-				html5:(window.location.protocol=='file:')
-			  })
+				html5: (window.location.protocol == 'file:'),
+				volume: volume
+			})
 			sound.play()
-			  
-		  },
 
-		  getDatasourceInstance:function(n)
-		  {
-			for(var i of freeboard.model.datasources())
-			{
-				if(i.name()==n)
-				{
+		},
+
+		getDatasourceInstance: function (n) {
+			for (var i of freeboard.model.datasources()) {
+				if (i.name() == n) {
 					return i.datasourceInstance
 				}
 			}
-		  },
-          eval: function(s)
-            {
-                if(typeof(s)=="string" && s[0]=='=')
-                {
-                    return this.compile("return "+s.substring(1))()
-                }
-                else
-                {
-                    return s;
-                }
-            },
-        
-            compile :function(s)
-            {
-                var f= new Function('datasources',s)
-                
-                var f2 = function()
-                {
-                    return f(theFreeboardModel.datasources)
-                }
-                return f2
-            },
-		initialize          : function(allowEdit, finishedCallback)
-		{
+		},
+		eval: function (s) {
+			if (typeof (s) == "string" && s[0] == '=') {
+				return this.compile("return " + s.substring(1))()
+			}
+			else {
+				return s;
+			}
+		},
+
+		compile: function (s) {
+			var f = new Function('datasources', s)
+
+			var f2 = function () {
+				return f(theFreeboardModel.datasources)
+			}
+			return f2
+		},
+		initialize: function (allowEdit, finishedCallback) {
 			ko.applyBindings(theFreeboardModel);
 
 			// Check to see if we have a query param called load. If so, we should load that dashboard initially
 			var freeboardLocation = getParameterByName("load");
 
-			if(freeboardLocation != "")
-			{
+			if (freeboardLocation != "") {
 				$.ajax({
-					url    : freeboardLocation,
-					success: function(data)
-					{
+					url: freeboardLocation,
+					success: function (data) {
 						theFreeboardModel.loadDashboard(data);
 
-						if(_.isFunction(finishedCallback))
-						{
+						if (_.isFunction(finishedCallback)) {
 							finishedCallback();
 						}
 					}
 				});
 			}
-			else
-			{
+			else {
 				theFreeboardModel.allow_edit(allowEdit);
 				theFreeboardModel.setEditing(allowEdit);
 
 				freeboardUI.showLoadingIndicator(false);
-				if(_.isFunction(finishedCallback))
-				{
+				if (_.isFunction(finishedCallback)) {
 					finishedCallback();
 				}
 
-                freeboard.emit("initialized");
+				freeboard.emit("initialized");
 			}
 		},
 
-		newDashboard        : function()
-		{
-			theFreeboardModel.loadDashboard({allow_edit: true});
+		newDashboard: function () {
+			theFreeboardModel.loadDashboard({ allow_edit: true });
 		},
-		loadDashboard       : function(configuration, callback)
-		{
+		loadDashboard: function (configuration, callback) {
 			theFreeboardModel.loadDashboard(configuration, callback);
 		},
-		serialize           : function()
-		{
+		serialize: function () {
 			return theFreeboardModel.serialize();
 		},
-		setEditing          : function(editing, animate)
-		{
+		setEditing: function (editing, animate) {
 			theFreeboardModel.setEditing(editing, animate);
 		},
-		isEditing           : function()
-		{
+		isEditing: function () {
 			return theFreeboardModel.isEditing();
 		},
-		loadDatasourcePlugin: function(plugin)
-		{
-			if(_.isUndefined(plugin.display_name))
-			{
+		loadDatasourcePlugin: function (plugin) {
+			if (_.isUndefined(plugin.display_name)) {
 				plugin.display_name = plugin.type_name;
 			}
 
-            // Add a required setting called name to the beginning
-            plugin.settings.unshift({
-                name : "name",
-                display_name : "Name",
-                type : "text",
-                required : true
-            });
+			// Add a required setting called name to the beginning
+			plugin.settings.unshift({
+				name: "name",
+				display_name: "Name",
+				type: "text",
+				required: true
+			});
 
 
 			theFreeboardModel.addPluginSource(plugin.source);
 			datasourcePlugins[plugin.type_name] = plugin;
 			theFreeboardModel._datasourceTypes.valueHasMutated();
 		},
-        resize : function()
-        {
-            freeboardUI.processResize(true);
-        },
-		loadWidgetPlugin    : function(plugin)
-		{
-			if(_.isUndefined(plugin.display_name))
-			{
+		resize: function () {
+			freeboardUI.processResize(true);
+		},
+		loadWidgetPlugin: function (plugin) {
+			if (_.isUndefined(plugin.display_name)) {
 				plugin.display_name = plugin.type_name;
 			}
 
@@ -3484,92 +3419,76 @@ var freeboard = (function()
 			theFreeboardModel._widgetTypes.valueHasMutated();
 		},
 		// To be used if freeboard is going to load dynamic assets from a different root URL
-		setAssetRoot        : function(assetRoot)
-		{
+		setAssetRoot: function (assetRoot) {
 			jsEditor.setAssetRoot(assetRoot);
 		},
-		addStyle            : function(selector, rules)
-		{
+		addStyle: function (selector, rules) {
 			var styleString = selector + "{" + rules + "}";
 
 			var styleElement = $("style#fb-styles");
 
-			if(styleElement.length == 0)
-			{
+			if (styleElement.length == 0) {
 				styleElement = $('<style id="fb-styles" type="text/css"></style>');
 				$("head").append(styleElement);
 			}
 
-			if(styleElement[0].styleSheet)
-			{
+			if (styleElement[0].styleSheet) {
 				styleElement[0].styleSheet.cssText += styleString;
 			}
-			else
-			{
+			else {
 				styleElement.text(styleElement.text() + styleString);
 			}
 		},
-		showLoadingIndicator: function(show)
-		{
+		showLoadingIndicator: function (show) {
 			freeboardUI.showLoadingIndicator(show);
 		},
-		showDialog          : function(contentElement, title, okTitle, cancelTitle, okCallback,cancelCallback)
-		{
-			new DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cancelCallback);
+		showDialog: function (contentElement, title, okTitle, cancelTitle, okCallback, cancelCallback) {
+			new DialogBox(contentElement, title, okTitle, cancelTitle, okCallback, cancelCallback);
 		},
-        getDatasourceSettings : function(datasourceName)
-        {
-            var datasources = theFreeboardModel.datasources();
+		getDatasourceSettings: function (datasourceName) {
+			var datasources = theFreeboardModel.datasources();
 
-            // Find the datasource with the name specified
-            var datasource = _.find(datasources, function(datasourceModel){
-                return (datasourceModel.name() === datasourceName);
-            });
+			// Find the datasource with the name specified
+			var datasource = _.find(datasources, function (datasourceModel) {
+				return (datasourceModel.name() === datasourceName);
+			});
 
-            if(datasource)
-            {
-                return datasource.settings;
-            }
-            else
-            {
-                return null;
-            }
-        },
-        setDatasourceSettings : function(datasourceName, settings)
-        {
-            var datasources = theFreeboardModel.datasources();
+			if (datasource) {
+				return datasource.settings;
+			}
+			else {
+				return null;
+			}
+		},
+		setDatasourceSettings: function (datasourceName, settings) {
+			var datasources = theFreeboardModel.datasources();
 
-            // Find the datasource with the name specified
-            var datasource = _.find(datasources, function(datasourceModel){
-                return (datasourceModel.name() === datasourceName);
-            });
+			// Find the datasource with the name specified
+			var datasource = _.find(datasources, function (datasourceModel) {
+				return (datasourceModel.name() === datasourceName);
+			});
 
-            if(!datasource)
-            {
-                console.log("Datasource not found");
-                return;
-            }
+			if (!datasource) {
+				console.log("Datasource not found");
+				return;
+			}
 
-            var combinedSettings = _.defaults(settings, datasource.settings);
-            datasource.setSettings(combinedSettings);
-        },
-		getStyleString      : function(name)
-		{
+			var combinedSettings = _.defaults(settings, datasource.settings);
+			datasource.setSettings(combinedSettings);
+		},
+		getStyleString: function (name) {
 			var returnString = "";
 
-			_.each(currentStyle[name], function(value, name)
-			{
+			_.each(currentStyle[name], function (value, name) {
 				returnString = returnString + name + ":" + value + ";";
 			});
 
 			return returnString;
 		},
-		getStyleObject      : function(name)
-		{
+		getStyleObject: function (name) {
 			return currentStyle[name];
 		},
-		showDeveloperConsole : function()
-		{
+		showDeveloperConsole: function () {
 			developerConsole.showDeveloperConsole();
 		}
 	};
@@ -3586,12 +3505,25 @@ globalSettingsSchema = {
             type: "object",
             title: "Sounds(saved as part of board)",
             additionalProperties: {
-                    type: "string",
-                    "media": {
-                        "binaryEncoding": "base64",
-                    },
+                type: "string",
+                "media": {
+                    "binaryEncoding": "base64",
                 },
             },
+        },
+
+
+        imageData: {
+            type: "object",
+            title: "Images(saved as part of board for CSS. Name must start with --)",
+            additionalProperties: {
+                type: "string",
+                "media": {
+                    "binaryEncoding": "base64",
+                },
+            },
+        },
+
 
 
         theme: {
@@ -3634,18 +3566,18 @@ globalSettingsSchema = {
                 "--logo-text": {
                     type: "string",
                 },
-          
+
                 "--main-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
                 },
                 "--title-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
                 },
                 "--widget-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack","DSEG7","DSEG14"]
+                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
                 },
                 "--main-font-size": {
                     type: "string",
@@ -3774,12 +3706,12 @@ globalSettingsSchema = {
                 "--header-border-radius":
                 {
                     type: "string",
-                    enum: ['0em',  '0.3em', '0.6em', '1em', '2em', '3em', '4em', '5em']
+                    enum: ['0em', '0.3em', '0.6em', '1em', '2em', '3em', '4em', '5em']
                 },
                 "--logo-border-radius":
                 {
                     type: "string",
-                    enum: ['0em', '0.3em', '0.6em','1em', '2em', '3em', '4em', '5em']
+                    enum: ['0em', '0.3em', '0.6em', '1em', '2em', '3em', '4em', '5em']
                 },
                 "--header-line-width":
                 {
@@ -3789,13 +3721,13 @@ globalSettingsSchema = {
                 "--pane-padding":
                 {
                     type: "string",
-                    enum: ['0.1em', '0.2em',' 0.3em', '0.6em', '1.2em', '2.4em']
+                    enum: ['0.1em', '0.2em', ' 0.3em', '0.6em', '1.2em', '2.4em']
                 },
 
                 "--pane-border-radius":
                 {
                     type: "string",
-                    enum: ['0.1em','0.2em','0.3em', '0.6em', '1.2em', '2.4em']
+                    enum: ['0.1em', '0.2em', '0.3em', '0.6em', '1.2em', '2.4em']
                 },
 
                 "--widget-border-radius":
@@ -3845,32 +3777,34 @@ If the target is just the name of a field of a datasource, it will try to write 
 it will be interpreted as a function to call to handle new data.
 You can access the value itself simply by using the variable called 'value'.</p>
 
+<p>Nonexistant targets just create that target when the user enters some data, otherwise they have an empty or default value.   This means you don't always need ot worry
+about declaring values.</p>
+
 <h2>Calculated values</h2>
 
 <p>These update in real time if the value of the expression changes.
 Much like a spreadsheet, they must begin with an equals sign,
 or else they get interpreted as just literal data.</p>
-</div>
+
 
 <h2> Data Tables </h2>
 <p>FreeBoard works with table-like data using the nanoSQl2 library which is always available to the user.   The following 4 special fields are reserved and may be added
     to rows when used with widgets: _time, the microseconds modification time of the record, _arrival, the microseconds time the record arrived on the local node,
     _uuid, a canonical UUID for the record, and _name, a nonunique name.<p>
 
-<p>As usual, data targets work with data in (value, timestamp) form for table views.</p>
 
 <p>When using the table widget in the raw data mode, all you need to worry about is your application data, the special fields are added automatically by the table widget.</p>
 
-<p>Tables have a data target for their selected row.  This row acts just like a the data rows in your input array, however, you can write
+<p>Table widgets have a data target for their selected row.  This row acts just like a the data rows in your input array, however, you can write
 the changes back to the original data table by setting the _arrival property to anything you want(The actual value will be changed to the current time).</p>
 
 <p>Where there is no selection, the selection is just an empty object, with all of the special underscore keys, and a random UUID.  Setting _arrival on this will
-create a new entry</p>
+create a new entry, as this triggers entering the row into whatever is managing the database.</p>
 
 <p>All database backends should understand this spec, so to make a database form, you use a table to find the record you want, assign the selection
 to a scratchpad data source, and use the usual controls to edit that selection.  When you're done, use a button widget to set the _arrival property, and everything gets saved.</p>
 
-    
+<p>The tableview widget itself will act as the backend if you use the raw data array mode.</p>
 
 <h2>Mustache Templates(Use in the rich text edit component,  3rdparty doc, MIT)</h2>
 <pre>
@@ -4215,1008 +4149,6 @@ $ € ¥ ¢ £ ₽ ₨ ₩ ฿ ₺ ₮ ₱ ₭ ₴ ₦ ৲ ৳ ૱ ௹ ﷼ ₹ �
   🌜 🌚 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌙 🌎 🌍 🌏 🪐 💫 ⭐️ 🌟 ✨ ⚡️ ☄️ 💥 🔥 🌪 <br>
   🌈 ☀️ 🌤 ⛅️ 🌥 ☁️ 🌦 🌧 ⛈ 🌩 🌨 ❄️ ☃️ ⛄️ 🌬 💨 💧 💦 ☔️ ☂️ 🌊 🌫<br>
 
-  <h2>FontAwesome symbols(Adapted from the official cheetsheet)</h2>
-  <pre>
-  	ad	f641
-  	address-book	f2b9
-  	address-card	f2bb
-  	adjust	f042
-  	air-freshener	f5d0
-  	align-center	f037
-  	align-justify	f039
-  	align-left	f036
-  	align-right	f038
-  	allergies	f461
-  	ambulance	f0f9
-  	american-sign-language-interpreting	f2a3
-  	anchor	f13d
-  	angle-double-down	f103
-  	angle-double-left	f100
-  	angle-double-right	f101
-  	angle-double-up	f102
-  	angle-down	f107
-  	angle-left	f104
-  	angle-right	f105
-  	angle-up	f106
-  	angry	f556
-  	ankh	f644
-  	apple-alt	f5d1
-  	archive	f187
-  	archway	f557
-  	arrow-alt-circle-down	f358
-  	arrow-alt-circle-left	f359
-  	arrow-alt-circle-right	f35a
-  	arrow-alt-circle-up	f35b
-  	arrow-circle-down	f0ab
-  	arrow-circle-left	f0a8
-  	arrow-circle-right	f0a9
-  	arrow-circle-up	f0aa
-  	arrow-down	f063
-  	arrow-left	f060
-  	arrow-right	f061
-  	arrow-up	f062
-  	arrows-alt	f0b2
-  	arrows-alt-h	f337
-  	arrows-alt-v	f338
-  	assistive-listening-systems	f2a2
-  	asterisk	f069
-  	at	f1fa
-  	atlas	f558
-  	atom	f5d2
-  	audio-description	f29e
-  	award	f559
-  	baby	f77c
-  	baby-carriage	f77d
-  	backspace	f55a
-  	backward	f04a
-  	bacon	f7e5
-  	bacteria	e059
-  	bacterium	e05a
-  	bahai	f666
-  	balance-scale	f24e
-  	balance-scale-left	f515
-  	balance-scale-right	f516
-  	ban	f05e
-  	band-aid	f462
-  	barcode	f02a
-  	bars	f0c9
-  	baseball-ball	f433
-  	basketball-ball	f434
-  	bath	f2cd
-  	battery-empty	f244
-  	battery-full	f240
-  	battery-half	f242
-  	battery-quarter	f243
-  	battery-three-quarters	f241
-  	bed	f236
-  	beer	f0fc
-  	bell	f0f3
-  	bell-slash	f1f6
-  	bezier-curve	f55b
-  	bible	f647
-  	bicycle	f206
-  	biking	f84a
-  	binoculars	f1e5
-  	biohazard	f780
-  	birthday-cake	f1fd
-  	blender	f517
-  	blender-phone	f6b6
-  	blind	f29d
-  	blog	f781
-  	bold	f032
-  	bolt	f0e7
-  	bomb	f1e2
-  	bone	f5d7
-  	bong	f55c
-  	book	f02d
-  	book-dead	f6b7
-  	book-medical	f7e6
-  	book-open	f518
-  	book-reader	f5da
-  	bookmark	f02e
-  	border-all	f84c
-  	border-none	f850
-  	border-style	f853
-  	bowling-ball	f436
-  	box	f466
-  	box-open	f49e
-  	box-tissue	e05b
-  	boxes	f468
-  	braille	f2a1
-  	brain	f5dc
-  	bread-slice	f7ec
-  	briefcase	f0b1
-  	briefcase-medical	f469
-  	broadcast-tower	f519
-  	broom	f51a
-  	brush	f55d
-  	bug	f188
-  	building	f1ad
-  	bullhorn	f0a1
-  	bullseye	f140
-  	burn	f46a
-  	bus	f207
-  	bus-alt	f55e
-  	business-time	f64a
-  	calculator	f1ec
-  	calendar	f133
-  	calendar-alt	f073
-  	calendar-check	f274
-  	calendar-day	f783
-  	calendar-minus	f272
-  	calendar-plus	f271
-  	calendar-times	f273
-  	calendar-week	f784
-  	camera	f030
-  	camera-retro	f083
-  	campground	f6bb
-  	candy-cane	f786
-  	cannabis	f55f
-  	capsules	f46b
-  	car	f1b9
-  	car-alt	f5de
-  	car-battery	f5df
-  	car-crash	f5e1
-  	car-side	f5e4
-  	caravan	f8ff
-  	caret-down	f0d7
-  	caret-left	f0d9
-  	caret-right	f0da
-  	caret-square-down	f150
-  	caret-square-left	f191
-  	caret-square-right	f152
-  	caret-square-up	f151
-  	caret-up	f0d8
-  	carrot	f787
-  	cart-arrow-down	f218
-  	cart-plus	f217
-  	cash-register	f788
-  	cat	f6be
-  	certificate	f0a3
-  	chair	f6c0
-  	chalkboard	f51b
-  	chalkboard-teacher	f51c
-  	charging-station	f5e7
-  	chart-area	f1fe
-  	chart-bar	f080
-  	chart-line	f201
-  	chart-pie	f200
-  	check	f00c
-  	check-circle	f058
-  	check-double	f560
-  	check-square	f14a
-  	cheese	f7ef
-  	chess	f439
-  	chess-bishop	f43a
-  	chess-board	f43c
-  	chess-king	f43f
-  	chess-knight	f441
-  	chess-pawn	f443
-  	chess-queen	f445
-  	chess-rook	f447
-  	chevron-circle-down	f13a
-  	chevron-circle-left	f137
-  	chevron-circle-right	f138
-  	chevron-circle-up	f139
-  	chevron-down	f078
-  	chevron-left	f053
-  	chevron-right	f054
-  	chevron-up	f077
-  	child	f1ae
-  	church	f51d
-  	circle	f111
-  	circle-notch	f1ce
-  	city	f64f
-  	clinic-medical	f7f2
-  	clipboard	f328
-  	clipboard-check	f46c
-  	clipboard-list	f46d
-  	clock	f017
-  	clone	f24d
-  	closed-captioning	f20a
-  	cloud	f0c2
-  	cloud-download-alt	f381
-  	cloud-meatball	f73b
-  	cloud-moon	f6c3
-  	cloud-moon-rain	f73c
-  	cloud-rain	f73d
-  	cloud-showers-heavy	f740
-  	cloud-sun	f6c4
-  	cloud-sun-rain	f743
-  	cloud-upload-alt	f382
-  	cocktail	f561
-  	code	f121
-  	code-branch	f126
-  	coffee	f0f4
-  	cog	f013
-  	cogs	f085
-  	coins	f51e
-  	columns	f0db
-  	comment	f075
-  	comment-alt	f27a
-  	comment-dollar	f651
-  	comment-dots	f4ad
-  	comment-medical	f7f5
-  	comment-slash	f4b3
-  	comments	f086
-  	comments-dollar	f653
-  	compact-disc	f51f
-  	compass	f14e
-  	compress	f066
-  	compress-alt	f422
-  	compress-arrows-alt	f78c
-  	concierge-bell	f562
-  	cookie	f563
-  	cookie-bite	f564
-  	copy	f0c5
-  	copyright	f1f9
-  	couch	f4b8
-  	credit-card	f09d
-  	crop	f125
-  	crop-alt	f565
-  	cross	f654
-  	crosshairs	f05b
-  	crow	f520
-  	crown	f521
-  	crutch	f7f7
-  	cube	f1b2
-  	cubes	f1b3
-  	cut	f0c4
-  	database	f1c0
-  	deaf	f2a4
-  	democrat	f747
-  	desktop	f108
-  	dharmachakra	f655
-  	diagnoses	f470
-  	dice	f522
-  	dice-d20	f6cf
-  	dice-d6	f6d1
-  	dice-five	f523
-  	dice-four	f524
-  	dice-one	f525
-  	dice-six	f526
-  	dice-three	f527
-  	dice-two	f528
-  	digital-tachograph	f566
-  	directions	f5eb
-  	disease	f7fa
-  	divide	f529
-  	dizzy	f567
-  	dna	f471
-  	dog	f6d3
-  	dollar-sign	f155
-  	dolly	f472
-  	dolly-flatbed	f474
-  	donate	f4b9
-  	door-closed	f52a
-  	door-open	f52b
-  	dot-circle	f192
-  	dove	f4ba
-  	download	f019
-  	drafting-compass	f568
-  	dragon	f6d5
-  	draw-polygon	f5ee
-  	drum	f569
-  	drum-steelpan	f56a
-  	drumstick-bite	f6d7
-  	dumbbell	f44b
-  	dumpster	f793
-  	dumpster-fire	f794
-  	dungeon	f6d9
-  	edit	f044
-  	egg	f7fb
-  	eject	f052
-  	ellipsis-h	f141
-  	ellipsis-v	f142
-  	envelope	f0e0
-  	envelope-open	f2b6
-  	envelope-open-text	f658
-  	envelope-square	f199
-  	equals	f52c
-  	eraser	f12d
-  	ethernet	f796
-  	euro-sign	f153
-  	exchange-alt	f362
-  	exclamation	f12a
-  	exclamation-circle	f06a
-  	exclamation-triangle	f071
-  	expand	f065
-  	expand-alt	f424
-  	expand-arrows-alt	f31e
-  	external-link-alt	f35d
-  	external-link-square-alt	f360
-  	eye	f06e
-  	eye-dropper	f1fb
-  	eye-slash	f070
-  	fan	f863
-  	fast-backward	f049
-  	fast-forward	f050
-  	faucet	e005
-  	fax	f1ac
-  	feather	f52d
-  	feather-alt	f56b
-  	female	f182
-  	fighter-jet	f0fb
-  	file	f15b
-  	file-alt	f15c
-  	file-archive	f1c6
-  	file-audio	f1c7
-  	file-code	f1c9
-  	file-contract	f56c
-  	file-csv	f6dd
-  	file-download	f56d
-  	file-excel	f1c3
-  	file-export	f56e
-  	file-image	f1c5
-  	file-import	f56f
-  	file-invoice	f570
-  	file-invoice-dollar	f571
-  	file-medical	f477
-  	file-medical-alt	f478
-  	file-pdf	f1c1
-  	file-powerpoint	f1c4
-  	file-prescription	f572
-  	file-signature	f573
-  	file-upload	f574
-  	file-video	f1c8
-  	file-word	f1c2
-  	fill	f575
-  	fill-drip	f576
-  	film	f008
-  	filter	f0b0
-  	fingerprint	f577
-  	fire	f06d
-  	fire-alt	f7e4
-  	fire-extinguisher	f134
-  	first-aid	f479
-  	fish	f578
-  	fist-raised	f6de
-  	flag	f024
-  	flag-checkered	f11e
-  	flag-usa	f74d
-  	flask	f0c3
-  	flushed	f579
-  	folder	f07b
-  	folder-minus	f65d
-  	folder-open	f07c
-  	folder-plus	f65e
-  	font	f031
-  	football-ball	f44e
-  	forward	f04e
-  	frog	f52e
-  	frown	f119
-  	frown-open	f57a
-  	funnel-dollar	f662
-  	futbol	f1e3
-  	gamepad	f11b
-  	gas-pump	f52f
-  	gavel	f0e3
-  	gem	f3a5
-  	genderless	f22d
-  	ghost	f6e2
-  	gift	f06b
-  	gifts	f79c
-  	glass-cheers	f79f
-  	glass-martini	f000
-  	glass-martini-alt	f57b
-  	glass-whiskey	f7a0
-  	glasses	f530
-  	globe	f0ac
-  	globe-africa	f57c
-  	globe-americas	f57d
-  	globe-asia	f57e
-  	globe-europe	f7a2
-  	golf-ball	f450
-  	gopuram	f664
-  	graduation-cap	f19d
-  	greater-than	f531
-  	greater-than-equal	f532
-  	grimace	f57f
-  	grin	f580
-  	grin-alt	f581
-  	grin-beam	f582
-  	grin-beam-sweat	f583
-  	grin-hearts	f584
-  	grin-squint	f585
-  	grin-squint-tears	f586
-  	grin-stars	f587
-  	grin-tears	f588
-  	grin-tongue	f589
-  	grin-tongue-squint	f58a
-  	grin-tongue-wink	f58b
-  	grin-wink	f58c
-  	grip-horizontal	f58d
-  	grip-lines	f7a4
-  	grip-lines-vertical	f7a5
-  	grip-vertical	f58e
-  	guitar	f7a6
-  	h-square	f0fd
-  	hamburger	f805
-  	hammer	f6e3
-  	hamsa	f665
-  	hand-holding	f4bd
-  	hand-holding-heart	f4be
-  	hand-holding-medical	e05c
-  	hand-holding-usd	f4c0
-  	hand-holding-water	f4c1
-  	hand-lizard	f258
-  	hand-middle-finger	f806
-  	hand-paper	f256
-  	hand-peace	f25b
-  	hand-point-down	f0a7
-  	hand-point-left	f0a5
-  	hand-point-right	f0a4
-  	hand-point-up	f0a6
-  	hand-pointer	f25a
-  	hand-rock	f255
-  	hand-scissors	f257
-  	hand-sparkles	e05d
-  	hand-spock	f259
-  	hands	f4c2
-  	hands-helping	f4c4
-  	hands-wash	e05e
-  	handshake	f2b5
-  	handshake-alt-slash	e05f
-  	handshake-slash	e060
-  	hanukiah	f6e6
-  	hard-hat	f807
-  	hashtag	f292
-  	hat-cowboy	f8c0
-  	hat-cowboy-side	f8c1
-  	hat-wizard	f6e8
-  	hdd	f0a0
-  	head-side-cough	e061
-  	head-side-cough-slash	e062
-  	head-side-mask	e063
-  	head-side-virus	e064
-  	heading	f1dc
-  	headphones	f025
-  	headphones-alt	f58f
-  	headset	f590
-  	heart	f004
-  	heart-broken	f7a9
-  	heartbeat	f21e
-  	helicopter	f533
-  	highlighter	f591
-  	hiking	f6ec
-  	hippo	f6ed
-  	history	f1da
-  	hockey-puck	f453
-  	holly-berry	f7aa
-  	home	f015
-  	horse	f6f0
-  	horse-head	f7ab
-  	hospital	f0f8
-  	hospital-alt	f47d
-  	hospital-symbol	f47e
-  	hospital-user	f80d
-  	hot-tub	f593
-  	hotdog	f80f
-  	hotel	f594
-  	hourglass	f254
-  	hourglass-end	f253
-  	hourglass-half	f252
-  	hourglass-start	f251
-  	house-damage	f6f1
-  	house-user	e065
-  	hryvnia	f6f2
-  	i-cursor	f246
-  	ice-cream	f810
-  	icicles	f7ad
-  	icons	f86d
-  	id-badge	f2c1
-  	id-card	f2c2
-  	id-card-alt	f47f
-  	igloo	f7ae
-  	image	f03e
-  	images	f302
-  	inbox	f01c
-  	indent	f03c
-  	industry	f275
-  	infinity	f534
-  	info	f129
-  	info-circle	f05a
-  	italic	f033
-  	jedi	f669
-  	joint	f595
-  	journal-whills	f66a
-  	kaaba	f66b
-  	key	f084
-  	keyboard	f11c
-  	khanda	f66d
-  	kiss	f596
-  	kiss-beam	f597
-  	kiss-wink-heart	f598
-  	kiwi-bird	f535
-  	landmark	f66f
-  	language	f1ab
-  	laptop	f109
-  	laptop-code	f5fc
-  	laptop-house	e066
-  	laptop-medical	f812
-  	laugh	f599
-  	laugh-beam	f59a
-  	laugh-squint	f59b
-  	laugh-wink	f59c
-  	layer-group	f5fd
-  	leaf	f06c
-  	lemon	f094
-  	less-than	f536
-  	less-than-equal	f537
-  	level-down-alt	f3be
-  	level-up-alt	f3bf
-  	life-ring	f1cd
-  	lightbulb	f0eb
-  	link	f0c1
-  	lira-sign	f195
-  	list	f03a
-  	list-alt	f022
-  	list-ol	f0cb
-  	list-ul	f0ca
-  	location-arrow	f124
-  	lock	f023
-  	lock-open	f3c1
-  	long-arrow-alt-down	f309
-  	long-arrow-alt-left	f30a
-  	long-arrow-alt-right	f30b
-  	long-arrow-alt-up	f30c
-  	low-vision	f2a8
-  	luggage-cart	f59d
-  	lungs	f604
-  	lungs-virus	e067
-  	magic	f0d0
-  	magnet	f076
-  	mail-bulk	f674
-  	male	f183
-  	map	f279
-  	map-marked	f59f
-  	map-marked-alt	f5a0
-  	map-marker	f041
-  	map-marker-alt	f3c5
-  	map-pin	f276
-  	map-signs	f277
-  	marker	f5a1
-  	mars	f222
-  	mars-double	f227
-  	mars-stroke	f229
-  	mars-stroke-h	f22b
-  	mars-stroke-v	f22a
-  	mask	f6fa
-  	medal	f5a2
-  	medkit	f0fa
-  	meh	f11a
-  	meh-blank	f5a4
-  	meh-rolling-eyes	f5a5
-  	memory	f538
-  	menorah	f676
-  	mercury	f223
-  	meteor	f753
-  	microchip	f2db
-  	microphone	f130
-  	microphone-alt	f3c9
-  	microphone-alt-slash	f539
-  	microphone-slash	f131
-  	microscope	f610
-  	minus	f068
-  	minus-circle	f056
-  	minus-square	f146
-  	mitten	f7b5
-  	mobile	f10b
-  	mobile-alt	f3cd
-  	money-bill	f0d6
-  	money-bill-alt	f3d1
-  	money-bill-wave	f53a
-  	money-bill-wave-alt	f53b
-  	money-check	f53c
-  	money-check-alt	f53d
-  	monument	f5a6
-  	moon	f186
-  	mortar-pestle	f5a7
-  	mosque	f678
-  	motorcycle	f21c
-  	mountain	f6fc
-  	mouse	f8cc
-  	mouse-pointer	f245
-  	mug-hot	f7b6
-  	music	f001
-  	network-wired	f6ff
-  	neuter	f22c
-  	newspaper	f1ea
-  	not-equal	f53e
-  	notes-medical	f481
-  	object-group	f247
-  	object-ungroup	f248
-  	oil-can	f613
-  	om	f679
-  	otter	f700
-  	outdent	f03b
-  	pager	f815
-  	paint-brush	f1fc
-  	paint-roller	f5aa
-  	palette	f53f
-  	pallet	f482
-  	paper-plane	f1d8
-  	paperclip	f0c6
-  	parachute-box	f4cd
-  	paragraph	f1dd
-  	parking	f540
-  	passport	f5ab
-  	pastafarianism	f67b
-  	paste	f0ea
-  	pause	f04c
-  	pause-circle	f28b
-  	paw	f1b0
-  	peace	f67c
-  	pen	f304
-  	pen-alt	f305
-  	pen-fancy	f5ac
-  	pen-nib	f5ad
-  	pen-square	f14b
-  	pencil-alt	f303
-  	pencil-ruler	f5ae
-  	people-arrows	e068
-  	people-carry	f4ce
-  	pepper-hot	f816
-  	percent	f295
-  	percentage	f541
-  	person-booth	f756
-  	phone	f095
-  	phone-alt	f879
-  	phone-slash	f3dd
-  	phone-square	f098
-  	phone-square-alt	f87b
-  	phone-volume	f2a0
-  	photo-video	f87c
-  	piggy-bank	f4d3
-  	pills	f484
-  	pizza-slice	f818
-  	place-of-worship	f67f
-  	plane	f072
-  	plane-arrival	f5af
-  	plane-departure	f5b0
-  	plane-slash	e069
-  	play	f04b
-  	play-circle	f144
-  	plug	f1e6
-  	plus	f067
-  	plus-circle	f055
-  	plus-square	f0fe
-  	podcast	f2ce
-  	poll	f681
-  	poll-h	f682
-  	poo	f2fe
-  	poo-storm	f75a
-  	poop	f619
-  	portrait	f3e0
-  	pound-sign	f154
-  	power-off	f011
-  	pray	f683
-  	praying-hands	f684
-  	prescription	f5b1
-  	prescription-bottle	f485
-  	prescription-bottle-alt	f486
-  	print	f02f
-  	procedures	f487
-  	project-diagram	f542
-  	pump-medical	e06a
-  	pump-soap	e06b
-  	puzzle-piece	f12e
-  	qrcode	f029
-  	question	f128
-  	question-circle	f059
-  	quidditch	f458
-  	quote-left	f10d
-  	quote-right	f10e
-  	quran	f687
-  	radiation	f7b9
-  	radiation-alt	f7ba
-  	rainbow	f75b
-  	random	f074
-  	receipt	f543
-  	record-vinyl	f8d9
-  	recycle	f1b8
-  	redo	f01e
-  	redo-alt	f2f9
-  	registered	f25d
-  	remove-format	f87d
-  	reply	f3e5
-  	reply-all	f122
-  	republican	f75e
-  	restroom	f7bd
-  	retweet	f079
-  	ribbon	f4d6
-  	ring	f70b
-  	road	f018
-  	robot	f544
-  	rocket	f135
-  	route	f4d7
-  	rss	f09e
-  	rss-square	f143
-  	ruble-sign	f158
-  	ruler	f545
-  	ruler-combined	f546
-  	ruler-horizontal	f547
-  	ruler-vertical	f548
-  	running	f70c
-  	rupee-sign	f156
-  	sad-cry	f5b3
-  	sad-tear	f5b4
-  	satellite	f7bf
-  	satellite-dish	f7c0
-  	save	f0c7
-  	school	f549
-  	screwdriver	f54a
-  	scroll	f70e
-  	sd-card	f7c2
-  	search	f002
-  	search-dollar	f688
-  	search-location	f689
-  	search-minus	f010
-  	search-plus	f00e
-  	seedling	f4d8
-  	server	f233
-  	shapes	f61f
-  	share	f064
-  	share-alt	f1e0
-  	share-alt-square	f1e1
-  	share-square	f14d
-  	shekel-sign	f20b
-  	shield-alt	f3ed
-  	shield-virus	e06c
-  	ship	f21a
-  	shipping-fast	f48b
-  	shoe-prints	f54b
-  	shopping-bag	f290
-  	shopping-basket	f291
-  	shopping-cart	f07a
-  	shower	f2cc
-  	shuttle-van	f5b6
-  	sign	f4d9
-  	sign-in-alt	f2f6
-  	sign-language	f2a7
-  	sign-out-alt	f2f5
-  	signal	f012
-  	signature	f5b7
-  	sim-card	f7c4
-  	sink	e06d
-  	sitemap	f0e8
-  	skating	f7c5
-  	skiing	f7c9
-  	skiing-nordic	f7ca
-  	skull	f54c
-  	skull-crossbones	f714
-  	slash	f715
-  	sleigh	f7cc
-  	sliders-h	f1de
-  	smile	f118
-  	smile-beam	f5b8
-  	smile-wink	f4da
-  	smog	f75f
-  	smoking	f48d
-  	smoking-ban	f54d
-  	sms	f7cd
-  	snowboarding	f7ce
-  	snowflake	f2dc
-  	snowman	f7d0
-  	snowplow	f7d2
-  	soap	e06e
-  	socks	f696
-  	solar-panel	f5ba
-  	sort	f0dc
-  	sort-alpha-down	f15d
-  	sort-alpha-down-alt	f881
-  	sort-alpha-up	f15e
-  	sort-alpha-up-alt	f882
-  	sort-amount-down	f160
-  	sort-amount-down-alt	f884
-  	sort-amount-up	f161
-  	sort-amount-up-alt	f885
-  	sort-down	f0dd
-  	sort-numeric-down	f162
-  	sort-numeric-down-alt	f886
-  	sort-numeric-up	f163
-  	sort-numeric-up-alt	f887
-  	sort-up	f0de
-  	spa	f5bb
-  	space-shuttle	f197
-  	spell-check	f891
-  	spider	f717
-  	spinner	f110
-  	splotch	f5bc
-  	spray-can	f5bd
-  	square	f0c8
-  	square-full	f45c
-  	square-root-alt	f698
-  	stamp	f5bf
-  	star	f005
-  	star-and-crescent	f699
-  	star-half	f089
-  	star-half-alt	f5c0
-  	star-of-david	f69a
-  	star-of-life	f621
-  	step-backward	f048
-  	step-forward	f051
-  	stethoscope	f0f1
-  	sticky-note	f249
-  	stop	f04d
-  	stop-circle	f28d
-  	stopwatch	f2f2
-  	stopwatch-20	e06f
-  	store	f54e
-  	store-alt	f54f
-  	store-alt-slash	e070
-  	store-slash	e071
-  	stream	f550
-  	street-view	f21d
-  	strikethrough	f0cc
-  	stroopwafel	f551
-  	subscript	f12c
-  	subway	f239
-  	suitcase	f0f2
-  	suitcase-rolling	f5c1
-  	sun	f185
-  	superscript	f12b
-  	surprise	f5c2
-  	swatchbook	f5c3
-  	swimmer	f5c4
-  	swimming-pool	f5c5
-  	synagogue	f69b
-  	sync	f021
-  	sync-alt	f2f1
-  	syringe	f48e
-  	table	f0ce
-  	table-tennis	f45d
-  	tablet	f10a
-  	tablet-alt	f3fa
-  	tablets	f490
-  	tachometer-alt	f3fd
-  	tag	f02b
-  	tags	f02c
-  	tape	f4db
-  	tasks	f0ae
-  	taxi	f1ba
-  	teeth	f62e
-  	teeth-open	f62f
-  	temperature-high	f769
-  	temperature-low	f76b
-  	tenge	f7d7
-  	terminal	f120
-  	text-height	f034
-  	text-width	f035
-  	th	f00a
-  	th-large	f009
-  	th-list	f00b
-  	theater-masks	f630
-  	thermometer	f491
-  	thermometer-empty	f2cb
-  	thermometer-full	f2c7
-  	thermometer-half	f2c9
-  	thermometer-quarter	f2ca
-  	thermometer-three-quarters	f2c8
-  	thumbs-down	f165
-  	thumbs-up	f164
-  	thumbtack	f08d
-  	ticket-alt	f3ff
-  	times	f00d
-  	times-circle	f057
-  	tint	f043
-  	tint-slash	f5c7
-  	tired	f5c8
-  	toggle-off	f204
-  	toggle-on	f205
-  	toilet	f7d8
-  	toilet-paper	f71e
-  	toilet-paper-slash	e072
-  	toolbox	f552
-  	tools	f7d9
-  	tooth	f5c9
-  	torah	f6a0
-  	torii-gate	f6a1
-  	tractor	f722
-  	trademark	f25c
-  	traffic-light	f637
-  	trailer	e041
-  	train	f238
-  	tram	f7da
-  	transgender	f224
-  	transgender-alt	f225
-  	trash	f1f8
-  	trash-alt	f2ed
-  	trash-restore	f829
-  	trash-restore-alt	f82a
-  	tree	f1bb
-  	trophy	f091
-  	truck	f0d1
-  	truck-loading	f4de
-  	truck-monster	f63b
-  	truck-moving	f4df
-  	truck-pickup	f63c
-  	tshirt	f553
-  	tty	f1e4
-  	tv	f26c
-  	umbrella	f0e9
-  	umbrella-beach	f5ca
-  	underline	f0cd
-  	undo	f0e2
-  	undo-alt	f2ea
-  	universal-access	f29a
-  	university	f19c
-  	unlink	f127
-  	unlock	f09c
-  	unlock-alt	f13e
-  	upload	f093
-  	user	f007
-  	user-alt	f406
-  	user-alt-slash	f4fa
-  	user-astronaut	f4fb
-  	user-check	f4fc
-  	user-circle	f2bd
-  	user-clock	f4fd
-  	user-cog	f4fe
-  	user-edit	f4ff
-  	user-friends	f500
-  	user-graduate	f501
-  	user-injured	f728
-  	user-lock	f502
-  	user-md	f0f0
-  	user-minus	f503
-  	user-ninja	f504
-  	user-nurse	f82f
-  	user-plus	f234
-  	user-secret	f21b
-  	user-shield	f505
-  	user-slash	f506
-  	user-tag	f507
-  	user-tie	f508
-  	user-times	f235
-  	users	f0c0
-  	users-cog	f509
-  	users-slash	e073
-  	utensil-spoon	f2e5
-  	utensils	f2e7
-  	vector-square	f5cb
-  	venus	f221
-  	venus-double	f226
-  	venus-mars	f228
-  	vest	e085
-  	vest-patches	e086
-  	vial	f492
-  	vials	f493
-  	video	f03d
-  	video-slash	f4e2
-  	vihara	f6a7
-  	virus	e074
-  	virus-slash	e075
-  	viruses	e076
-  	voicemail	f897
-  	volleyball-ball	f45f
-  	volume-down	f027
-  	volume-mute	f6a9
-  	volume-off	f026
-  	volume-up	f028
-  	vote-yea	f772
-  	vr-cardboard	f729
-  	walking	f554
-  	wallet	f555
-  	warehouse	f494
-  	water	f773
-  	wave-square	f83e
-  	weight	f496
-  	weight-hanging	f5cd
-  	wheelchair	f193
-  	wifi	f1eb
-  	wind	f72e
-  	window-close	f410
-  	window-maximize	f2d0
-  	window-minimize	f2d1
-  	window-restore	f2d2
-  	wine-bottle	f72f
-  	wine-glass	f4e3
-  	wine-glass-alt	f5ce
-  	won-sign	f159
-  	wrench	f0ad
-  	x-ray	f497
-  	yen-sign	f157
   </pre>
   `
 
@@ -5715,7 +4647,37 @@ function uuidv4() {
 
     var htmlWidget = function (settings) {
         var self = this;
-        var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
+
+        self.id = freeboard.genUUID()
+
+        var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
+        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background:grey;width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
+        var fsButton = $('<button></button>').on('click', function(){
+
+            if(self.fs){
+                self.fs=0;
+                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color'})
+                containerElement.css({background:newSettings.background||''})
+                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            }
+            else{
+                self.fs=1;
+                containerElement.css({height:'100%', width:'100%',position:'static','z-index':'auto','background-color':'transparent'})
+                containerElement.css({background:newSettings.background||''})
+                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            }
+        })
+        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
+
+
+        toolbarElement.append(printButton)
+        toolbarElement.append(fsButton)
+
+
+   
+        var htmlElement = $('<div class="html-widget" style="width:100%; height:auto; margin:0px;padding:0px;flex-grow:100;"></div>').attr('id', self.id);
         var currentSettings = settings;
 
         self.data = {}
@@ -5724,23 +4686,43 @@ function uuidv4() {
         {
             if(self.data && typeof(self.data)=='object')
             {
-                htmlElement.html(Mustache.render(currentSettings.html, self.data));
+                htmlElement.html(Mustache.render(currentSettings.html||'', self.data));
             }
             else
             {
-                htmlElement.html(currentSettings.html);
+                htmlElement.html(currentSettings.html||'');
             }
 
         }
 
         this.render = function (element) {
-            $(element).append(htmlElement);
+            $(element).append(containerElement);
+         
+                containerElement.append(toolbarElement);
+                toolbarElement.append()
+
+            
+
+            containerElement.append(htmlElement);
              self.updateData()
         }
 
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
             self.updateData()
+
+            if(newSettings.toolbar)
+            {
+                toolbarElement.css({display:'block'})
+            }
+            else
+            {
+                toolbarElement.css({display:'none'})
+            }
+
+            containerElement.css({background:newSettings.background||''})
+            containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+            containerElement.css({'background-size':newSettings.backgroundSize||''})
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
@@ -5787,11 +4769,68 @@ function uuidv4() {
                     "description"  : "Variables to use in Mustache templating, as a JS object.  Access a var with {{varname}} in your document template, it gets replaced with the value.",
             },
             {
+                "name": "background",
+                "display_name": "Background",
+                "type": "text",
+                "default_value": 'transparent',
+                "description": "CSS Background(try 'blue' or 'url(--my-image) cover')",
+                "options": freeboard.getAvailableCSSImageVars
+            },
+            {
+                "name": "backgroundRepeat",
+                "display_name": "Background Repeat",
+                "type": "option",
+                "options": [
+                    {
+                        "name": "no-repeat",
+                        "value": "no-repeat"
+                    },
+                    {
+                        "name": "Tile/Repeat",
+                        "value": "repeat"
+                    }
+                ]
+            },
+            {
+                "name": "backgroundSize",
+                "display_name": "Background Image Size",
+                "type": "option",
+                "options": [
+                    {
+                        "name": "Cover",
+                        "value": "cover"
+                    },
+                    {
+                        "name": "Contain",
+                        "value": "contain"
+                    },
+                    {
+                        "name": "auto/actual size",
+                        "value": "auto"
+                    }
+                ]
+            },   
+            {
+                "name": "background",
+                "display_name": "Background",
+                "type": "text",
+                "default_value": 'transparent',
+                "description": "CSS Background(try 'blue' or 'url(--my-image) cover')",
+                "options": freeboard.getAvailableCSSImageVars
+            },
+            {
                 "name": "height",
                 "display_name": "Height Blocks",
                 "type": "number",
                 "default_value": 4,
                 "description": "A height block is around 60 pixels"
+            },
+            {
+                "name": "toolbar",
+                "display_name": "Show toolbar",
+                "type": "boolean",
+                "default_value": false,
+                "description": "Fullscreen and print options"
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -5870,7 +4909,7 @@ function uuidv4() {
                 type: "text",
                 default_value: '',
                 options: freeboard.getAvailableSounds
-            },
+			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -6156,13 +5195,17 @@ function uuidv4() {
                     }
                     if (settings.format == 'rgb') {
                         c = c.rgba()
-                        self.dataTargets.target({
-                            '_type': 'rgb',
+
+                        //Add to existing, don't erase, because this might actually be a fade command with other stuff
+                        var d = {
+                            '_type':'rgb',
                             'r': c[0],
                             g: c[1],
                             b: c[2],
                             a: c[3]
-                        });
+                        }
+                        self.lastDataFromTarget.assign(d)
+                        self.dataTargets.target(self.lastDataFromTarget);
                     }
                 }
             }
@@ -6209,6 +5252,7 @@ function uuidv4() {
                     return;
                 }
                 self.value = e
+                self.lastDataFromTarget = {}
 
 
                 $(inputElement).spectrum('set', (c.css()))

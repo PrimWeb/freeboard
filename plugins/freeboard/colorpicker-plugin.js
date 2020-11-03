@@ -159,13 +159,17 @@
                     }
                     if (settings.format == 'rgb') {
                         c = c.rgba()
-                        self.dataTargets.target({
-                            '_type': 'rgb',
+
+                        //Add to existing, don't erase, because this might actually be a fade command with other stuff
+                        var d = {
+                            '_type':'rgb',
                             'r': c[0],
                             g: c[1],
                             b: c[2],
                             a: c[3]
-                        });
+                        }
+                        self.lastDataFromTarget.assign(d)
+                        self.dataTargets.target(self.lastDataFromTarget);
                     }
                 }
             }
@@ -212,6 +216,7 @@
                     return;
                 }
                 self.value = e
+                self.lastDataFromTarget = {}
 
 
                 $(inputElement).spectrum('set', (c.css()))

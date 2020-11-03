@@ -491,7 +491,37 @@ function uuidv4() {
 
     var htmlWidget = function (settings) {
         var self = this;
-        var htmlElement = $('<div class="html-widget" style="overflow:auto;height:100%;width:100%;"></div>');
+
+        self.id = freeboard.genUUID()
+
+        var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
+        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background:grey;width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
+        var fsButton = $('<button></button>').on('click', function(){
+
+            if(self.fs){
+                self.fs=0;
+                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color'})
+                containerElement.css({background:newSettings.background||''})
+                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            }
+            else{
+                self.fs=1;
+                containerElement.css({height:'100%', width:'100%',position:'static','z-index':'auto','background-color':'transparent'})
+                containerElement.css({background:newSettings.background||''})
+                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            }
+        })
+        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
+
+
+        toolbarElement.append(printButton)
+        toolbarElement.append(fsButton)
+
+
+   
+        var htmlElement = $('<div class="html-widget" style="width:100%; height:auto; margin:0px;padding:0px;flex-grow:100;"></div>').attr('id', self.id);
         var currentSettings = settings;
 
         self.data = {}
@@ -500,23 +530,43 @@ function uuidv4() {
         {
             if(self.data && typeof(self.data)=='object')
             {
-                htmlElement.html(Mustache.render(currentSettings.html, self.data));
+                htmlElement.html(Mustache.render(currentSettings.html||'', self.data));
             }
             else
             {
-                htmlElement.html(currentSettings.html);
+                htmlElement.html(currentSettings.html||'');
             }
 
         }
 
         this.render = function (element) {
-            $(element).append(htmlElement);
+            $(element).append(containerElement);
+         
+                containerElement.append(toolbarElement);
+                toolbarElement.append()
+
+            
+
+            containerElement.append(htmlElement);
              self.updateData()
         }
 
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
             self.updateData()
+
+            if(newSettings.toolbar)
+            {
+                toolbarElement.css({display:'block'})
+            }
+            else
+            {
+                toolbarElement.css({display:'none'})
+            }
+
+            containerElement.css({background:newSettings.background||''})
+            containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
+            containerElement.css({'background-size':newSettings.backgroundSize||''})
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
@@ -563,11 +613,68 @@ function uuidv4() {
                     "description"  : "Variables to use in Mustache templating, as a JS object.  Access a var with {{varname}} in your document template, it gets replaced with the value.",
             },
             {
+                "name": "background",
+                "display_name": "Background",
+                "type": "text",
+                "default_value": 'transparent',
+                "description": "CSS Background(try 'blue' or 'url(--my-image) cover')",
+                "options": freeboard.getAvailableCSSImageVars
+            },
+            {
+                "name": "backgroundRepeat",
+                "display_name": "Background Repeat",
+                "type": "option",
+                "options": [
+                    {
+                        "name": "no-repeat",
+                        "value": "no-repeat"
+                    },
+                    {
+                        "name": "Tile/Repeat",
+                        "value": "repeat"
+                    }
+                ]
+            },
+            {
+                "name": "backgroundSize",
+                "display_name": "Background Image Size",
+                "type": "option",
+                "options": [
+                    {
+                        "name": "Cover",
+                        "value": "cover"
+                    },
+                    {
+                        "name": "Contain",
+                        "value": "contain"
+                    },
+                    {
+                        "name": "auto/actual size",
+                        "value": "auto"
+                    }
+                ]
+            },   
+            {
+                "name": "background",
+                "display_name": "Background",
+                "type": "text",
+                "default_value": 'transparent',
+                "description": "CSS Background(try 'blue' or 'url(--my-image) cover')",
+                "options": freeboard.getAvailableCSSImageVars
+            },
+            {
                 "name": "height",
                 "display_name": "Height Blocks",
                 "type": "number",
                 "default_value": 4,
                 "description": "A height block is around 60 pixels"
+            },
+            {
+                "name": "toolbar",
+                "display_name": "Show toolbar",
+                "type": "boolean",
+                "default_value": false,
+                "description": "Fullscreen and print options"
             }
         ],
         newInstance: function (settings, newInstanceCallback) {
@@ -646,7 +753,7 @@ function uuidv4() {
                 type: "text",
                 default_value: '',
                 options: freeboard.getAvailableSounds
-            },
+			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -932,13 +1039,17 @@ function uuidv4() {
                     }
                     if (settings.format == 'rgb') {
                         c = c.rgba()
-                        self.dataTargets.target({
-                            '_type': 'rgb',
+
+                        //Add to existing, don't erase, because this might actually be a fade command with other stuff
+                        var d = {
+                            '_type':'rgb',
                             'r': c[0],
                             g: c[1],
                             b: c[2],
                             a: c[3]
-                        });
+                        }
+                        self.lastDataFromTarget.assign(d)
+                        self.dataTargets.target(self.lastDataFromTarget);
                     }
                 }
             }
@@ -985,6 +1096,7 @@ function uuidv4() {
                     return;
                 }
                 self.value = e
+                self.lastDataFromTarget = {}
 
 
                 $(inputElement).spectrum('set', (c.css()))

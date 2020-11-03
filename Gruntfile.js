@@ -51,7 +51,8 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/leaflet-realtime.js',
                         'lib/js/thirdparty/chroma.js',
                         'lib/js/thirdparty/spectrum.min.js',
-                     
+                        'lib/js/thirdparty/print.min.js',
+
 
                     ]
                 ],

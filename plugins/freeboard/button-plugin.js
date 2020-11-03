@@ -68,7 +68,7 @@
                 type: "text",
                 default_value: '',
                 options: freeboard.getAvailableSounds
-            },
+			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
