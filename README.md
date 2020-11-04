@@ -46,8 +46,8 @@ http://freeboard.github.io/freeboard
 
 https://freeboard.io
 
-### Screenshots
-![Weather](https://raw.github.com/Freeboard/branding/master/screenshots/freeboard-screenshot-1.jpg)
+### Screenshots(Forest.json theme)
+![Weather](screenshots/screenshot.webp)
 
 ### What is It?
 

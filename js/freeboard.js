@@ -3335,10 +3335,10 @@ var freeboard = (function () {
 		},
 
 		compile: function (s) {
-			var f = new Function('datasources', s)
+			var f = new Function('datasources','ds', s)
 
 			var f2 = function () {
-				return f(theFreeboardModel.datasources)
+				return f(theFreeboardModel.datasources,theFreeboardModel.datasources)
 			}
 			return f2
 		},
@@ -3566,7 +3566,10 @@ globalSettingsSchema = {
                 "--logo-text": {
                     type: "string",
                 },
-
+                "--box-backdrop": {
+                    type: "string",
+                    enum: ['', 'blur(1px)', 'blur(2px)', 'blur(4px)','blur(8px)','blur(16px)']
+                },
                 "--main-font": {
                     type: "string",
                     enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
@@ -3687,6 +3690,29 @@ globalSettingsSchema = {
                     }
                 },
                 "--pane-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+                "--widget-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+
+                "--border-color":
                 {
                     type: "string",
                     format: 'color',
@@ -3821,6 +3847,10 @@ to a scratchpad data source, and use the usual controls to edit that selection. 
 <p>Image names must start with --, as in --my-awesome-background.  Once you have added the image, there will be a prompt to upload a file.</p>
 
 <p>The image will now be available in the Rich Text widget backgrounds list. Other uses coming soon!</p>
+
+<p>Internally, they are made available as global CSS data URIs.</p>
+
+<p>Note that images can also be uploaded directly to the Rich Text Content widget</p>
 
 <h3>Sounds</h3>
 
