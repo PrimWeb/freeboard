@@ -52,8 +52,7 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/chroma.js',
                         'lib/js/thirdparty/spectrum.min.js',
                         'lib/js/thirdparty/print.min.js',
-
-
+                        'lib/js/thirdparty/purify.js',
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'

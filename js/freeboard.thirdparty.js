@@ -7970,3 +7970,1170 @@ module.exports = L.Realtime;
 !function(e){"use strict";"function"==typeof define&&define.amd?define(["jquery"],e):"object"==typeof exports&&"object"==typeof module?module.exports=e(require("jquery")):e(jQuery)}(function(De,qe){"use strict";var e,Ie={beforeShow:a,move:a,change:a,show:a,hide:a,color:!1,flat:!1,type:"",showInput:!1,allowEmpty:!0,showButtons:!0,clickoutFiresChange:!0,showInitial:!1,showPalette:!0,showPaletteOnly:!1,hideAfterPaletteSelect:!1,togglePaletteOnly:!1,showSelectionPalette:!0,localStorageKey:!1,appendTo:"body",maxSelectionSize:8,locale:"en",cancelText:"cancel",chooseText:"choose",togglePaletteMoreText:"more",togglePaletteLessText:"less",clearText:"Clear Color Selection",noColorSelectedText:"No Color Selected",preferredFormat:"name",className:"",containerClassName:"",replacerClassName:"",showAlpha:!0,theme:"sp-light",palette:[["#000000","#444444","#5b5b5b","#999999","#bcbcbc","#eeeeee","#f3f6f4","#ffffff"],["#f44336","#744700","#ce7e00","#8fce00","#2986cc","#16537e","#6a329f","#c90076"],["#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#cfe2f3","#d9d2e9","#ead1dc"],["#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#9fc5e8","#b4a7d6","#d5a6bd"],["#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6fa8dc","#8e7cc3","#c27ba0"],["#cc0000","#e69138","#f1c232","#6aa84f","#45818e","#3d85c6","#674ea7","#a64d79"],["#990000","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],["#660000","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]],selectionPalette:[],disabled:!1,offset:null},Ve=[],We=!!/msie/i.exec(window.navigator.userAgent),Be=((e=document.createElement("div").style).cssText="background-color:rgba(0,0,0,.5)",t(e.backgroundColor,"rgba")||t(e.backgroundColor,"hsla")),Ke=["<div class='sp-replacer'>","<div class='sp-preview'><div class='sp-preview-inner'></div></div>","<div class='sp-dd'>&#9660;</div>","</div>"].join(""),$e=function(){var e="";if(We)for(var t=1;t<=6;t++)e+="<div class='sp-"+t+"'></div>";return["<div class='sp-container sp-hidden'>","<div class='sp-palette-container'>","<div class='sp-palette sp-thumb sp-cf'></div>","<div class='sp-palette-button-container sp-cf'>","<button type='button' class='sp-palette-toggle'></button>","</div>","</div>","<div class='sp-picker-container'>","<div class='sp-top sp-cf'>","<div class='sp-fill'></div>","<div class='sp-top-inner'>","<div class='sp-color'>","<div class='sp-sat'>","<div class='sp-val'>","<div class='sp-dragger'></div>","</div>","</div>","</div>","<div class='sp-clear sp-clear-display'>","</div>","<div class='sp-hue'>","<div class='sp-slider'></div>",e,"</div>","</div>","<div class='sp-alpha'><div class='sp-alpha-inner'><div class='sp-alpha-handle'></div></div></div>","</div>","<div class='sp-input-container sp-cf'>","<input class='sp-input' type='text' spellcheck='false'  />","</div>","<div class='sp-initial sp-thumb sp-cf'></div>","<div class='sp-button-container sp-cf'>","<button class='sp-cancel' href='#'></button>","<button type='button' class='sp-choose'></button>","</div>","</div>","</div>"].join("")}();function t(e,t){return!!~(""+e).indexOf(t)}function Xe(e,t,a,o){for(var r=[],n=0;n<e.length;n++){var s=e[n];if(s){var i=tinycolor(s),l=i.toHsl().l<.5?"sp-thumb-el sp-thumb-dark":"sp-thumb-el sp-thumb-light";l+=tinycolor.equals(t,s)?" sp-thumb-active":"";var c=i.toString(o.preferredFormat||"rgb"),u=Be?"background-color:"+i.toRgbString():"filter:"+i.toFilter();r.push('<span title="'+c+'" data-color="'+i.toRgbString()+'" class="'+l+'"><span class="sp-thumb-inner" style="'+u+';"></span></span>')}else r.push('<span class="sp-thumb-el sp-clear-display" ><span class="sp-clear-palette-only" style="background-color: transparent;"></span></span>')}return"<div class='sp-cf "+a+"'>"+r.join("")+"</div>"}function n(e,t){var a,o,r,n,h=function(e,t){e.locale=e.locale||window.navigator.language,e.locale&&(e.locale=e.locale.split("-")[0].toLowerCase()),"en"!=e.locale&&De.spectrum.localization[e.locale]&&(e=De.extend({},De.spectrum.localization[e.locale],e));var a=De.extend({},Ie,e);return a.callbacks={move:Ge(a.move,t),change:Ge(a.change,t),show:Ge(a.show,t),hide:Ge(a.hide,t),beforeShow:Ge(a.beforeShow,t)},a}(t,e),s=h.type,d="flat"==s,i=h.showSelectionPalette,l=h.localStorageKey,c=h.theme,u=h.callbacks,f=(a=Qe,function(){var e=this,t=arguments;r&&clearTimeout(n),!r&&n||(n=setTimeout(function(){n=null,a.apply(e,t)},o))}),p=!(o=10),g=!1,b=0,m=0,v=0,x=0,y=0,T=0,w=0,_=0,k=0,P=0,C=1,S=[],M=[],z={},j=h.selectionPalette.slice(0),A=h.maxSelectionSize,R="sp-dragging",F=!1,H=null,L=e.ownerDocument,O=(L.body,De(e)),Q=!1,E=De($e,L).addClass(c),N=E.find(".sp-picker-container"),D=E.find(".sp-color"),q=E.find(".sp-dragger"),I=E.find(".sp-hue"),V=E.find(".sp-slider"),W=E.find(".sp-alpha-inner"),B=E.find(".sp-alpha"),K=E.find(".sp-alpha-handle"),$=E.find(".sp-input"),X=E.find(".sp-palette"),Y=E.find(".sp-initial"),G=E.find(".sp-cancel"),U=E.find(".sp-clear"),J=E.find(".sp-choose"),Z=E.find(".sp-palette-toggle"),ee=O.is("input"),te=(ee&&"color"===O.attr("type")&&Je(),ee&&"color"==s),ae=te?De(Ke).addClass(c).addClass(h.className).addClass(h.replacerClassName):De([]),oe=te?ae:O,re=ae.find(".sp-preview-inner"),ne=h.color||ee&&O.val(),se=!1,ie=h.preferredFormat,le=!h.showButtons||h.clickoutFiresChange,ce=!ne,ue=h.allowEmpty,fe=null,he=null,de=null,pe=null,ge=O.attr("id");if(ge!==qe&&0<ge.length){var be=De('label[for="'+ge+'"]');be.length&&be.on("click",function(e){return e.preventDefault(),O.spectrum("show"),!1})}function me(){if(h.showPaletteOnly&&(h.showPalette=!0),Z.text(h.showPaletteOnly?h.togglePaletteMoreText:h.togglePaletteLessText),h.palette){S=h.palette.slice(0),M=De.isArray(S[0])?S:[S],z={};for(var e=0;e<M.length;e++)for(var t=0;t<M[e].length;t++){var a=tinycolor(M[e][t]).toRgbString();z[a]=!0}h.showPaletteOnly&&!h.color&&(ne=""===S[0][0]?S[0][0]:Object.keys(z)[0])}E.toggleClass("sp-flat",d),E.toggleClass("sp-input-disabled",!h.showInput),E.toggleClass("sp-alpha-enabled",h.showAlpha),E.toggleClass("sp-clear-enabled",ue),E.toggleClass("sp-buttons-disabled",!h.showButtons),E.toggleClass("sp-palette-buttons-disabled",!h.togglePaletteOnly),E.toggleClass("sp-palette-disabled",!h.showPalette),E.toggleClass("sp-palette-only",h.showPaletteOnly),E.toggleClass("sp-initial-disabled",!h.showInitial),E.addClass(h.className).addClass(h.containerClassName),Qe()}function ve(){if(l){try{var e=window.localStorage,t=e[l].split(",#");1<t.length&&(delete e[l],De.each(t,function(e,t){xe(t)}))}catch(e){}try{j=window.localStorage[l].split(";")}catch(e){}}}function xe(e){if(i){var t=tinycolor(e).toRgbString();if(!z[t]&&-1===De.inArray(t,j))for(j.push(t);j.length>A;)j.shift();if(l)try{window.localStorage[l]=j.join(";")}catch(e){}}}function ye(){var a=Re(),e=De.map(M,function(e,t){return Xe(e,a,"sp-palette-row sp-palette-row-"+t,h)});ve(),j&&e.push(Xe(function(){var e=[];if(h.showPalette)for(var t=0;t<j.length;t++){var a=tinycolor(j[t]).toRgbString();z[a]||e.push(j[t])}return e.reverse().slice(0,h.maxSelectionSize)}(),a,"sp-palette-row sp-palette-row-selection",h)),X.html(e.join(""))}function Te(){if(h.showInitial){var e=se,t=Re();Y.html(Xe([e,t],t,"sp-palette-row-initial",h))}}function we(){(m<=0||b<=0||x<=0)&&Qe(),g=!0,E.addClass(R),H=null,O.trigger("dragstart.spectrum",[Re()])}function _e(){g=!1,E.removeClass(R),O.trigger("dragstop.spectrum",[Re()])}function ke(e){if(F)F=!1;else if(null!==e&&""!==e||!ue){var t=tinycolor(e);t.isValid()?(Ae(t),Fe(),Oe()):$.addClass("sp-validation-error")}else Ae(null),Fe(),Oe()}function Pe(){(p?ze:Ce)()}function Ce(){var e=De.Event("beforeShow.spectrum");p?Qe():(O.trigger(e,[Re()]),!1===u.beforeShow(Re())||e.isDefaultPrevented()||(function(){for(var e=0;e<Ve.length;e++)Ve[e]&&Ve[e].hide()}(),p=!0,De(L).on("keydown.spectrum",Se),De(L).on("click.spectrum",Me),De(window).on("resize.spectrum",f),ae.addClass("sp-active"),E.removeClass("sp-hidden"),Qe(),He(),se=Re(),Te(),u.show(se),O.trigger("show.spectrum",[se])))}function Se(e){27===e.keyCode&&ze()}function Me(e){2!=e.button&&(g||(le?Oe(!0):je(),ze()))}function ze(){p&&!d&&(p=!1,De(L).off("keydown.spectrum",Se),De(L).off("click.spectrum",Me),De(window).off("resize.spectrum",f),ae.removeClass("sp-active"),E.addClass("sp-hidden"),u.hide(Re()),O.trigger("hide.spectrum",[Re()]))}function je(){Ae(se,!0),Oe(!0)}function Ae(e,t){var a,o;tinycolor.equals(e,Re())?He():(e&&e!==qe||!ue?(ce=!1,o=(a=tinycolor(e)).toHsv(),_=o.h%360/360,k=o.s,P=o.v,C=o.a):ce=!0,He(),a&&a.isValid()&&!t&&(ie=h.preferredFormat||a.getFormat()))}function Re(e){return e=e||{},ue&&ce?null:tinycolor.fromRatio({h:_,s:k,v:P,a:Math.round(1e3*C)/1e3},{format:e.format||ie})}function Fe(){He(),u.move(Re()),O.trigger("move.spectrum",[Re()])}function He(){$.removeClass("sp-validation-error"),Le();var e=tinycolor.fromRatio({h:_,s:1,v:1});D.css("background-color",e.toHexString());var t=ie;C<1&&(0!==C||"name"!==t)&&("hex"!==t&&"hex3"!==t&&"hex6"!==t&&"name"!==t||(t="rgb"));var a=Re({format:t}),o="";if(re.removeClass("sp-clear-display"),re.css("background-color","transparent"),!a&&ue)re.addClass("sp-clear-display");else{var r=a.toHexString(),n=a.toRgbString();if(Be||1===a.alpha?re.css("background-color",n):(re.css("background-color","transparent"),re.css("filter",a.toFilter())),h.showAlpha){var s=a.toRgb();s.a=0;var i=tinycolor(s).toRgbString(),l="linear-gradient(left, "+i+", "+r+")";We?W.css("filter",tinycolor(i).toFilter({gradientType:1},r)):(W.css("background","-webkit-"+l),W.css("background","-moz-"+l),W.css("background","-ms-"+l),W.css("background","linear-gradient(to right, "+i+", "+r+")"))}o=a.toString(t)}if(h.showInput&&$.val(o),O.val(o),"text"==h.type||"component"==h.type){var c=a;if(c&&he){var u=c.isLight()||c.getAlpha()<.4?"black":"white";he.css("background-color",c.toRgbString()).css("color",u)}else he.css("background-color",pe).css("color",de)}h.showPalette&&ye(),Te()}function Le(){var e=k,t=P;if(ue&&ce)K.hide(),V.hide(),q.hide();else{K.show(),V.show(),q.show();var a=e*b,o=m-t*m;a=Math.max(-v,Math.min(b-v,a-v)),o=Math.max(-v,Math.min(m-v,o-v)),q.css({top:o+"px",left:a+"px"});var r=C*y;K.css({left:r-T/2+"px"});var n=_*x;V.css({top:n-w+"px"})}}function Oe(e){var t=Re(),a=!tinycolor.equals(t,se);t&&(t.toString(ie),xe(t)),e&&a&&(u.change(t),F=!0,O.trigger("change",[t]))}function Qe(){var e,t,a,o,r,n,s,i,l,c,u,f;p&&(b=D.width(),m=D.height(),v=q.height(),I.width(),x=I.height(),w=V.height(),y=B.width(),T=K.width(),d||(E.css("position","absolute"),h.offset?E.offset(h.offset):E.offset((t=oe,a=(e=E).outerWidth(),o=e.outerHeight(),r=t.outerHeight(),n=e[0].ownerDocument,s=n.documentElement,i=s.clientWidth+De(n).scrollLeft(),l=s.clientHeight+De(n).scrollTop(),c=t.offset(),u=c.left,f=c.top,f+=r,u-=Math.min(u,i<u+a&&a<i?Math.abs(u+a-i):0),{top:f-=Math.min(f,l<f+o&&o<l?Math.abs(+(o+r)):0),bottom:c.bottom,left:u,right:c.right,width:c.width,height:c.height}))),Le(),h.showPalette&&ye(),O.trigger("reflow.spectrum"))}function Ee(){ze(),Q=!0,O.attr("disabled",!0),oe.addClass("sp-disabled")}!function(){if(We&&E.find("*:not(input)").attr("unselectable","on"),me(),fe=De('<span class="sp-original-input-container"></span>'),["margin"].forEach(function(e){fe.css(e,O.css(e))}),"block"==O.css("display")&&fe.css("display","flex"),te)O.after(ae).hide();else if("text"==s)fe.addClass("sp-colorize-container"),O.addClass("spectrum sp-colorize").wrap(fe);else if("component"==s){O.addClass("spectrum").wrap(fe);var e=De(["<div class='sp-colorize-container sp-add-on'>","<div class='sp-colorize'></div> ","</div>"].join(""));e.width(O.outerHeight()+"px").css("border-radius",O.css("border-radius")).css("border",O.css("border")),O.addClass("with-add-on").before(e)}if(he=O.parent().find(".sp-colorize"),de=he.css("color"),pe=he.css("background-color"),ue||U.hide(),d)O.after(E).hide();else{var t="parent"===h.appendTo?O.parent():De(h.appendTo);1!==t.length&&(t=De("body")),t.append(E)}function a(e){return e.data&&e.data.ignore?(Ae(De(e.target).closest(".sp-thumb-el").data("color")),Fe()):(Ae(De(e.target).closest(".sp-thumb-el").data("color")),Fe(),h.hideAfterPaletteSelect?(Oe(!0),ze()):Oe()),!1}ve(),oe.on("click.spectrum touchstart.spectrum",function(e){Q||Pe(),e.stopPropagation(),De(e.target).is("input")||e.preventDefault()}),!O.is(":disabled")&&!0!==h.disabled||Ee(),E.click(Ye),[$,O].forEach(function(t){t.change(function(){ke(t.val())}),t.on("paste",function(){setTimeout(function(){ke(t.val())},1)}),t.keydown(function(e){13==e.keyCode&&(ke(De(t).val()),t==O&&ze())})}),G.text(h.cancelText),G.on("click.spectrum",function(e){e.stopPropagation(),e.preventDefault(),je(),ze()}),U.attr("title",h.clearText),U.on("click.spectrum",function(e){e.stopPropagation(),e.preventDefault(),ce=!0,Fe(),d&&Oe(!0)}),J.text(h.chooseText),J.on("click.spectrum",function(e){e.stopPropagation(),e.preventDefault(),We&&$.is(":focus")&&$.trigger("change"),$.hasClass("sp-validation-error")||(Oe(!0),ze())}),Z.text(h.showPaletteOnly?h.togglePaletteMoreText:h.togglePaletteLessText),Z.on("click.spectrum",function(e){e.stopPropagation(),e.preventDefault(),h.showPaletteOnly=!h.showPaletteOnly,h.showPaletteOnly||d||E.css("left","-="+(N.outerWidth(!0)+5)),me()}),Ue(B,function(e,t,a){C=e/y,ce=!1,a.shiftKey&&(C=Math.round(10*C)/10),Fe()},we,_e),Ue(I,function(e,t){_=parseFloat(t/x),ce=!1,h.showAlpha||(C=1),Fe()},we,_e),Ue(D,function(e,t,a){if(a.shiftKey){if(!H){var o=k*b,r=m-P*m,n=Math.abs(e-o)>Math.abs(t-r);H=n?"x":"y"}}else H=null;var s=!H||"y"===H;H&&"x"!==H||(k=parseFloat(e/b)),s&&(P=parseFloat((m-t)/m)),ce=!1,h.showAlpha||(C=1),Fe()},we,_e),ne?(Ae(ne),He(),ie=tinycolor(ne).format||h.preferredFormat,xe(ne)):(""===ne&&Ae(ne),He()),d&&Ce();var o=We?"mousedown.spectrum":"click.spectrum touchstart.spectrum";X.on(o,".sp-thumb-el",a),Y.on(o,".sp-thumb-el:nth-child(1)",{ignore:!0},a)}();var Ne={show:Ce,hide:ze,toggle:Pe,reflow:Qe,option:function(e,t){return e===qe?De.extend({},h):t===qe?h[e]:(h[e]=t,"preferredFormat"===e&&(ie=h.preferredFormat),void me())},enable:function(){Q=!1,O.attr("disabled",!1),oe.removeClass("sp-disabled")},disable:Ee,offset:function(e){h.offset=e,Qe()},set:function(e){Ae(e),Oe()},get:Re,destroy:function(){O.show().removeClass("spectrum with-add-on sp-colorize"),oe.off("click.spectrum touchstart.spectrum"),E.remove(),ae.remove(),he&&he.css("background-color",pe).css("color",de);var e=O.closest(".sp-original-input-container");0<e.length&&e.after(O).remove(),Ve[Ne.id]=null},container:E};return Ne.id=Ve.push(Ne)-1,Ne}function a(){}function Ye(e){e.stopPropagation()}function Ge(e,t){var a=Array.prototype.slice,o=a.call(arguments,2);return function(){return e.apply(t,o.concat(a.call(arguments)))}}function Ue(s,i,t,e){i=i||function(){},t=t||function(){},e=e||function(){};var l=document,c=!1,u={},f=0,h=0,d="ontouchstart"in window,a={};function p(e){e.stopPropagation&&e.stopPropagation(),e.preventDefault&&e.preventDefault(),e.returnValue=!1}function o(e){if(c){if(We&&l.documentMode<9&&!e.button)return g();var t=e.originalEvent&&e.originalEvent.touches&&e.originalEvent.touches[0],a=t&&t.pageX||e.pageX,o=t&&t.pageY||e.pageY,r=Math.max(0,Math.min(a-u.left,h)),n=Math.max(0,Math.min(o-u.top,f));d&&p(e),i.apply(s,[r,n,e])}}function g(){c&&(De(l).off(a),De(l.body).removeClass("sp-dragging"),setTimeout(function(){e.apply(s,arguments)},0)),c=!1}a.selectstart=p,a.dragstart=p,a["touchmove mousemove"]=o,a["touchend mouseup"]=g,De(s).on("touchstart mousedown",function(e){(e.which?3==e.which:2==e.button)||c||!1!==t.apply(s,arguments)&&(c=!0,f=De(s).height(),h=De(s).width(),u=De(s).offset(),De(l).on(a),De(l.body).addClass("sp-dragging"),o(e),p(e))})}function Je(){return De.fn.spectrum.inputTypeColorSupport()}var s="spectrum.id";De.fn.spectrum=function(a,e){if("string"!=typeof a)return this.spectrum("destroy").each(function(){var e=De.extend({},De(this).data(),a);De(this).is("input")?e.flat||"flat"==e.type?e.type="flat":"color"==De(this).attr("type")?e.type="color":e.type=e.type||"component":e.type="noInput";var t=n(this,e);De(this).data(s,t.id)});var o=this,r=Array.prototype.slice.call(arguments,1);return this.each(function(){var e=Ve[De(this).data(s)];if(e){var t=e[a];if(!t)throw new Error("Spectrum: no such method: '"+a+"'");"get"==a?o=e.get():"container"==a?o=e.container:"option"==a?o=e.option.apply(e,r):"destroy"==a?(e.destroy(),De(this).removeData(s)):t.apply(e,r)}}),o},De.fn.spectrum.load=!0,De.fn.spectrum.loadOpts={},De.fn.spectrum.draggable=Ue,De.fn.spectrum.defaults=Ie,De.fn.spectrum.inputTypeColorSupport=function e(){if(void 0===e._cachedResult){var t=De("<input type='color'/>")[0];e._cachedResult="color"===t.type&&""!==t.value}return e._cachedResult},De.spectrum={},De.spectrum.localization={},De.spectrum.palettes={},De.fn.spectrum.processNativeColorInputs=function(){var e=De("input[type=color]");e.length&&!Je()&&e.spectrum({preferredFormat:"hex6"})},function(){var n=/^[\s,#]+/,s=/\s+$/,o=0,c=Math,i=c.round,u=c.min,f=c.max,e=c.random,h=function(e,t){if(t=t||{},(e=e||"")instanceof h)return e;if(!(this instanceof h))return new h(e,t);var a=function(e){var t={r:0,g:0,b:0},a=1,o=!1,r=!1;"string"==typeof e&&(e=function(e){e=e.replace(n,"").replace(s,"").toLowerCase();var t,a=!1;if(C[e])e=C[e],a=!0;else if("transparent"==e)return{r:0,g:0,b:0,a:0,format:"name"};if(t=Q.rgb.exec(e))return{r:t[1],g:t[2],b:t[3]};if(t=Q.rgba.exec(e))return{r:t[1],g:t[2],b:t[3],a:t[4]};if(t=Q.hsl.exec(e))return{h:t[1],s:t[2],l:t[3]};if(t=Q.hsla.exec(e))return{h:t[1],s:t[2],l:t[3],a:t[4]};if(t=Q.hsv.exec(e))return{h:t[1],s:t[2],v:t[3]};if(t=Q.hsva.exec(e))return{h:t[1],s:t[2],v:t[3],a:t[4]};if(t=Q.hex8.exec(e))return{a:function(e){return A(e)/255}(t[1]),r:A(t[2]),g:A(t[3]),b:A(t[4]),format:a?"name":"hex8"};if(t=Q.hex6.exec(e))return{r:A(t[1]),g:A(t[2]),b:A(t[3]),format:a?"name":"hex"};if(t=Q.hex3.exec(e))return{r:A(t[1]+""+t[1]),g:A(t[2]+""+t[2]),b:A(t[3]+""+t[3]),format:a?"name":"hex"};return!1}(e));"object"==typeof e&&(e.hasOwnProperty("r")&&e.hasOwnProperty("g")&&e.hasOwnProperty("b")?(t=function(e,t,a){return{r:255*z(e,255),g:255*z(t,255),b:255*z(a,255)}}(e.r,e.g,e.b),o=!0,r="%"===String(e.r).substr(-1)?"prgb":"rgb"):e.hasOwnProperty("h")&&e.hasOwnProperty("s")&&e.hasOwnProperty("v")?(e.s=F(e.s),e.v=F(e.v),t=function(e,t,a){e=6*z(e,360),t=z(t,100),a=z(a,100);var o=c.floor(e),r=e-o,n=a*(1-t),s=a*(1-r*t),i=a*(1-(1-r)*t),l=o%6;return{r:255*[a,s,n,n,i,a][l],g:255*[i,a,a,s,n,n][l],b:255*[n,n,i,a,a,s][l]}}(e.h,e.s,e.v),o=!0,r="hsv"):e.hasOwnProperty("h")&&e.hasOwnProperty("s")&&e.hasOwnProperty("l")&&(e.s=F(e.s),e.l=F(e.l),t=function(e,t,a){var o,r,n;function s(e,t,a){return a<0&&(a+=1),1<a&&--a,a<1/6?e+6*(t-e)*a:a<.5?t:a<2/3?e+(t-e)*(2/3-a)*6:e}if(e=z(e,360),t=z(t,100),a=z(a,100),0===t)o=r=n=a;else{var i=a<.5?a*(1+t):a+t-a*t,l=2*a-i;o=s(l,i,e+1/3),r=s(l,i,e),n=s(l,i,e-1/3)}return{r:255*o,g:255*r,b:255*n}}(e.h,e.s,e.l),o=!0,r="hsl"),e.hasOwnProperty("a")&&(a=e.a));return a=M(a),{ok:o,format:e.format||r,r:u(255,f(t.r,0)),g:u(255,f(t.g,0)),b:u(255,f(t.b,0)),a:a}}(e);this._originalInput=e,this._r=a.r,this._g=a.g,this._b=a.b,this._a=a.a,this._roundA=i(1e3*this._a)/1e3,this._format=t.format||a.format,this._gradientType=t.gradientType,this._r<1&&(this._r=i(this._r)),this._g<1&&(this._g=i(this._g)),this._b<1&&(this._b=i(this._b)),this._ok=a.ok,this._tc_id=o++};function r(e,t,a){e=z(e,255),t=z(t,255),a=z(a,255);var o,r,n=f(e,t,a),s=u(e,t,a),i=(n+s)/2;if(n==s)o=r=0;else{var l=n-s;switch(r=.5<i?l/(2-n-s):l/(n+s),n){case e:o=(t-a)/l+(t<a?6:0);break;case t:o=(a-e)/l+2;break;case a:o=(e-t)/l+4}o/=6}return{h:o,s:r,l:i}}function l(e,t,a){e=z(e,255),t=z(t,255),a=z(a,255);var o,r,n=f(e,t,a),s=u(e,t,a),i=n,l=n-s;if(r=0===n?0:l/n,n==s)o=0;else{switch(n){case e:o=(t-a)/l+(t<a?6:0);break;case t:o=(a-e)/l+2;break;case a:o=(e-t)/l+4}o/=6}return{h:o,s:r,v:i}}function t(e,t,a,o){var r=[R(i(e).toString(16)),R(i(t).toString(16)),R(i(a).toString(16))];return o&&r[0].charAt(0)==r[0].charAt(1)&&r[1].charAt(0)==r[1].charAt(1)&&r[2].charAt(0)==r[2].charAt(1)?r[0].charAt(0)+r[1].charAt(0)+r[2].charAt(0):r.join("")}function d(e,t,a,o){var r;return[R((r=o,Math.round(255*parseFloat(r)).toString(16))),R(i(e).toString(16)),R(i(t).toString(16)),R(i(a).toString(16))].join("")}function a(e,t){t=0===t?0:t||10;var a=h(e).toHsl();return a.s-=t/100,a.s=j(a.s),h(a)}function p(e,t){t=0===t?0:t||10;var a=h(e).toHsl();return a.s+=t/100,a.s=j(a.s),h(a)}function g(e){return h(e).desaturate(100)}function b(e,t){t=0===t?0:t||10;var a=h(e).toHsl();return a.l+=t/100,a.l=j(a.l),h(a)}function m(e,t){t=0===t?0:t||10;var a=h(e).toRgb();return a.r=f(0,u(255,a.r-i(-t/100*255))),a.g=f(0,u(255,a.g-i(-t/100*255))),a.b=f(0,u(255,a.b-i(-t/100*255))),h(a)}function v(e,t){t=0===t?0:t||10;var a=h(e).toHsl();return a.l-=t/100,a.l=j(a.l),h(a)}function x(e,t){var a=h(e).toHsl(),o=(i(a.h)+t)%360;return a.h=o<0?360+o:o,h(a)}function y(e){var t=h(e).toHsl();return t.h=(t.h+180)%360,h(t)}function T(e){var t=h(e).toHsl(),a=t.h;return[h(e),h({h:(a+120)%360,s:t.s,l:t.l}),h({h:(a+240)%360,s:t.s,l:t.l})]}function w(e){var t=h(e).toHsl(),a=t.h;return[h(e),h({h:(a+90)%360,s:t.s,l:t.l}),h({h:(a+180)%360,s:t.s,l:t.l}),h({h:(a+270)%360,s:t.s,l:t.l})]}function _(e){var t=h(e).toHsl(),a=t.h;return[h(e),h({h:(a+72)%360,s:t.s,l:t.l}),h({h:(a+216)%360,s:t.s,l:t.l})]}function k(e,t,a){t=t||6,a=a||30;var o=h(e).toHsl(),r=360/a,n=[h(e)];for(o.h=(o.h-(r*t>>1)+720)%360;--t;)o.h=(o.h+r)%360,n.push(h(o));return n}function P(e,t){t=t||6;for(var a=h(e).toHsv(),o=a.h,r=a.s,n=a.v,s=[],i=1/t;t--;)s.push(h({h:o,s:r,v:n})),n=(n+i)%1;return s}h.prototype={isDark:function(){return this.getBrightness()<128},isLight:function(){return!this.isDark()},isValid:function(){return this._ok},getOriginalInput:function(){return this._originalInput},getFormat:function(){return this._format},getAlpha:function(){return this._a},getBrightness:function(){var e=this.toRgb();return(299*e.r+587*e.g+114*e.b)/1e3},setAlpha:function(e){return this._a=M(e),this._roundA=i(1e3*this._a)/1e3,this},toHsv:function(){var e=l(this._r,this._g,this._b);return{h:360*e.h,s:e.s,v:e.v,a:this._a}},toHsvString:function(){var e=l(this._r,this._g,this._b),t=i(360*e.h),a=i(100*e.s),o=i(100*e.v);return 1==this._a?"hsv("+t+", "+a+"%, "+o+"%)":"hsva("+t+", "+a+"%, "+o+"%, "+this._roundA+")"},toHsl:function(){var e=r(this._r,this._g,this._b);return{h:360*e.h,s:e.s,l:e.l,a:this._a}},toHslString:function(){var e=r(this._r,this._g,this._b),t=i(360*e.h),a=i(100*e.s),o=i(100*e.l);return 1==this._a?"hsl("+t+", "+a+"%, "+o+"%)":"hsla("+t+", "+a+"%, "+o+"%, "+this._roundA+")"},toHex:function(e){return t(this._r,this._g,this._b,e)},toHexString:function(e){return"#"+this.toHex(e)},toHex8:function(){return d(this._r,this._g,this._b,this._a)},toHex8String:function(){return"#"+this.toHex8()},toRgb:function(){return{r:i(this._r),g:i(this._g),b:i(this._b),a:this._a}},toRgbString:function(){return 1==this._a?"rgb("+i(this._r)+", "+i(this._g)+", "+i(this._b)+")":"rgba("+i(this._r)+", "+i(this._g)+", "+i(this._b)+", "+this._roundA+")"},toPercentageRgb:function(){return{r:i(100*z(this._r,255))+"%",g:i(100*z(this._g,255))+"%",b:i(100*z(this._b,255))+"%",a:this._a}},toPercentageRgbString:function(){return 1==this._a?"rgb("+i(100*z(this._r,255))+"%, "+i(100*z(this._g,255))+"%, "+i(100*z(this._b,255))+"%)":"rgba("+i(100*z(this._r,255))+"%, "+i(100*z(this._g,255))+"%, "+i(100*z(this._b,255))+"%, "+this._roundA+")"},toName:function(){return 0===this._a?"transparent":!(this._a<1)&&(S[t(this._r,this._g,this._b,!0)]||!1)},toFilter:function(e){var t="#"+d(this._r,this._g,this._b,this._a),a=t,o=this._gradientType?"GradientType = 1, ":"";e&&(a=h(e).toHex8String());return"progid:DXImageTransform.Microsoft.gradient("+o+"startColorstr="+t+",endColorstr="+a+")"},toString:function(e){var t=!!e;e=e||this._format;var a=!1,o=this._a<1&&0<=this._a;return t||!o||"hex"!==e&&"hex6"!==e&&"hex3"!==e&&"name"!==e?("rgb"===e&&(a=this.toRgbString()),"prgb"===e&&(a=this.toPercentageRgbString()),"hex"!==e&&"hex6"!==e||(a=this.toHexString()),"hex3"===e&&(a=this.toHexString(!0)),"hex8"===e&&(a=this.toHex8String()),"name"===e&&(a=this.toName()),"hsl"===e&&(a=this.toHslString()),"hsv"===e&&(a=this.toHsvString()),a||this.toHexString()):"name"===e&&0===this._a?this.toName():this.toRgbString()},_applyModification:function(e,t){var a=e.apply(null,[this].concat([].slice.call(t)));return this._r=a._r,this._g=a._g,this._b=a._b,this.setAlpha(a._a),this},lighten:function(){return this._applyModification(b,arguments)},brighten:function(){return this._applyModification(m,arguments)},darken:function(){return this._applyModification(v,arguments)},desaturate:function(){return this._applyModification(a,arguments)},saturate:function(){return this._applyModification(p,arguments)},greyscale:function(){return this._applyModification(g,arguments)},spin:function(){return this._applyModification(x,arguments)},_applyCombination:function(e,t){return e.apply(null,[this].concat([].slice.call(t)))},analogous:function(){return this._applyCombination(k,arguments)},complement:function(){return this._applyCombination(y,arguments)},monochromatic:function(){return this._applyCombination(P,arguments)},splitcomplement:function(){return this._applyCombination(_,arguments)},triad:function(){return this._applyCombination(T,arguments)},tetrad:function(){return this._applyCombination(w,arguments)}},h.fromRatio=function(e,t){if("object"==typeof e){var a={};for(var o in e)e.hasOwnProperty(o)&&(a[o]="a"===o?e[o]:F(e[o]));e=a}return h(e,t)},h.equals=function(e,t){return!(!e||!t)&&h(e).toRgbString()==h(t).toRgbString()},h.random=function(){return h.fromRatio({r:e(),g:e(),b:e()})},h.mix=function(e,t,a){a=0===a?0:a||50;var o,r=h(e).toRgb(),n=h(t).toRgb(),s=a/100,i=2*s-1,l=n.a-r.a,c=1-(o=((o=i*l==-1?i:(i+l)/(1+i*l))+1)/2),u={r:n.r*o+r.r*c,g:n.g*o+r.g*c,b:n.b*o+r.b*c,a:n.a*s+r.a*(1-s)};return h(u)},h.readability=function(e,t){var a=h(e),o=h(t),r=a.toRgb(),n=o.toRgb(),s=a.getBrightness(),i=o.getBrightness(),l=Math.max(r.r,n.r)-Math.min(r.r,n.r)+Math.max(r.g,n.g)-Math.min(r.g,n.g)+Math.max(r.b,n.b)-Math.min(r.b,n.b);return{brightness:Math.abs(s-i),color:l}},h.isReadable=function(e,t){var a=h.readability(e,t);return 125<a.brightness&&500<a.color},h.mostReadable=function(e,t){for(var a=null,o=0,r=!1,n=0;n<t.length;n++){var s=h.readability(e,t[n]),i=125<s.brightness&&500<s.color,l=s.brightness/125*3+s.color/500;(i&&!r||i&&r&&o<l||!i&&!r&&o<l)&&(r=i,o=l,a=h(t[n]))}return a};var C=h.names={aliceblue:"f0f8ff",antiquewhite:"faebd7",aqua:"0ff",aquamarine:"7fffd4",azure:"f0ffff",beige:"f5f5dc",bisque:"ffe4c4",black:"000",blanchedalmond:"ffebcd",blue:"00f",blueviolet:"8a2be2",brown:"a52a2a",burlywood:"deb887",burntsienna:"ea7e5d",cadetblue:"5f9ea0",chartreuse:"7fff00",chocolate:"d2691e",coral:"ff7f50",cornflowerblue:"6495ed",cornsilk:"fff8dc",crimson:"dc143c",cyan:"0ff",darkblue:"00008b",darkcyan:"008b8b",darkgoldenrod:"b8860b",darkgray:"a9a9a9",darkgreen:"006400",darkgrey:"a9a9a9",darkkhaki:"bdb76b",darkmagenta:"8b008b",darkolivegreen:"556b2f",darkorange:"ff8c00",darkorchid:"9932cc",darkred:"8b0000",darksalmon:"e9967a",darkseagreen:"8fbc8f",darkslateblue:"483d8b",darkslategray:"2f4f4f",darkslategrey:"2f4f4f",darkturquoise:"00ced1",darkviolet:"9400d3",deeppink:"ff1493",deepskyblue:"00bfff",dimgray:"696969",dimgrey:"696969",dodgerblue:"1e90ff",firebrick:"b22222",floralwhite:"fffaf0",forestgreen:"228b22",fuchsia:"f0f",gainsboro:"dcdcdc",ghostwhite:"f8f8ff",gold:"ffd700",goldenrod:"daa520",gray:"808080",green:"008000",greenyellow:"adff2f",grey:"808080",honeydew:"f0fff0",hotpink:"ff69b4",indianred:"cd5c5c",indigo:"4b0082",ivory:"fffff0",khaki:"f0e68c",lavender:"e6e6fa",lavenderblush:"fff0f5",lawngreen:"7cfc00",lemonchiffon:"fffacd",lightblue:"add8e6",lightcoral:"f08080",lightcyan:"e0ffff",lightgoldenrodyellow:"fafad2",lightgray:"d3d3d3",lightgreen:"90ee90",lightgrey:"d3d3d3",lightpink:"ffb6c1",lightsalmon:"ffa07a",lightseagreen:"20b2aa",lightskyblue:"87cefa",lightslategray:"789",lightslategrey:"789",lightsteelblue:"b0c4de",lightyellow:"ffffe0",lime:"0f0",limegreen:"32cd32",linen:"faf0e6",magenta:"f0f",maroon:"800000",mediumaquamarine:"66cdaa",mediumblue:"0000cd",mediumorchid:"ba55d3",mediumpurple:"9370db",mediumseagreen:"3cb371",mediumslateblue:"7b68ee",mediumspringgreen:"00fa9a",mediumturquoise:"48d1cc",mediumvioletred:"c71585",midnightblue:"191970",mintcream:"f5fffa",mistyrose:"ffe4e1",moccasin:"ffe4b5",navajowhite:"ffdead",navy:"000080",oldlace:"fdf5e6",olive:"808000",olivedrab:"6b8e23",orange:"ffa500",orangered:"ff4500",orchid:"da70d6",palegoldenrod:"eee8aa",palegreen:"98fb98",paleturquoise:"afeeee",palevioletred:"db7093",papayawhip:"ffefd5",peachpuff:"ffdab9",peru:"cd853f",pink:"ffc0cb",plum:"dda0dd",powderblue:"b0e0e6",purple:"800080",rebeccapurple:"663399",red:"f00",rosybrown:"bc8f8f",royalblue:"4169e1",saddlebrown:"8b4513",salmon:"fa8072",sandybrown:"f4a460",seagreen:"2e8b57",seashell:"fff5ee",sienna:"a0522d",silver:"c0c0c0",skyblue:"87ceeb",slateblue:"6a5acd",slategray:"708090",slategrey:"708090",snow:"fffafa",springgreen:"00ff7f",steelblue:"4682b4",tan:"d2b48c",teal:"008080",thistle:"d8bfd8",tomato:"ff6347",turquoise:"40e0d0",violet:"ee82ee",wheat:"f5deb3",white:"fff",whitesmoke:"f5f5f5",yellow:"ff0",yellowgreen:"9acd32"},S=h.hexNames=function(e){var t={};for(var a in e)e.hasOwnProperty(a)&&(t[e[a]]=a);return t}(C);function M(e){return e=parseFloat(e),(isNaN(e)||e<0||1<e)&&(e=1),e}function z(e,t){var a;"string"==typeof(a=e)&&-1!=a.indexOf(".")&&1===parseFloat(a)&&(e="100%");var o,r="string"==typeof(o=e)&&-1!=o.indexOf("%");return e=u(t,f(0,parseFloat(e))),r&&(e=parseInt(e*t,10)/100),c.abs(e-t)<1e-6?1:e%t/parseFloat(t)}function j(e){return u(1,f(0,e))}function A(e){return parseInt(e,16)}function R(e){return 1==e.length?"0"+e:""+e}function F(e){return e<=1&&(e=100*e+"%"),e}var H,L,O,Q=(L="[\\s|\\(]+("+(H="(?:[-\\+]?\\d*\\.\\d+%?)|(?:[-\\+]?\\d+%?)")+")[,|\\s]+("+H+")[,|\\s]+("+H+")\\s*\\)?",O="[\\s|\\(]+("+H+")[,|\\s]+("+H+")[,|\\s]+("+H+")[,|\\s]+("+H+")\\s*\\)?",{rgb:new RegExp("rgb"+L),rgba:new RegExp("rgba"+O),hsl:new RegExp("hsl"+L),hsla:new RegExp("hsla"+O),hsv:new RegExp("hsv"+L),hsva:new RegExp("hsva"+O),hex3:/^([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,hex6:/^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/,hex8:/^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/});window.tinycolor=h}(),De(function(){De.fn.spectrum.load&&De.fn.spectrum.processNativeColorInputs()})}),jQuery.spectrum.localization.ar={cancelText:"إلغاء",chooseText:"إختار",clearText:"إرجاع الألوان على ما كانت",noColorSelectedText:"لم تختار أي لون",togglePaletteMoreText:"أكثر",togglePaletteLessText:"أقل"},jQuery.spectrum.localization.ca={cancelText:"Cancel·lar",chooseText:"Escollir",clearText:"Esborrar color seleccionat",noColorSelectedText:"Cap color seleccionat",togglePaletteMoreText:"Més",togglePaletteLessText:"Menys"},jQuery.spectrum.localization.cs={cancelText:"zrušit",chooseText:"vybrat",clearText:"Resetovat výměr barev",noColorSelectedText:"Žádná barva nebyla vybrána",togglePaletteMoreText:"více",togglePaletteLessText:"méně"},jQuery.spectrum.localization.de={cancelText:"Abbrechen",chooseText:"Wählen",clearText:"Farbauswahl zurücksetzen",noColorSelectedText:"Keine Farbe ausgewählt",togglePaletteMoreText:"Mehr",togglePaletteLessText:"Weniger"},jQuery.spectrum.localization.dk={cancelText:"annuller",chooseText:"Vælg"},jQuery.spectrum.localization.es={cancelText:"Cancelar",chooseText:"Elegir",clearText:"Borrar color seleccionado",noColorSelectedText:"Ningún color seleccionado",togglePaletteMoreText:"Más",togglePaletteLessText:"Menos"},jQuery.spectrum.localization.et={cancelText:"Katkesta",chooseText:"Vali",clearText:"Tühista värvivalik",noColorSelectedText:"Ühtki värvi pole valitud",togglePaletteMoreText:"Rohkem",togglePaletteLessText:"Vähem"},jQuery.spectrum.localization.fa={cancelText:"لغو",chooseText:"انتخاب",clearText:"تنظیم مجدد رنگ",noColorSelectedText:"هیچ رنگی انتخاب نشده است!",togglePaletteMoreText:"بیشتر",togglePaletteLessText:"کمتر"},jQuery.spectrum.localization.fi={cancelText:"Kumoa",chooseText:"Valitse"},jQuery.spectrum.localization.fr={cancelText:"Annuler",chooseText:"Valider",clearText:"Effacer couleur sélectionnée",noColorSelectedText:"Aucune couleur sélectionnée",togglePaletteMoreText:"Plus",togglePaletteLessText:"Moins"},jQuery.spectrum.localization.gr={cancelText:"Ακύρωση",chooseText:"Επιλογή",clearText:"Καθαρισμός επιλεγμένου χρώματος",noColorSelectedText:"Δεν έχει επιλεχθεί κάποιο χρώμα",togglePaletteMoreText:"Περισσότερα",togglePaletteLessText:"Λιγότερα"},jQuery.spectrum.localization.he={cancelText:"בטל בחירה",chooseText:"בחר צבע",clearText:"אפס בחירה",noColorSelectedText:"לא נבחר צבע",togglePaletteMoreText:"עוד צבעים",togglePaletteLessText:"פחות צבעים"},jQuery.spectrum.localization.hr={cancelText:"Odustani",chooseText:"Odaberi",clearText:"Poništi odabir",noColorSelectedText:"Niti jedna boja nije odabrana",togglePaletteMoreText:"Više",togglePaletteLessText:"Manje"},jQuery.spectrum.localization.hu={cancelText:"Mégsem",chooseText:"Mentés",clearText:"A színválasztás visszaállítása",noColorSelectedText:"Nincs szín kijelölve",togglePaletteMoreText:"Több",togglePaletteLessText:"Kevesebb"},jQuery.spectrum.localization.id={cancelText:"Batal",chooseText:"Pilih",clearText:"Hapus Pilihan Warna",noColorSelectedText:"Warna Tidak Dipilih",togglePaletteMoreText:"tambah",togglePaletteLessText:"kurangi"},jQuery.spectrum.localization.it={cancelText:"annulla",chooseText:"scegli",clearText:"Annulla selezione colore",noColorSelectedText:"Nessun colore selezionato"},jQuery.spectrum.localization.ja={cancelText:"中止",chooseText:"選択"},jQuery.spectrum.localization.ko={cancelText:"취소",chooseText:"선택",clearText:"선택 초기화",noColorSelectedText:"선택된 색상 없음",togglePaletteMoreText:"더보기",togglePaletteLessText:"줄이기"},jQuery.spectrum.localization.lt={cancelText:"Atšaukti",chooseText:"Pasirinkti",clearText:"Išvalyti pasirinkimą",noColorSelectedText:"Spalva nepasirinkta",togglePaletteMoreText:"Daugiau",togglePaletteLessText:"Mažiau"},jQuery.spectrum.localization["nb-no"]={cancelText:"Avbryte",chooseText:"Velg",clearText:"Tilbakestill",noColorSelectedText:"Farge er ikke valgt",togglePaletteMoreText:"Mer",togglePaletteLessText:"Mindre"},jQuery.spectrum.localization["nl-nl"]={cancelText:"Annuleer",chooseText:"Kies",clearText:"Wis kleur selectie",togglePaletteMoreText:"Meer",togglePaletteLessText:"Minder"},jQuery.spectrum.localization.pl={cancelText:"Anuluj",chooseText:"Wybierz",clearText:"Usuń wybór koloru",noColorSelectedText:"Nie wybrano koloru",togglePaletteMoreText:"Więcej",togglePaletteLessText:"Mniej"},jQuery.spectrum.localization["pt-br"]={cancelText:"Cancelar",chooseText:"Escolher",clearText:"Limpar cor selecionada",noColorSelectedText:"Nenhuma cor selecionada",togglePaletteMoreText:"Mais",togglePaletteLessText:"Menos"},jQuery.spectrum.localization["pt-pt"]={cancelText:"Cancelar",chooseText:"Escolher",clearText:"Limpar cor seleccionada",noColorSelectedText:"Nenhuma cor seleccionada",togglePaletteMoreText:"Mais",togglePaletteLessText:"Menos"},jQuery.spectrum.localization.ru={cancelText:"Отмена",chooseText:"Выбрать",clearText:"Сбросить",noColorSelectedText:"Цвет не выбран",togglePaletteMoreText:"Ещё",togglePaletteLessText:"Скрыть"},jQuery.spectrum.localization.sv={cancelText:"Avbryt",chooseText:"Välj"},jQuery.spectrum.localization.tr={cancelText:"iptal",chooseText:"tamam"},jQuery.spectrum.localization["zh-cn"]={cancelText:"取消",chooseText:"选择",clearText:"清除",togglePaletteMoreText:"更多选项",togglePaletteLessText:"隐藏",noColorSelectedText:"尚未选择任何颜色"},jQuery.spectrum.localization["zh-tw"]={cancelText:"取消",chooseText:"選擇",clearText:"清除",togglePaletteMoreText:"更多選項",togglePaletteLessText:"隱藏",noColorSelectedText:"尚未選擇任何顏色"}; 
 
 !function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports.printJS=t():e.printJS=t()}(window,function(){return function(n){var r={};function o(e){if(r[e])return r[e].exports;var t=r[e]={i:e,l:!1,exports:{}};return n[e].call(t.exports,t,t.exports,o),t.l=!0,t.exports}return o.m=n,o.c=r,o.d=function(e,t,n){o.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:n})},o.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},o.t=function(t,e){if(1&e&&(t=o(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var n=Object.create(null);if(o.r(n),Object.defineProperty(n,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var r in t)o.d(n,r,function(e){return t[e]}.bind(null,r));return n},o.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return o.d(t,"a",t),t},o.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},o.p="",o(o.s=4)}([function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o=n(2),i=(r=o)&&r.__esModule?r:{default:r},a=n(1);var l={send:function(r,e){document.getElementsByTagName("body")[0].appendChild(e);var o=document.getElementById(r.frameId);o.onload=function(){if("pdf"!==r.type){var e=o.contentWindow||o.contentDocument;if(e.document&&(e=e.document),e.body.appendChild(r.printableElement),"pdf"!==r.type&&r.style){var t=document.createElement("style");t.innerHTML=r.style,e.head.appendChild(t)}var n=e.getElementsByTagName("img");0<n.length?function(e){var t=[],n=!0,r=!1,o=void 0;try{for(var i,a=e[Symbol.iterator]();!(n=(i=a.next()).done);n=!0){var l=i.value;t.push(u(l))}}catch(e){r=!0,o=e}finally{try{!n&&a.return&&a.return()}finally{if(r)throw o}}return Promise.all(t)}(n).then(function(){return d(o,r)}):d(o,r)}else d(o,r)}}};function d(t,n){try{if(t.focus(),i.default.isEdge()||i.default.isIE())try{t.contentWindow.document.execCommand("print",!1,null)}catch(e){t.contentWindow.print()}else t.contentWindow.print()}catch(e){n.onError(e)}finally{(0,a.cleanUp)(n)}}function u(n){return new Promise(function(t){!function e(){n&&void 0!==n.naturalWidth&&0!==n.naturalWidth&&n.complete?t():setTimeout(e,500)}()})}t.default=l},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var i="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e};t.addWrapper=function(e,t){return'<div style="font-family:'+t.font+" !important; font-size: "+t.font_size+' !important; width:100%;">'+e+"</div>"},t.capitalizePrint=function(e){return e.charAt(0).toUpperCase()+e.slice(1)},t.collectStyles=f,t.loopNodesCollectStyles=function e(t,n){for(var r=0;r<t.length;r++){var o=t[r];if(-1===n.ignoreElements.indexOf(o.getAttribute("id"))){var i=o.tagName;if("INPUT"===i||"TEXTAREA"===i||"SELECT"===i){var a=f(o,n),l=o.parentNode,d="SELECT"===i?document.createTextNode(o.options[o.selectedIndex].text):document.createTextNode(o.value),u=document.createElement("div");u.appendChild(d),u.setAttribute("style",a),l.appendChild(u),l.removeChild(o)}else o.setAttribute("style",f(o,n));var c=o.children;c&&c.length&&e(c,n)}else o.parentNode.removeChild(o)}},t.addHeader=function(e,t){var n=document.createElement("div");if(l(t.header))n.innerHTML=t.header;else{var r=document.createElement("h1"),o=document.createTextNode(t.header);r.appendChild(o),r.setAttribute("style",t.headerStyle),n.appendChild(r)}e.insertBefore(n,e.childNodes[0])},t.cleanUp=function(t){t.showModal&&r.default.close();t.onLoadingEnd&&t.onLoadingEnd();(t.showModal||t.onLoadingStart)&&window.URL.revokeObjectURL(t.printable);if(t.onPrintDialogClose){var n="mouseover";(o.default.isChrome()||o.default.isFirefox())&&(n="focus");window.addEventListener(n,function e(){window.removeEventListener(n,e),t.onPrintDialogClose()})}},t.isRawHTML=l;var r=a(n(3)),o=a(n(2));function a(e){return e&&e.__esModule?e:{default:e}}function f(e,t){var n=document.defaultView||window,r="",o=n.getComputedStyle(e,"");return Object.keys(o).map(function(e){(-1!==t.targetStyles.indexOf("*")||-1!==t.targetStyle.indexOf(o[e])||function(e,t){for(var n=0;n<e.length;n++)if("object"===(void 0===t?"undefined":i(t))&&-1!==t.indexOf(e[n]))return!0;return!1}(t.targetStyles,o[e]))&&o.getPropertyValue(o[e])&&(r+=o[e]+":"+o.getPropertyValue(o[e])+";")}),r+="max-width: "+t.maxWidth+"px !important;"+t.font_size+" !important;"}function l(e){return new RegExp("<([A-Za-z][A-Za-z0-9]*)\\b[^>]*>(.*?)</\\1>").test(e)}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r={isFirefox:function(){return"undefined"!=typeof InstallTrigger},isIE:function(){return-1!==navigator.userAgent.indexOf("MSIE")||!!document.documentMode},isEdge:function(){return!r.isIE()&&!!window.StyleMedia},isChrome:function(){return!!(0<arguments.length&&void 0!==arguments[0]?arguments[0]:window).chrome},isSafari:function(){return 0<Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor")||-1!==navigator.userAgent.toLowerCase().indexOf("safari")}};t.default=r},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a={show:function(e){var t=document.createElement("div");t.setAttribute("style","font-family:sans-serif; display:table; text-align:center; font-weight:300; font-size:30px; left:0; top:0;position:fixed; z-index: 9990;color: #0460B5; width: 100%; height: 100%; background-color:rgba(255,255,255,.9);transition: opacity .3s ease;"),t.setAttribute("id","printJS-Modal");var n=document.createElement("div");n.setAttribute("style","display:table-cell; vertical-align:middle; padding-bottom:100px;");var r=document.createElement("div");r.setAttribute("class","printClose"),r.setAttribute("id","printClose"),n.appendChild(r);var o=document.createElement("span");o.setAttribute("class","printSpinner"),n.appendChild(o);var i=document.createTextNode(e.modalMessage);n.appendChild(i),t.appendChild(n),document.getElementsByTagName("body")[0].appendChild(t),document.getElementById("printClose").addEventListener("click",function(){a.close()})},close:function(){var e=document.getElementById("printJS-Modal");e.parentNode.removeChild(e)}};t.default=a},function(e,t,n){e.exports=n(5)},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),n(6);var r,o=n(7);var i=((r=o)&&r.__esModule?r:{default:r}).default.init;"undefined"!=typeof window&&(window.printJS=i),t.default=i},function(e,t,n){},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var i="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},a=r(n(2)),l=r(n(3)),d=r(n(8)),u=r(n(9)),c=r(n(10)),f=r(n(11)),s=r(n(12));function r(e){return e&&e.__esModule?e:{default:e}}var p=["pdf","html","image","json","raw-html"];t.default={init:function(){var t={printable:null,fallbackPrintable:null,type:"pdf",header:null,headerStyle:"font-weight: 300;",maxWidth:800,font:"TimesNewRoman",font_size:"12pt",honorMarginPadding:!0,honorColor:!1,properties:null,gridHeaderStyle:"font-weight: bold; padding: 5px; border: 1px solid #dddddd;",gridStyle:"border: 1px solid lightgray; margin-bottom: -1px;",showModal:!1,onError:function(e){throw e},onLoadingStart:null,onLoadingEnd:null,onPrintDialogClose:null,onPdfOpen:null,onBrowserIncompatible:function(){return!0},modalMessage:"Retrieving Document...",frameId:"printJS",printableElement:null,documentTitle:"Document",targetStyle:["clear","display","width","min-width","height","min-height","max-height"],targetStyles:["border","box","break","text-decoration"],ignoreElements:[],imageStyle:"max-width: 100%;",repeatTableHeader:!0,css:null,style:null,scanStyles:!0,base64:!1},e=arguments[0];if(void 0===e)throw new Error("printJS expects at least 1 attribute.");switch(void 0===e?"undefined":i(e)){case"string":t.printable=encodeURI(e),t.fallbackPrintable=t.printable,t.type=arguments[1]||t.type;break;case"object":for(var n in t.printable=e.printable,t.base64=void 0!==e.base64,t.fallbackPrintable=void 0!==e.fallbackPrintable?e.fallbackPrintable:t.printable,t.fallbackPrintable=t.base64?"data:application/pdf;base64,"+t.fallbackPrintable:t.fallbackPrintable,t)"printable"!==n&&"fallbackPrintable"!==n&&"base64"!==n&&(t[n]=void 0!==e[n]?e[n]:t[n]);break;default:throw new Error('Unexpected argument type! Expected "string" or "object", got '+(void 0===e?"undefined":i(e)))}if(!t.printable)throw new Error("Missing printable information.");if(!t.type||"string"!=typeof t.type||-1===p.indexOf(t.type.toLowerCase()))throw new Error("Invalid print type. Available types are: pdf, html, image and json.");t.showModal&&l.default.show(t),t.onLoadingStart&&t.onLoadingStart();var r=document.getElementById(t.frameId);r&&r.parentNode.removeChild(r);var o=void 0;switch((o=document.createElement("iframe")).setAttribute("style","visibility: hidden; height: 0; width: 0; position: absolute;"),o.setAttribute("id",t.frameId),"pdf"!==t.type&&(o.srcdoc="<html><head><title>"+t.documentTitle+"</title>",null!==t.css&&(Array.isArray(t.css)||(t.css=[t.css]),t.css.forEach(function(e){o.srcdoc+='<link rel="stylesheet" href="'+e+'">'})),o.srcdoc+="</head><body></body></html>"),t.type){case"pdf":if(a.default.isFirefox()||a.default.isEdge()||a.default.isIE())try{if(console.info("PrintJS currently doesn't support PDF printing in Firefox, Internet Explorer and Edge."),!0===t.onBrowserIncompatible())window.open(t.fallbackPrintable,"_blank").focus(),t.onPdfOpen&&t.onPdfOpen()}catch(e){t.onError(e)}finally{t.showModal&&l.default.close(),t.onLoadingEnd&&t.onLoadingEnd()}else d.default.print(t,o);break;case"image":f.default.print(t,o);break;case"html":u.default.print(t,o);break;case"raw-html":c.default.print(t,o);break;case"json":s.default.print(t,o)}}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o=n(0),i=(r=o)&&r.__esModule?r:{default:r},a=n(1);function l(e,t,n){var r=new window.Blob([n],{type:"application/pdf"});r=window.URL.createObjectURL(r),t.setAttribute("src",r),i.default.send(e,t)}t.default={print:function(e,t){if(e.base64){var n=Uint8Array.from(atob(e.printable),function(e){return e.charCodeAt(0)});l(e,t,n)}else{e.printable=/^(blob|http)/i.test(e.printable)?e.printable:window.location.origin+("/"!==e.printable.charAt(0)?"/"+e.printable:e.printable);var r=new window.XMLHttpRequest;r.responseType="arraybuffer",r.addEventListener("load",function(){if(-1===[200,201].indexOf(r.status))return(0,a.cleanUp)(e),void e.onError(r.statusText);l(e,t,r.response)}),r.open("GET",e.printable,!0),r.send()}}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o=n(1),i=n(0),a=(r=i)&&r.__esModule?r:{default:r};t.default={print:function(e,t){var n=document.getElementById(e.printable);n?(e.printableElement=function e(t,n){var r=t.cloneNode();var o=!0;var i=!1;var a=void 0;try{for(var l,d=t.childNodes[Symbol.iterator]();!(o=(l=d.next()).done);o=!0){var u=l.value;if(-1===n.ignoreElements.indexOf(u.id)){var c=e(u,n);r.appendChild(c)}}}catch(e){i=!0,a=e}finally{try{!o&&d.return&&d.return()}finally{if(i)throw a}}switch(t.tagName){case"SELECT":r.value=t.value;break;case"CANVAS":r.getContext("2d").drawImage(t,0,0)}return r}(n,e),e.header&&(0,o.addHeader)(e.printableElement,e),a.default.send(e,t)):window.console.error("Invalid HTML element id: "+e.printable)}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o=n(0),i=(r=o)&&r.__esModule?r:{default:r};t.default={print:function(e,t){e.printableElement=document.createElement("div"),e.printableElement.setAttribute("style","width:100%"),e.printableElement.innerHTML=e.printable,i.default.send(e,t)}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o=n(1),i=n(0),a=(r=i)&&r.__esModule?r:{default:r};t.default={print:function(r,e){r.printable.constructor!==Array&&(r.printable=[r.printable]),r.printableElement=document.createElement("div"),r.printable.forEach(function(e){var t=document.createElement("img");t.setAttribute("style",r.imageStyle),t.src=e;var n=document.createElement("div");n.appendChild(t),r.printableElement.appendChild(n)}),r.header&&(0,o.addHeader)(r.printableElement,r),a.default.send(r,e)}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r,o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},c=n(1),i=n(0),a=(r=i)&&r.__esModule?r:{default:r};t.default={print:function(t,e){if("object"!==o(t.printable))throw new Error("Invalid javascript data object (JSON).");if("boolean"!=typeof t.repeatTableHeader)throw new Error("Invalid value for repeatTableHeader attribute (JSON).");if(!t.properties||!Array.isArray(t.properties))throw new Error("Invalid properties array for your JSON data.");t.properties=t.properties.map(function(e){return{field:"object"===(void 0===e?"undefined":o(e))?e.field:e,displayName:"object"===(void 0===e?"undefined":o(e))?e.displayName:e,columnSize:"object"===(void 0===e?"undefined":o(e))&&e.columnSize?e.columnSize+";":100/t.properties.length+"%;"}}),t.printableElement=document.createElement("div"),t.header&&(0,c.addHeader)(t.printableElement,t),t.printableElement.innerHTML+=function(e){var t=e.printable,n=e.properties,r='<table style="border-collapse: collapse; width: 100%;">';e.repeatTableHeader&&(r+="<thead>");r+="<tr>";for(var o=0;o<n.length;o++)r+='<th style="width:'+n[o].columnSize+";"+e.gridHeaderStyle+'">'+(0,c.capitalizePrint)(n[o].displayName)+"</th>";r+="</tr>",e.repeatTableHeader&&(r+="</thead>");r+="<tbody>";for(var i=0;i<t.length;i++){r+="<tr>";for(var a=0;a<n.length;a++){var l=t[i],d=n[a].field.split(".");if(1<d.length)for(var u=0;u<d.length;u++)l=l[d[u]];else l=l[n[a].field];r+='<td style="width:'+n[a].columnSize+e.gridStyle+'">'+l+"</td>"}r+="</tr>"}return r+="</tbody></table>"}(t),a.default.send(t,e)}}}]).default});
+/*! @license DOMPurify | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/2.0.8/LICENSE */
+
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global.DOMPurify = factory());
+}(this, function () { 'use strict';
+
+  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+  var hasOwnProperty = Object.hasOwnProperty,
+      setPrototypeOf = Object.setPrototypeOf,
+      isFrozen = Object.isFrozen;
+  var freeze = Object.freeze,
+      seal = Object.seal,
+      create = Object.create; // eslint-disable-line import/no-mutable-exports
+
+  var _ref = typeof Reflect !== 'undefined' && Reflect,
+      apply = _ref.apply,
+      construct = _ref.construct;
+
+  if (!apply) {
+    apply = function apply(fun, thisValue, args) {
+      return fun.apply(thisValue, args);
+    };
+  }
+
+  if (!freeze) {
+    freeze = function freeze(x) {
+      return x;
+    };
+  }
+
+  if (!seal) {
+    seal = function seal(x) {
+      return x;
+    };
+  }
+
+  if (!construct) {
+    construct = function construct(Func, args) {
+      return new (Function.prototype.bind.apply(Func, [null].concat(_toConsumableArray(args))))();
+    };
+  }
+
+  var arrayForEach = unapply(Array.prototype.forEach);
+  var arrayPop = unapply(Array.prototype.pop);
+  var arrayPush = unapply(Array.prototype.push);
+
+  var stringToLowerCase = unapply(String.prototype.toLowerCase);
+  var stringMatch = unapply(String.prototype.match);
+  var stringReplace = unapply(String.prototype.replace);
+  var stringIndexOf = unapply(String.prototype.indexOf);
+  var stringTrim = unapply(String.prototype.trim);
+
+  var regExpTest = unapply(RegExp.prototype.test);
+
+  var typeErrorCreate = unconstruct(TypeError);
+
+  function unapply(func) {
+    return function (thisArg) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return apply(func, thisArg, args);
+    };
+  }
+
+  function unconstruct(func) {
+    return function () {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      return construct(func, args);
+    };
+  }
+
+  /* Add properties to a lookup table */
+  function addToSet(set, array) {
+    if (setPrototypeOf) {
+      // Make 'in' and truthy checks like Boolean(set.constructor)
+      // independent of any properties defined on Object.prototype.
+      // Prevent prototype setters from intercepting set as a this value.
+      setPrototypeOf(set, null);
+    }
+
+    var l = array.length;
+    while (l--) {
+      var element = array[l];
+      if (typeof element === 'string') {
+        var lcElement = stringToLowerCase(element);
+        if (lcElement !== element) {
+          // Config presets (e.g. tags.js, attrs.js) are immutable.
+          if (!isFrozen(array)) {
+            array[l] = lcElement;
+          }
+
+          element = lcElement;
+        }
+      }
+
+      set[element] = true;
+    }
+
+    return set;
+  }
+
+  /* Shallow clone an object */
+  function clone(object) {
+    var newObject = create(null);
+
+    var property = void 0;
+    for (property in object) {
+      if (apply(hasOwnProperty, object, [property])) {
+        newObject[property] = object[property];
+      }
+    }
+
+    return newObject;
+  }
+
+  var html = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'select', 'shadow', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
+
+  // SVG
+  var svg = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'audio', 'canvas', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'video', 'view', 'vkern']);
+
+  var svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
+
+  var mathMl = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover']);
+
+  var text = freeze(['#text']);
+
+  var html$1 = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'pattern', 'placeholder', 'playsinline', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'xmlns']);
+
+  var svg$1 = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'targetx', 'targety', 'transform', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
+
+  var mathMl$1 = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
+
+  var xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
+
+  // eslint-disable-next-line unicorn/better-regex
+  var MUSTACHE_EXPR = seal(/\{\{[\s\S]*|[\s\S]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
+  var ERB_EXPR = seal(/<%[\s\S]*|[\s\S]*%>/gm);
+  var DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]/); // eslint-disable-line no-useless-escape
+  var ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
+  var IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
+  );
+  var IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
+  var ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
+  );
+
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+  function _toConsumableArray$1(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+  var getGlobal = function getGlobal() {
+    return typeof window === 'undefined' ? null : window;
+  };
+
+  /**
+   * Creates a no-op policy for internal use only.
+   * Don't export this function outside this module!
+   * @param {?TrustedTypePolicyFactory} trustedTypes The policy factory.
+   * @param {Document} document The document object (to determine policy name suffix)
+   * @return {?TrustedTypePolicy} The policy created (or null, if Trusted Types
+   * are not supported).
+   */
+  var _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, document) {
+    if ((typeof trustedTypes === 'undefined' ? 'undefined' : _typeof(trustedTypes)) !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
+      return null;
+    }
+
+    // Allow the callers to control the unique policy name
+    // by adding a data-tt-policy-suffix to the script element with the DOMPurify.
+    // Policy creation with duplicate names throws in Trusted Types.
+    var suffix = null;
+    var ATTR_NAME = 'data-tt-policy-suffix';
+    if (document.currentScript && document.currentScript.hasAttribute(ATTR_NAME)) {
+      suffix = document.currentScript.getAttribute(ATTR_NAME);
+    }
+
+    var policyName = 'dompurify' + (suffix ? '#' + suffix : '');
+
+    try {
+      return trustedTypes.createPolicy(policyName, {
+        createHTML: function createHTML(html$$1) {
+          return html$$1;
+        }
+      });
+    } catch (_) {
+      // Policy creation failed (most likely another DOMPurify script has
+      // already run). Skip creating the policy, as this will only cause errors
+      // if TT are enforced.
+      console.warn('TrustedTypes policy ' + policyName + ' could not be created.');
+      return null;
+    }
+  };
+
+  function createDOMPurify() {
+    var window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
+
+    var DOMPurify = function DOMPurify(root) {
+      return createDOMPurify(root);
+    };
+
+    /**
+     * Version label, exposed for easier checks
+     * if DOMPurify is up to date or not
+     */
+    DOMPurify.version = '2.2.2';
+
+    /**
+     * Array of elements that DOMPurify removed during sanitation.
+     * Empty if nothing was removed.
+     */
+    DOMPurify.removed = [];
+
+    if (!window || !window.document || window.document.nodeType !== 9) {
+      // Not running in a browser, provide a factory function
+      // so that you can pass your own Window
+      DOMPurify.isSupported = false;
+
+      return DOMPurify;
+    }
+
+    var originalDocument = window.document;
+
+    var document = window.document;
+    var DocumentFragment = window.DocumentFragment,
+        HTMLTemplateElement = window.HTMLTemplateElement,
+        Node = window.Node,
+        NodeFilter = window.NodeFilter,
+        _window$NamedNodeMap = window.NamedNodeMap,
+        NamedNodeMap = _window$NamedNodeMap === undefined ? window.NamedNodeMap || window.MozNamedAttrMap : _window$NamedNodeMap,
+        Text = window.Text,
+        Comment = window.Comment,
+        DOMParser = window.DOMParser,
+        trustedTypes = window.trustedTypes;
+
+    // As per issue #47, the web-components registry is inherited by a
+    // new document created via createHTMLDocument. As per the spec
+    // (http://w3c.github.io/webcomponents/spec/custom/#creating-and-passing-registries)
+    // a new empty registry is used when creating a template contents owner
+    // document, so we use that as our parent document to ensure nothing
+    // is inherited.
+
+    if (typeof HTMLTemplateElement === 'function') {
+      var template = document.createElement('template');
+      if (template.content && template.content.ownerDocument) {
+        document = template.content.ownerDocument;
+      }
+    }
+
+    var trustedTypesPolicy = _createTrustedTypesPolicy(trustedTypes, originalDocument);
+    var emptyHTML = trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML('') : '';
+
+    var _document = document,
+        implementation = _document.implementation,
+        createNodeIterator = _document.createNodeIterator,
+        getElementsByTagName = _document.getElementsByTagName,
+        createDocumentFragment = _document.createDocumentFragment;
+    var importNode = originalDocument.importNode;
+
+
+    var documentMode = {};
+    try {
+      documentMode = clone(document).documentMode ? document.documentMode : {};
+    } catch (_) {}
+
+    var hooks = {};
+
+    /**
+     * Expose whether this browser supports running the full DOMPurify.
+     */
+    DOMPurify.isSupported = implementation && typeof implementation.createHTMLDocument !== 'undefined' && documentMode !== 9;
+
+    var MUSTACHE_EXPR$$1 = MUSTACHE_EXPR,
+        ERB_EXPR$$1 = ERB_EXPR,
+        DATA_ATTR$$1 = DATA_ATTR,
+        ARIA_ATTR$$1 = ARIA_ATTR,
+        IS_SCRIPT_OR_DATA$$1 = IS_SCRIPT_OR_DATA,
+        ATTR_WHITESPACE$$1 = ATTR_WHITESPACE;
+    var IS_ALLOWED_URI$$1 = IS_ALLOWED_URI;
+
+    /**
+     * We consider the elements and attributes below to be safe. Ideally
+     * don't add any new ones but feel free to remove unwanted ones.
+     */
+
+    /* allowed element names */
+
+    var ALLOWED_TAGS = null;
+    var DEFAULT_ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray$1(html), _toConsumableArray$1(svg), _toConsumableArray$1(svgFilters), _toConsumableArray$1(mathMl), _toConsumableArray$1(text)));
+
+    /* Allowed attribute names */
+    var ALLOWED_ATTR = null;
+    var DEFAULT_ALLOWED_ATTR = addToSet({}, [].concat(_toConsumableArray$1(html$1), _toConsumableArray$1(svg$1), _toConsumableArray$1(mathMl$1), _toConsumableArray$1(xml)));
+
+    /* Explicitly forbidden tags (overrides ALLOWED_TAGS/ADD_TAGS) */
+    var FORBID_TAGS = null;
+
+    /* Explicitly forbidden attributes (overrides ALLOWED_ATTR/ADD_ATTR) */
+    var FORBID_ATTR = null;
+
+    /* Decide if ARIA attributes are okay */
+    var ALLOW_ARIA_ATTR = true;
+
+    /* Decide if custom data attributes are okay */
+    var ALLOW_DATA_ATTR = true;
+
+    /* Decide if unknown protocols are okay */
+    var ALLOW_UNKNOWN_PROTOCOLS = false;
+
+    /* Output should be safe for common template engines.
+     * This means, DOMPurify removes data attributes, mustaches and ERB
+     */
+    var SAFE_FOR_TEMPLATES = false;
+
+    /* Decide if document with <html>... should be returned */
+    var WHOLE_DOCUMENT = false;
+
+    /* Track whether config is already set on this instance of DOMPurify. */
+    var SET_CONFIG = false;
+
+    /* Decide if all elements (e.g. style, script) must be children of
+     * document.body. By default, browsers might move them to document.head */
+    var FORCE_BODY = false;
+
+    /* Decide if a DOM `HTMLBodyElement` should be returned, instead of a html
+     * string (or a TrustedHTML object if Trusted Types are supported).
+     * If `WHOLE_DOCUMENT` is enabled a `HTMLHtmlElement` will be returned instead
+     */
+    var RETURN_DOM = false;
+
+    /* Decide if a DOM `DocumentFragment` should be returned, instead of a html
+     * string  (or a TrustedHTML object if Trusted Types are supported) */
+    var RETURN_DOM_FRAGMENT = false;
+
+    /* If `RETURN_DOM` or `RETURN_DOM_FRAGMENT` is enabled, decide if the returned DOM
+     * `Node` is imported into the current `Document`. If this flag is not enabled the
+     * `Node` will belong (its ownerDocument) to a fresh `HTMLDocument`, created by
+     * DOMPurify.
+     *
+     * This defaults to `true` starting DOMPurify 2.2.0. Note that setting it to `false`
+     * might cause XSS from attacks hidden in closed shadowroots in case the browser
+     * supports Declarative Shadow: DOM https://web.dev/declarative-shadow-dom/
+     */
+    var RETURN_DOM_IMPORT = true;
+
+    /* Try to return a Trusted Type object instead of a string, return a string in
+     * case Trusted Types are not supported  */
+    var RETURN_TRUSTED_TYPE = false;
+
+    /* Output should be free from DOM clobbering attacks? */
+    var SANITIZE_DOM = true;
+
+    /* Keep element content when removing element? */
+    var KEEP_CONTENT = true;
+
+    /* If a `Node` is passed to sanitize(), then performs sanitization in-place instead
+     * of importing it into a new Document and returning a sanitized copy */
+    var IN_PLACE = false;
+
+    /* Allow usage of profiles like html, svg and mathMl */
+    var USE_PROFILES = {};
+
+    /* Tags to ignore content of when KEEP_CONTENT is true */
+    var FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
+
+    /* Tags that are safe for data: URIs */
+    var DATA_URI_TAGS = null;
+    var DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
+
+    /* Attributes safe for values like "javascript:" */
+    var URI_SAFE_ATTRIBUTES = null;
+    var DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'summary', 'title', 'value', 'style', 'xmlns']);
+
+    /* Keep a reference to config to pass to hooks */
+    var CONFIG = null;
+
+    /* Ideally, do not touch anything below this line */
+    /* ______________________________________________ */
+
+    var formElement = document.createElement('form');
+
+    /**
+     * _parseConfig
+     *
+     * @param  {Object} cfg optional config literal
+     */
+    // eslint-disable-next-line complexity
+    var _parseConfig = function _parseConfig(cfg) {
+      if (CONFIG && CONFIG === cfg) {
+        return;
+      }
+
+      /* Shield configuration object from tampering */
+      if (!cfg || (typeof cfg === 'undefined' ? 'undefined' : _typeof(cfg)) !== 'object') {
+        cfg = {};
+      }
+
+      /* Shield configuration object from prototype pollution */
+      cfg = clone(cfg);
+
+      /* Set configuration parameters */
+      ALLOWED_TAGS = 'ALLOWED_TAGS' in cfg ? addToSet({}, cfg.ALLOWED_TAGS) : DEFAULT_ALLOWED_TAGS;
+      ALLOWED_ATTR = 'ALLOWED_ATTR' in cfg ? addToSet({}, cfg.ALLOWED_ATTR) : DEFAULT_ALLOWED_ATTR;
+      URI_SAFE_ATTRIBUTES = 'ADD_URI_SAFE_ATTR' in cfg ? addToSet(clone(DEFAULT_URI_SAFE_ATTRIBUTES), cfg.ADD_URI_SAFE_ATTR) : DEFAULT_URI_SAFE_ATTRIBUTES;
+      DATA_URI_TAGS = 'ADD_DATA_URI_TAGS' in cfg ? addToSet(clone(DEFAULT_DATA_URI_TAGS), cfg.ADD_DATA_URI_TAGS) : DEFAULT_DATA_URI_TAGS;
+      FORBID_TAGS = 'FORBID_TAGS' in cfg ? addToSet({}, cfg.FORBID_TAGS) : {};
+      FORBID_ATTR = 'FORBID_ATTR' in cfg ? addToSet({}, cfg.FORBID_ATTR) : {};
+      USE_PROFILES = 'USE_PROFILES' in cfg ? cfg.USE_PROFILES : false;
+      ALLOW_ARIA_ATTR = cfg.ALLOW_ARIA_ATTR !== false; // Default true
+      ALLOW_DATA_ATTR = cfg.ALLOW_DATA_ATTR !== false; // Default true
+      ALLOW_UNKNOWN_PROTOCOLS = cfg.ALLOW_UNKNOWN_PROTOCOLS || false; // Default false
+      SAFE_FOR_TEMPLATES = cfg.SAFE_FOR_TEMPLATES || false; // Default false
+      WHOLE_DOCUMENT = cfg.WHOLE_DOCUMENT || false; // Default false
+      RETURN_DOM = cfg.RETURN_DOM || false; // Default false
+      RETURN_DOM_FRAGMENT = cfg.RETURN_DOM_FRAGMENT || false; // Default false
+      RETURN_DOM_IMPORT = cfg.RETURN_DOM_IMPORT !== false; // Default true
+      RETURN_TRUSTED_TYPE = cfg.RETURN_TRUSTED_TYPE || false; // Default false
+      FORCE_BODY = cfg.FORCE_BODY || false; // Default false
+      SANITIZE_DOM = cfg.SANITIZE_DOM !== false; // Default true
+      KEEP_CONTENT = cfg.KEEP_CONTENT !== false; // Default true
+      IN_PLACE = cfg.IN_PLACE || false; // Default false
+      IS_ALLOWED_URI$$1 = cfg.ALLOWED_URI_REGEXP || IS_ALLOWED_URI$$1;
+      if (SAFE_FOR_TEMPLATES) {
+        ALLOW_DATA_ATTR = false;
+      }
+
+      if (RETURN_DOM_FRAGMENT) {
+        RETURN_DOM = true;
+      }
+
+      /* Parse profile info */
+      if (USE_PROFILES) {
+        ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray$1(text)));
+        ALLOWED_ATTR = [];
+        if (USE_PROFILES.html === true) {
+          addToSet(ALLOWED_TAGS, html);
+          addToSet(ALLOWED_ATTR, html$1);
+        }
+
+        if (USE_PROFILES.svg === true) {
+          addToSet(ALLOWED_TAGS, svg);
+          addToSet(ALLOWED_ATTR, svg$1);
+          addToSet(ALLOWED_ATTR, xml);
+        }
+
+        if (USE_PROFILES.svgFilters === true) {
+          addToSet(ALLOWED_TAGS, svgFilters);
+          addToSet(ALLOWED_ATTR, svg$1);
+          addToSet(ALLOWED_ATTR, xml);
+        }
+
+        if (USE_PROFILES.mathMl === true) {
+          addToSet(ALLOWED_TAGS, mathMl);
+          addToSet(ALLOWED_ATTR, mathMl$1);
+          addToSet(ALLOWED_ATTR, xml);
+        }
+      }
+
+      /* Merge configuration parameters */
+      if (cfg.ADD_TAGS) {
+        if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {
+          ALLOWED_TAGS = clone(ALLOWED_TAGS);
+        }
+
+        addToSet(ALLOWED_TAGS, cfg.ADD_TAGS);
+      }
+
+      if (cfg.ADD_ATTR) {
+        if (ALLOWED_ATTR === DEFAULT_ALLOWED_ATTR) {
+          ALLOWED_ATTR = clone(ALLOWED_ATTR);
+        }
+
+        addToSet(ALLOWED_ATTR, cfg.ADD_ATTR);
+      }
+
+      if (cfg.ADD_URI_SAFE_ATTR) {
+        addToSet(URI_SAFE_ATTRIBUTES, cfg.ADD_URI_SAFE_ATTR);
+      }
+
+      /* Add #text in case KEEP_CONTENT is set to true */
+      if (KEEP_CONTENT) {
+        ALLOWED_TAGS['#text'] = true;
+      }
+
+      /* Add html, head and body to ALLOWED_TAGS in case WHOLE_DOCUMENT is true */
+      if (WHOLE_DOCUMENT) {
+        addToSet(ALLOWED_TAGS, ['html', 'head', 'body']);
+      }
+
+      /* Add tbody to ALLOWED_TAGS in case tables are permitted, see #286, #365 */
+      if (ALLOWED_TAGS.table) {
+        addToSet(ALLOWED_TAGS, ['tbody']);
+        delete FORBID_TAGS.tbody;
+      }
+
+      // Prevent further manipulation of configuration.
+      // Not available in IE8, Safari 5, etc.
+      if (freeze) {
+        freeze(cfg);
+      }
+
+      CONFIG = cfg;
+    };
+
+    /**
+     * _forceRemove
+     *
+     * @param  {Node} node a DOM node
+     */
+    var _forceRemove = function _forceRemove(node) {
+      arrayPush(DOMPurify.removed, { element: node });
+      try {
+        node.parentNode.removeChild(node);
+      } catch (_) {
+        node.outerHTML = emptyHTML;
+      }
+    };
+
+    /**
+     * _removeAttribute
+     *
+     * @param  {String} name an Attribute name
+     * @param  {Node} node a DOM node
+     */
+    var _removeAttribute = function _removeAttribute(name, node) {
+      try {
+        arrayPush(DOMPurify.removed, {
+          attribute: node.getAttributeNode(name),
+          from: node
+        });
+      } catch (_) {
+        arrayPush(DOMPurify.removed, {
+          attribute: null,
+          from: node
+        });
+      }
+
+      node.removeAttribute(name);
+    };
+
+    /**
+     * _initDocument
+     *
+     * @param  {String} dirty a string of dirty markup
+     * @return {Document} a DOM, filled with the dirty markup
+     */
+    var _initDocument = function _initDocument(dirty) {
+      /* Create a HTML document */
+      var doc = void 0;
+      var leadingWhitespace = void 0;
+
+      if (FORCE_BODY) {
+        dirty = '<remove></remove>' + dirty;
+      } else {
+        /* If FORCE_BODY isn't used, leading whitespace needs to be preserved manually */
+        var matches = stringMatch(dirty, /^[\r\n\t ]+/);
+        leadingWhitespace = matches && matches[0];
+      }
+
+      var dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
+      /* Use the DOMParser API by default, fallback later if needs be */
+      try {
+        doc = new DOMParser().parseFromString(dirtyPayload, 'text/html');
+      } catch (_) {}
+
+      /* Use createHTMLDocument in case DOMParser is not available */
+      if (!doc || !doc.documentElement) {
+        doc = implementation.createHTMLDocument('');
+        var _doc = doc,
+            body = _doc.body;
+
+        body.parentNode.removeChild(body.parentNode.firstElementChild);
+        body.outerHTML = dirtyPayload;
+      }
+
+      if (dirty && leadingWhitespace) {
+        doc.body.insertBefore(document.createTextNode(leadingWhitespace), doc.body.childNodes[0] || null);
+      }
+
+      /* Work on whole document or just its body */
+      return getElementsByTagName.call(doc, WHOLE_DOCUMENT ? 'html' : 'body')[0];
+    };
+
+    /**
+     * _createIterator
+     *
+     * @param  {Document} root document/fragment to create iterator for
+     * @return {Iterator} iterator instance
+     */
+    var _createIterator = function _createIterator(root) {
+      return createNodeIterator.call(root.ownerDocument || root, root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT, function () {
+        return NodeFilter.FILTER_ACCEPT;
+      }, false);
+    };
+
+    /**
+     * _isClobbered
+     *
+     * @param  {Node} elm element to check for clobbering attacks
+     * @return {Boolean} true if clobbered, false if safe
+     */
+    var _isClobbered = function _isClobbered(elm) {
+      if (elm instanceof Text || elm instanceof Comment) {
+        return false;
+      }
+
+      if (typeof elm.nodeName !== 'string' || typeof elm.textContent !== 'string' || typeof elm.removeChild !== 'function' || !(elm.attributes instanceof NamedNodeMap) || typeof elm.removeAttribute !== 'function' || typeof elm.setAttribute !== 'function' || typeof elm.namespaceURI !== 'string') {
+        return true;
+      }
+
+      return false;
+    };
+
+    /**
+     * _isNode
+     *
+     * @param  {Node} obj object to check whether it's a DOM node
+     * @return {Boolean} true is object is a DOM node
+     */
+    var _isNode = function _isNode(object) {
+      return (typeof Node === 'undefined' ? 'undefined' : _typeof(Node)) === 'object' ? object instanceof Node : object && (typeof object === 'undefined' ? 'undefined' : _typeof(object)) === 'object' && typeof object.nodeType === 'number' && typeof object.nodeName === 'string';
+    };
+
+    /**
+     * _executeHook
+     * Execute user configurable hooks
+     *
+     * @param  {String} entryPoint  Name of the hook's entry point
+     * @param  {Node} currentNode node to work on with the hook
+     * @param  {Object} data additional hook parameters
+     */
+    var _executeHook = function _executeHook(entryPoint, currentNode, data) {
+      if (!hooks[entryPoint]) {
+        return;
+      }
+
+      arrayForEach(hooks[entryPoint], function (hook) {
+        hook.call(DOMPurify, currentNode, data, CONFIG);
+      });
+    };
+
+    /**
+     * _sanitizeElements
+     *
+     * @protect nodeName
+     * @protect textContent
+     * @protect removeChild
+     *
+     * @param   {Node} currentNode to check for permission to exist
+     * @return  {Boolean} true if node was killed, false if left alive
+     */
+    var _sanitizeElements = function _sanitizeElements(currentNode) {
+      var content = void 0;
+
+      /* Execute a hook if present */
+      _executeHook('beforeSanitizeElements', currentNode, null);
+
+      /* Check if element is clobbered or can clobber */
+      if (_isClobbered(currentNode)) {
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Check if tagname contains Unicode */
+      if (stringMatch(currentNode.nodeName, /[\u0080-\uFFFF]/)) {
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Now let's check the element's type and name */
+      var tagName = stringToLowerCase(currentNode.nodeName);
+
+      /* Execute a hook if present */
+      _executeHook('uponSanitizeElement', currentNode, {
+        tagName: tagName,
+        allowedTags: ALLOWED_TAGS
+      });
+
+      /* Take care of an mXSS pattern using p, br inside svg, math */
+      if ((tagName === 'svg' || tagName === 'math') && currentNode.querySelectorAll('p, br, form, table').length !== 0) {
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Detect mXSS attempts abusing namespace confusion */
+      if (!_isNode(currentNode.firstElementChild) && (!_isNode(currentNode.content) || !_isNode(currentNode.content.firstElementChild)) && regExpTest(/<[!/\w]/g, currentNode.innerHTML) && regExpTest(/<[!/\w]/g, currentNode.textContent)) {
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Remove element if anything forbids its presence */
+      if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
+        /* Keep content except for bad-listed elements */
+        if (KEEP_CONTENT && !FORBID_CONTENTS[tagName] && typeof currentNode.insertAdjacentHTML === 'function') {
+          try {
+            var htmlToInsert = currentNode.innerHTML;
+            currentNode.insertAdjacentHTML('AfterEnd', trustedTypesPolicy ? trustedTypesPolicy.createHTML(htmlToInsert) : htmlToInsert);
+          } catch (_) {}
+        }
+
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Remove in case a noscript/noembed XSS is suspected */
+      if ((tagName === 'noscript' || tagName === 'noembed') && regExpTest(/<\/no(script|embed)/i, currentNode.innerHTML)) {
+        _forceRemove(currentNode);
+        return true;
+      }
+
+      /* Sanitize element content to be template-safe */
+      if (SAFE_FOR_TEMPLATES && currentNode.nodeType === 3) {
+        /* Get the element's text content */
+        content = currentNode.textContent;
+        content = stringReplace(content, MUSTACHE_EXPR$$1, ' ');
+        content = stringReplace(content, ERB_EXPR$$1, ' ');
+        if (currentNode.textContent !== content) {
+          arrayPush(DOMPurify.removed, { element: currentNode.cloneNode() });
+          currentNode.textContent = content;
+        }
+      }
+
+      /* Execute a hook if present */
+      _executeHook('afterSanitizeElements', currentNode, null);
+
+      return false;
+    };
+
+    /**
+     * _isValidAttribute
+     *
+     * @param  {string} lcTag Lowercase tag name of containing element.
+     * @param  {string} lcName Lowercase attribute name.
+     * @param  {string} value Attribute value.
+     * @return {Boolean} Returns true if `value` is valid, otherwise false.
+     */
+    // eslint-disable-next-line complexity
+    var _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
+      /* Make sure attribute cannot clobber */
+      if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
+        return false;
+      }
+
+      /* Allow valid data-* attributes: At least one character after "-"
+          (https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes)
+          XML-compatible (https://html.spec.whatwg.org/multipage/infrastructure.html#xml-compatible and http://www.w3.org/TR/xml/#d0e804)
+          We don't need to check the value; it's always URI safe. */
+      if (ALLOW_DATA_ATTR && regExpTest(DATA_ATTR$$1, lcName)) ; else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR$$1, lcName)) ; else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
+        return false;
+
+        /* Check value is safe. First, is attr inert? If so, is safe */
+      } else if (URI_SAFE_ATTRIBUTES[lcName]) ; else if (regExpTest(IS_ALLOWED_URI$$1, stringReplace(value, ATTR_WHITESPACE$$1, ''))) ; else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ; else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA$$1, stringReplace(value, ATTR_WHITESPACE$$1, ''))) ; else if (!value) ; else {
+        return false;
+      }
+
+      return true;
+    };
+
+    /**
+     * _sanitizeAttributes
+     *
+     * @protect attributes
+     * @protect nodeName
+     * @protect removeAttribute
+     * @protect setAttribute
+     *
+     * @param  {Node} currentNode to sanitize
+     */
+    var _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
+      var attr = void 0;
+      var value = void 0;
+      var lcName = void 0;
+      var l = void 0;
+      /* Execute a hook if present */
+      _executeHook('beforeSanitizeAttributes', currentNode, null);
+
+      var attributes = currentNode.attributes;
+
+      /* Check if we have attributes; if not we might have a text node */
+
+      if (!attributes) {
+        return;
+      }
+
+      var hookEvent = {
+        attrName: '',
+        attrValue: '',
+        keepAttr: true,
+        allowedAttributes: ALLOWED_ATTR
+      };
+      l = attributes.length;
+
+      /* Go backwards over all attributes; safely remove bad ones */
+      while (l--) {
+        attr = attributes[l];
+        var _attr = attr,
+            name = _attr.name,
+            namespaceURI = _attr.namespaceURI;
+
+        value = stringTrim(attr.value);
+        lcName = stringToLowerCase(name);
+
+        /* Execute a hook if present */
+        hookEvent.attrName = lcName;
+        hookEvent.attrValue = value;
+        hookEvent.keepAttr = true;
+        hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
+        _executeHook('uponSanitizeAttribute', currentNode, hookEvent);
+        value = hookEvent.attrValue;
+        /* Did the hooks approve of the attribute? */
+        if (hookEvent.forceKeepAttr) {
+          continue;
+        }
+
+        /* Remove attribute */
+        _removeAttribute(name, currentNode);
+
+        /* Did the hooks approve of the attribute? */
+        if (!hookEvent.keepAttr) {
+          continue;
+        }
+
+        /* Work around a security issue in jQuery 3.0 */
+        if (regExpTest(/\/>/i, value)) {
+          _removeAttribute(name, currentNode);
+          continue;
+        }
+
+        /* Sanitize attribute content to be template-safe */
+        if (SAFE_FOR_TEMPLATES) {
+          value = stringReplace(value, MUSTACHE_EXPR$$1, ' ');
+          value = stringReplace(value, ERB_EXPR$$1, ' ');
+        }
+
+        /* Is `value` valid for this attribute? */
+        var lcTag = currentNode.nodeName.toLowerCase();
+        if (!_isValidAttribute(lcTag, lcName, value)) {
+          continue;
+        }
+
+        /* Handle invalid data-* attribute set by try-catching it */
+        try {
+          if (namespaceURI) {
+            currentNode.setAttributeNS(namespaceURI, name, value);
+          } else {
+            /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
+            currentNode.setAttribute(name, value);
+          }
+
+          arrayPop(DOMPurify.removed);
+        } catch (_) {}
+      }
+
+      /* Execute a hook if present */
+      _executeHook('afterSanitizeAttributes', currentNode, null);
+    };
+
+    /**
+     * _sanitizeShadowDOM
+     *
+     * @param  {DocumentFragment} fragment to iterate over recursively
+     */
+    var _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
+      var shadowNode = void 0;
+      var shadowIterator = _createIterator(fragment);
+
+      /* Execute a hook if present */
+      _executeHook('beforeSanitizeShadowDOM', fragment, null);
+
+      while (shadowNode = shadowIterator.nextNode()) {
+        /* Execute a hook if present */
+        _executeHook('uponSanitizeShadowNode', shadowNode, null);
+
+        /* Sanitize tags and elements */
+        if (_sanitizeElements(shadowNode)) {
+          continue;
+        }
+
+        /* Deep shadow DOM detected */
+        if (shadowNode.content instanceof DocumentFragment) {
+          _sanitizeShadowDOM(shadowNode.content);
+        }
+
+        /* Check attributes, sanitize if necessary */
+        _sanitizeAttributes(shadowNode);
+      }
+
+      /* Execute a hook if present */
+      _executeHook('afterSanitizeShadowDOM', fragment, null);
+    };
+
+    /**
+     * Sanitize
+     * Public method providing core sanitation functionality
+     *
+     * @param {String|Node} dirty string or DOM node
+     * @param {Object} configuration object
+     */
+    // eslint-disable-next-line complexity
+    DOMPurify.sanitize = function (dirty, cfg) {
+      var body = void 0;
+      var importedNode = void 0;
+      var currentNode = void 0;
+      var oldNode = void 0;
+      var returnNode = void 0;
+      /* Make sure we have a string to sanitize.
+        DO NOT return early, as this will return the wrong type if
+        the user has requested a DOM object rather than a string */
+      if (!dirty) {
+        dirty = '<!-->';
+      }
+
+      /* Stringify, in case dirty is an object */
+      if (typeof dirty !== 'string' && !_isNode(dirty)) {
+        // eslint-disable-next-line no-negated-condition
+        if (typeof dirty.toString !== 'function') {
+          throw typeErrorCreate('toString is not a function');
+        } else {
+          dirty = dirty.toString();
+          if (typeof dirty !== 'string') {
+            throw typeErrorCreate('dirty is not a string, aborting');
+          }
+        }
+      }
+
+      /* Check we can run. Otherwise fall back or ignore */
+      if (!DOMPurify.isSupported) {
+        if (_typeof(window.toStaticHTML) === 'object' || typeof window.toStaticHTML === 'function') {
+          if (typeof dirty === 'string') {
+            return window.toStaticHTML(dirty);
+          }
+
+          if (_isNode(dirty)) {
+            return window.toStaticHTML(dirty.outerHTML);
+          }
+        }
+
+        return dirty;
+      }
+
+      /* Assign config vars */
+      if (!SET_CONFIG) {
+        _parseConfig(cfg);
+      }
+
+      /* Clean up removed elements */
+      DOMPurify.removed = [];
+
+      /* Check if dirty is correctly typed for IN_PLACE */
+      if (typeof dirty === 'string') {
+        IN_PLACE = false;
+      }
+
+      if (IN_PLACE) ; else if (dirty instanceof Node) {
+        /* If dirty is a DOM element, append to an empty document to avoid
+           elements being stripped by the parser */
+        body = _initDocument('<!---->');
+        importedNode = body.ownerDocument.importNode(dirty, true);
+        if (importedNode.nodeType === 1 && importedNode.nodeName === 'BODY') {
+          /* Node is already a body, use as is */
+          body = importedNode;
+        } else if (importedNode.nodeName === 'HTML') {
+          body = importedNode;
+        } else {
+          // eslint-disable-next-line unicorn/prefer-node-append
+          body.appendChild(importedNode);
+        }
+      } else {
+        /* Exit directly if we have nothing to do */
+        if (!RETURN_DOM && !SAFE_FOR_TEMPLATES && !WHOLE_DOCUMENT &&
+        // eslint-disable-next-line unicorn/prefer-includes
+        dirty.indexOf('<') === -1) {
+          return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(dirty) : dirty;
+        }
+
+        /* Initialize the document to work on */
+        body = _initDocument(dirty);
+
+        /* Check we have a DOM node from the data */
+        if (!body) {
+          return RETURN_DOM ? null : emptyHTML;
+        }
+      }
+
+      /* Remove first element node (ours) if FORCE_BODY is set */
+      if (body && FORCE_BODY) {
+        _forceRemove(body.firstChild);
+      }
+
+      /* Get node iterator */
+      var nodeIterator = _createIterator(IN_PLACE ? dirty : body);
+
+      /* Now start iterating over the created document */
+      while (currentNode = nodeIterator.nextNode()) {
+        /* Fix IE's strange behavior with manipulated textNodes #89 */
+        if (currentNode.nodeType === 3 && currentNode === oldNode) {
+          continue;
+        }
+
+        /* Sanitize tags and elements */
+        if (_sanitizeElements(currentNode)) {
+          continue;
+        }
+
+        /* Shadow DOM detected, sanitize it */
+        if (currentNode.content instanceof DocumentFragment) {
+          _sanitizeShadowDOM(currentNode.content);
+        }
+
+        /* Check attributes, sanitize if necessary */
+        _sanitizeAttributes(currentNode);
+
+        oldNode = currentNode;
+      }
+
+      oldNode = null;
+
+      /* If we sanitized `dirty` in-place, return it. */
+      if (IN_PLACE) {
+        return dirty;
+      }
+
+      /* Return sanitized string or DOM */
+      if (RETURN_DOM) {
+        if (RETURN_DOM_FRAGMENT) {
+          returnNode = createDocumentFragment.call(body.ownerDocument);
+
+          while (body.firstChild) {
+            // eslint-disable-next-line unicorn/prefer-node-append
+            returnNode.appendChild(body.firstChild);
+          }
+        } else {
+          returnNode = body;
+        }
+
+        if (RETURN_DOM_IMPORT) {
+          /*
+            AdoptNode() is not used because internal state is not reset
+            (e.g. the past names map of a HTMLFormElement), this is safe
+            in theory but we would rather not risk another attack vector.
+            The state that is cloned by importNode() is explicitly defined
+            by the specs.
+          */
+          returnNode = importNode.call(originalDocument, returnNode, true);
+        }
+
+        return returnNode;
+      }
+
+      var serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
+
+      /* Sanitize final string template-safe */
+      if (SAFE_FOR_TEMPLATES) {
+        serializedHTML = stringReplace(serializedHTML, MUSTACHE_EXPR$$1, ' ');
+        serializedHTML = stringReplace(serializedHTML, ERB_EXPR$$1, ' ');
+      }
+
+      return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(serializedHTML) : serializedHTML;
+    };
+
+    /**
+     * Public method to set the configuration once
+     * setConfig
+     *
+     * @param {Object} cfg configuration object
+     */
+    DOMPurify.setConfig = function (cfg) {
+      _parseConfig(cfg);
+      SET_CONFIG = true;
+    };
+
+    /**
+     * Public method to remove the configuration
+     * clearConfig
+     *
+     */
+    DOMPurify.clearConfig = function () {
+      CONFIG = null;
+      SET_CONFIG = false;
+    };
+
+    /**
+     * Public method to check if an attribute value is valid.
+     * Uses last set config, if any. Otherwise, uses config defaults.
+     * isValidAttribute
+     *
+     * @param  {string} tag Tag name of containing element.
+     * @param  {string} attr Attribute name.
+     * @param  {string} value Attribute value.
+     * @return {Boolean} Returns true if `value` is valid. Otherwise, returns false.
+     */
+    DOMPurify.isValidAttribute = function (tag, attr, value) {
+      /* Initialize shared config vars if necessary. */
+      if (!CONFIG) {
+        _parseConfig({});
+      }
+
+      var lcTag = stringToLowerCase(tag);
+      var lcName = stringToLowerCase(attr);
+      return _isValidAttribute(lcTag, lcName, value);
+    };
+
+    /**
+     * AddHook
+     * Public method to add DOMPurify hooks
+     *
+     * @param {String} entryPoint entry point for the hook to add
+     * @param {Function} hookFunction function to execute
+     */
+    DOMPurify.addHook = function (entryPoint, hookFunction) {
+      if (typeof hookFunction !== 'function') {
+        return;
+      }
+
+      hooks[entryPoint] = hooks[entryPoint] || [];
+      arrayPush(hooks[entryPoint], hookFunction);
+    };
+
+    /**
+     * RemoveHook
+     * Public method to remove a DOMPurify hook at a given entryPoint
+     * (pops it from the stack of hooks if more are present)
+     *
+     * @param {String} entryPoint entry point for the hook to remove
+     */
+    DOMPurify.removeHook = function (entryPoint) {
+      if (hooks[entryPoint]) {
+        arrayPop(hooks[entryPoint]);
+      }
+    };
+
+    /**
+     * RemoveHooks
+     * Public method to remove all DOMPurify hooks at a given entryPoint
+     *
+     * @param  {String} entryPoint entry point for the hooks to remove
+     */
+    DOMPurify.removeHooks = function (entryPoint) {
+      if (hooks[entryPoint]) {
+        hooks[entryPoint] = [];
+      }
+    };
+
+    /**
+     * RemoveAllHooks
+     * Public method to remove all DOMPurify hooks
+     *
+     */
+    DOMPurify.removeAllHooks = function () {
+      hooks = {};
+    };
+
+    return DOMPurify;
+  }
+
+  var purify = createDOMPurify();
+
+  return purify;
+
+}));
+//# sourceMappingURL=purify.js.map

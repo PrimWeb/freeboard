@@ -3,24 +3,33 @@
         var self = this;
 
         self.id = freeboard.genUUID()
+        self.fs=0
 
         var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
-        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background:grey;width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
+        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background-color:var(--widget-bg-color);width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
         var fsButton = $('<button></button>').on('click', function(){
 
-            if(self.fs){
-                self.fs=0;
-                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color'})
-                containerElement.css({background:newSettings.background||''})
-                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
-                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            if(!self.fs){
+                self.fs=1;
+
+                //Backdrop filters break fixed positioning
+                self.backup=getComputedStyle(document.body).getPropertyValue("--box-backdrop");
+
+                document.body.style.setProperty("--box-backdrop", 'initial')
+
+                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color)'})
+                containerElement.css({"background-image":currentSettings.background||''})
+                containerElement.css({'background-repeat':currentSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
             else{
-                self.fs=1;
+                self.fs=0;
+                document.body.style.setProperty("--box-backdrop", self.backup)
+
                 containerElement.css({height:'100%', width:'100%',position:'static','z-index':'auto','background-color':'transparent'})
-                containerElement.css({background:newSettings.background||''})
-                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
-                containerElement.css({'background-size':newSettings.backgroundSize||''})
+                containerElement.css({"background-image":currentSettings.background||''})
+                containerElement.css({'background-repeat':currentSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
         })
         var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})

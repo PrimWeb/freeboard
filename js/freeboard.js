@@ -3253,9 +3253,25 @@ var freeboard = (function () {
 
 			if (st.imageData) {
 				for (var i in st.imageData) {
-					r['var('+i+')'] = 'Uploaded Image'
+					r['var(' + i + ')'] = 'Uploaded Image'
 				}
 			}
+			if(st.theme){
+			for (i in st.theme) {
+				var x = st.theme[i]
+
+				//Wrap URLs in the URL tag
+				if (i.includes('-image')) {
+					if (x) {
+						r['var(' + i + ')'] = 'Image from settings'
+
+					}
+
+				}
+			}
+				document.body.style.setProperty(i, x)
+			}
+
 			return r
 
 		},
@@ -3335,10 +3351,10 @@ var freeboard = (function () {
 		},
 
 		compile: function (s) {
-			var f = new Function('datasources','ds', s)
+			var f = new Function('datasources', 'ds', s)
 
 			var f2 = function () {
-				return f(theFreeboardModel.datasources,theFreeboardModel.datasources)
+				return f(theFreeboardModel.datasources, theFreeboardModel.datasources)
 			}
 			return f2
 		},
@@ -3556,6 +3572,27 @@ globalSettingsSchema = {
                         "type": "img/png"
                     },
                 },
+                "--widget-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--box-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--bar-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
                 "--logo-image": {
                     type: "string",
                     "media": {
@@ -3701,6 +3738,18 @@ globalSettingsSchema = {
                     }
                 },
                 "--widget-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+
+                "--widget-text-shadow":
                 {
                     type: "string",
                     format: 'color',

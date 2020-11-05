@@ -3253,9 +3253,25 @@ var freeboard = (function () {
 
 			if (st.imageData) {
 				for (var i in st.imageData) {
-					r['var('+i+')'] = 'Uploaded Image'
+					r['var(' + i + ')'] = 'Uploaded Image'
 				}
 			}
+			if(st.theme){
+			for (i in st.theme) {
+				var x = st.theme[i]
+
+				//Wrap URLs in the URL tag
+				if (i.includes('-image')) {
+					if (x) {
+						r['var(' + i + ')'] = 'Image from settings'
+
+					}
+
+				}
+			}
+				document.body.style.setProperty(i, x)
+			}
+
 			return r
 
 		},
@@ -3335,10 +3351,10 @@ var freeboard = (function () {
 		},
 
 		compile: function (s) {
-			var f = new Function('datasources','ds', s)
+			var f = new Function('datasources', 'ds', s)
 
 			var f2 = function () {
-				return f(theFreeboardModel.datasources,theFreeboardModel.datasources)
+				return f(theFreeboardModel.datasources, theFreeboardModel.datasources)
 			}
 			return f2
 		},
@@ -3556,6 +3572,27 @@ globalSettingsSchema = {
                         "type": "img/png"
                     },
                 },
+                "--widget-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--box-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--bar-bg-image": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
                 "--logo-image": {
                     type: "string",
                     "media": {
@@ -3701,6 +3738,18 @@ globalSettingsSchema = {
                     }
                 },
                 "--widget-shadow":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+
+                "--widget-text-shadow":
                 {
                     type: "string",
                     format: 'color',
@@ -4705,24 +4754,33 @@ function uuidv4() {
         var self = this;
 
         self.id = freeboard.genUUID()
+        self.fs=0
 
         var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
-        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background:grey;width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
+        var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background-color:var(--widget-bg-color);width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
         var fsButton = $('<button></button>').on('click', function(){
 
-            if(self.fs){
-                self.fs=0;
-                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color'})
-                containerElement.css({background:newSettings.background||''})
-                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
-                containerElement.css({'background-size':newSettings.backgroundSize||''})
+            if(!self.fs){
+                self.fs=1;
+
+                //Backdrop filters break fixed positioning
+                self.backup=getComputedStyle(document.body).getPropertyValue("--box-backdrop");
+
+                document.body.style.setProperty("--box-backdrop", 'initial')
+
+                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color)'})
+                containerElement.css({"background-image":currentSettings.background||''})
+                containerElement.css({'background-repeat':currentSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
             else{
-                self.fs=1;
+                self.fs=0;
+                document.body.style.setProperty("--box-backdrop", self.backup)
+
                 containerElement.css({height:'100%', width:'100%',position:'static','z-index':'auto','background-color':'transparent'})
-                containerElement.css({background:newSettings.background||''})
-                containerElement.css({'background-repeat':newSettings.backgroundRepeat||''})
-                containerElement.css({'background-size':newSettings.backgroundSize||''})
+                containerElement.css({"background-image":currentSettings.background||''})
+                containerElement.css({'background-repeat':currentSettings.backgroundRepeat||''})
+                containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
         })
         var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
@@ -5326,189 +5384,6 @@ function uuidv4() {
         self.onDispose = function () {
         }
     }
-}());
-
-// # Building a Freeboard Plugin
-//
-// A freeboard plugin is simply a javascript file that is loaded into a web page after the main freeboard.js file is loaded.
-//
-// Let's get started with an example of a datasource plugin and a widget plugin.
-//
-// -------------------
-
-
-//This is a limited, easy-to-use nosql db build on alasql
-
-function uuidv4() {
-	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-	);
-  }
-
-// Best to encapsulate your plugin in a closure, although not required.
-(function()
-{
-	// ## A Datasource Plugin
-	//
-	// -------------------
-	// ### Datasource Definition
-	//
-	// -------------------
-	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
-	freeboard.loadDatasourcePlugin({
-		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
-		"type_name"   : "document_database_plugin",
-		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "In-browser database",
-        // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
-        "description" : "DB for storing JSON records.",
-		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
-	
-		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
-		"settings"    : [
-                {
-                    // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
-                    "name"         : "data",
-                    // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
-                    "display_name" : "Default Data(as JSON or JS expression)",
-                    // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
-                    "type"         : "text",
-                    // **default_value** : A default value for this setting.
-                    "default_value": "={}",
-                    "options" : function(){
-                        return {"={key: 'value'}":""}
-                    },
-                    // **description** : Text that will be displayed below the setting to give the user any extra information.
-                    "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
-                    // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
-                    "required" : true
-                }
-			
-		],
-		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
-		// * **settings** : A javascript object with the initial settings set by the user. The names of the properties in the object will correspond to the setting names defined above.
-		// * **newInstanceCallback** : A callback function that you'll call when the new instance of the plugin is ready. This function expects a single argument, which is the new instance of your plugin object.
-		// * **updateCallback** : A callback function that you'll call if and when your datasource has an update for freeboard to recalculate. This function expects a single parameter which is a javascript object with the new, updated data. You should hold on to this reference and call it when needed.
-		newInstance   : function(settings, newInstanceCallback, updateCallback)
-		{
-			// myDatasourcePlugin is defined below.
-			newInstanceCallback(new myDatasourcePlugin(settings, updateCallback));
-		}
-	});
-
-
-	// ### Datasource Implementation
-	//
-	// -------------------
-	// Here we implement the actual datasource plugin. We pass in the settings and updateCallback.
-	var myDatasourcePlugin = async function(settings, updateCallback)
-	{
-		var self = this;
-
-
-		self.makeDB=async function()
-		{
-			self.db = await nSQL().createDatabase({
-				id: "my-db",
-				mode: "TEMP", // pass in "PERM" to switch to persistent storage mode!
-				tables: [
-				  {
-					name: "records",
-					model: 
-					{
-						".uuid:uuid":{pk: true}
-					}
-				  }
-				]
-			  })
-		}
-
-		await self.makeDB()
-
-		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
-        var currentSettings = settings;
-        self.database = new alasql.Database();
-        self.database.exec('CREATE TABLE one (two INT)');
-
-        self.handler={
-			set: function(obj,prop,val)
-			{
-				throw new Error("You can't set anything here, all DB properties are async.");
-			}
-
-		}
-		
-        self.data={
-
-			query: function(match) {
-				nSQL().useDatabase("my_db");
-				var x = nSQL('records').query('select');
-
-				//Everything in the DB must match
-				for (i in match)
-				{
-					x = x.where([i,'=', match[i]]);
-				}
-
-				return x.exec()
-			},
-
-			set: function(record)
-			{
-				var r = {}
-				r.assign(record)
-				r['.time']=r['.time'] | Date.now()*1000;
-				r['.arrival']=r['.arrival'] | Date.now()*1000;
-				r['.name']=r['.name'] | String(Date.now()*1000);
-				nSQL().useDatabase("my_db");
-				nSQL('records').query('upsert', r).exec()
-
-			}
-
-			
-
-		}
-        self.proxy = new Proxy(self.data, self.handler)
-        
-
-		/* This is some function where I'll get my data from somewhere */
-		function getData()
-		{
-			var newData= self.proxy ; // Just putting some sample data in for fun.
-
-			/* Get my data from somewhere and populate newData with it... Probably a JSON API or something. */
-			/* ... */
-			// I'm calling updateCallback to tell it I've got new data for it to munch on.
-			updateCallback(newData);
-		}
-
-
-
-		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
-		self.onSettingsChanged = function(newSettings)
-		{
-			// Here we update our current settings with the variable that is passed in.
-			currentSettings = newSettings;
-            self.data =  freeboard.eval(newSettings['data']);
-
-            updateCallback(self.proxy)
-		}
-
-		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
-		self.updateNow = function()
-		{
-			// Most likely I'll just call getData() here.
-			getData();
-		}
-
-		// **onDispose()** (required) : A public function we must implement that will be called when this instance of this plugin is no longer needed. Do anything you need to cleanup after yourself here.
-		self.onDispose = function()
-		{
-		
-		}
-
-	}
-
 }());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
@@ -8051,7 +7926,6 @@ freeboard.loadDatasourcePlugin({
 
      freeboard.addStyle ('.floating-box',"display: inline-block; vertical-align: top; width: 78px; background-color: #222;margin-top: 10px; margin-right: 5px;");
      
-     freeboard.addStyle ('.onoffswitch-title',"font-size: 17px; line-height: 29px; width: 65%; height: 29px; padding-left: 10px;border: 1px solid #3d3d3d;");
      freeboard.addStyle ('.round' ,"border-radius: 50%;");
     var wswitch = function (settings) {
         var self = this;    

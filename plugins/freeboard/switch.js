@@ -62,7 +62,6 @@
 
      freeboard.addStyle ('.floating-box',"display: inline-block; vertical-align: top; width: 78px; background-color: #222;margin-top: 10px; margin-right: 5px;");
      
-     freeboard.addStyle ('.onoffswitch-title',"font-size: 17px; line-height: 29px; width: 65%; height: 29px; padding-left: 10px;border: 1px solid #3d3d3d;");
      freeboard.addStyle ('.round' ,"border-radius: 50%;");
     var wswitch = function (settings) {
         var self = this;    

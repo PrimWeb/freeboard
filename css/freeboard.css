@@ -1301,6 +1301,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	--title-shadow: rgba(0, 0, 0, 0.5);
 	--pane-shadow: rgba(0, 0, 0, 0.5);
 	--widget-shadow: rgba(0, 0, 0, 0.6);
+	--widget-bg-image: "";
+	--box-bg-image: "";
+	--bar-bg-image: "";
+
+	--widget-text-shadow: transparent;
 
 	/*This value MUST be in pixels*/
 	--title-line-height: 20px;
@@ -1320,6 +1325,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	border-style: solid;
 	width: 100%;
 	background-color: var(--bar-bg-color);
+	background-image: var(--bar-bg-image);
 	border-color: var(--border-color);
 	flex-direction: horizontal;
 	display: flex;
@@ -1722,10 +1728,12 @@ button, input, select {
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
 	border-radius: var(--widget-border-radius);
+	background-image: var(--widget-bg-image);
 }
 
 button{
-	box-shadow: 2px 2px 10px var(--widget-shadow);
+	box-shadow: 2px 2px 8px var(--widget-shadow);
+
 }
 
 textarea {
@@ -1737,6 +1745,7 @@ textarea {
 	color: var(--widget-fg-color);
 	font-family: FBMono, 'NotoColorEmoji', FontAwesome;
 	border-radius: var(--widget-border-radius);
+	background-image: var(--widget-bg-image);
 }
 
 /**
@@ -2059,7 +2068,6 @@ input:invalid {
 select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input {
 	display: inline-block;
 	height: 20px;
-	padding: 4px 6px;
 	line-height: 20px;
 	vertical-align: middle;
 	border-radius: var(--widget-border-radius);
@@ -2069,8 +2077,14 @@ select, textarea, input[type="text"], input[type="password"], input[type="dateti
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
-}
+	border-style: inset;
+	border-width: 2px;
 
+}
+select,input{
+	text-shadow: 1px 1px 3px var(--widget-text-shadow);
+
+}
 input, textarea {
 	width: 206px;
 }
@@ -2085,7 +2099,7 @@ textarea {
 
 textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input {
 	background-color: var(--widget-bg-color);
-	border: 1px solid var(--border-color);
+	border: 2px inset var(--border-color);
 	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
@@ -2100,9 +2114,8 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, input[ty
 	outline: 0;
 	outline: thin dotted \9;
 	/* IE6-9 */
-	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--highlight-color);
-	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--highlight-color);
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--highlight-color);
+
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--widget-shadow);
 }
 
 select {
@@ -2270,6 +2283,7 @@ header h1 {
 
 #admin-bar {
 	background-color: var(--bar-bg-color);
+	background-image: var(--bar-bg-image);
 	width: 100%;
 	height: 300px;
 	position: relative;
@@ -2513,6 +2527,7 @@ ul, ol {
 
 .gridster .gs_w {
 	background: var(--box-bg-color);
+	background-image: var(--box-bg-image);
 	backdrop-filter: var(--box-backdrop);
 	padding: var(--pane-padding);
 	border-radius: var(--pane-border-radius);
@@ -3186,7 +3201,7 @@ ul.value-dropdown {
 	padding: 0px;
 	margin: 0px;
 	background-color: var(--widget-bg-color);
-	border: 1px solid var(--highlight-color);
+	border: 2px inset var(--highlight-color);
 	overflow-x: auto;
 	overflow-y: auto;
 	z-index: 3001;
@@ -3295,16 +3310,24 @@ ul.board-toolbar.vertical {
 	cursor: pointer;
 	border-color: var(--widget-fg-color);
 	border-width: 1px;
-	border-style: solid;
+	border-style: outset;
+	background-image: var(--widget-bg-image);
+
 }
 
 button {
 	font-size: var(--widget-font-size);
 	/* 2 */
 	background-color: var(--widget-bg-color);
-	box-shadow: 2px 2px 10px var(--widget-shadow);
+	box-shadow: 2px 2px 8px var(--widget-shadow);
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
+	text-shadow: 1px 1px 3px var(--widget-text-shadow);
+
+}
+
+button:active{
+	box-shadow: inset -2px -2px 4px var(--widget-shadow);
 }
 
 .datasource-name {
@@ -3390,7 +3413,7 @@ ul.datasource-input-suffix {
 	width: 16em;
 	height: 30px;
 	-webkit-appearance: none;
-	border: 1px solid var(--border-color);
+	border: 2px inset var(--border-color);
 	background: url(../img/dropdown-arrow.png) no-repeat right var(--widget-bg-color);
 }
 
@@ -3449,9 +3472,9 @@ h2.title {
 }
 
 .table-operation {
-	padding-left: 5px;
-	padding-bottom: 5px;
-	padding-top: 1px;
+	padding-left: 2px;
+	padding-bottom: 2px;
+	padding-top: 2px;
 }
 
 /*Disable pull to refresh*/
@@ -3718,23 +3741,36 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 
 ::-webkit-scrollbar {
 	height: 0px;
-	width: 0.7em;
+	width: 12px;
 	background: transparent;
+
 	padding-right: 10;
 }
 
 ::-webkit-scrollbar-thumb {
-	border-color: var(--border-color);
-	background-color: var(--widget-bg-color);
-	color: var(--widget-fg-color);
+	border-color: var(--widget-fg-color);
 	-webkit-border-radius: 1ex;
 	border-radius: 1ex;
+	border-style: outset;
+	border-width: 2px;
+	background-color: var(--widget-bg-color);
+	margin:2px;
+}
+
+::-webkit-scrollbar-track {
+	background-image: var(--widget-bg-image);
+	background-color: var(--widget-bg-color);
+	border-style: inset;
+	border-width:2px;
 }
 
 ::-webkit-scrollbar-corner {
 	background: transparent;
 }
 
+#globalSettingsDialog{
+	overflow:auto;
+}
 .validation-error {
 	margin-top: 7px;
 	margin-bottom: 7px;
@@ -3758,8 +3794,12 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 	display: block;
 	overflow: hidden;
 	cursor: pointer;
-	border: 1px solid var(--border-color);
+	border: 2px inset var(--border-color);
 	border-radius: 0px;
+}
+
+.onoffswitch-title{
+	font-size: 17px; line-height: 29px; width: 65%; height: 29px; padding-left: 10px;border: 2px inset var(--border-color);
 }
 
 .onoffswitch-inner {
@@ -3787,13 +3827,13 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 .onoffswitch-inner .on {
 	padding-left: 6px;
 	background-color: rgb(119, 214, 119);
-	color: var(--fg-color);
+	color:black;
 }
 
 .onoffswitch-inner .off {
 	padding-right: 6px;
 	background-color: rgb(70, 36, 25);
-	color: var(--fg-color);
+	color: white;
 	text-align: right;
 }
 
@@ -3801,7 +3841,7 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 	width: 21px;
 	margin: 4px;
 	background: var(--widget-bg-color);
-	border: 1px solid var(--border-color);
+	border: 2px outset var(--border-color);
 	border-radius: 0px;
 	position: absolute;
 	top: 0;
