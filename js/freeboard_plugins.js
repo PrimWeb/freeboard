@@ -236,7 +236,10 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cance
 	}
 
 	// Create our header
-	modalDialog.append('<header><h2 class="title">' + title + "</h2></header>");
+	var x = $('<h2 class="title">' + title + '</h2>')//.css('height','25px').css('width',"800px")
+	var y = $('<header></header>')//.css('overflow','hidden')
+	y.append(x)
+	modalDialog.append(y)	
 
 	$('<section></section>').appendTo(modalDialog).append(contentElement);
 
@@ -277,6 +280,8 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cance
 
 	overlay.append(modalDialog);
 	$("body").append(overlay);
+	setTimeout(function(){ textFit(x)},10);
+
 	overlay.fadeIn(200);
 }
 
@@ -480,6 +485,10 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 			document.body.style.setProperty(i, x)
 		}
+		$("#board-logo").html(getComputedStyle(document.documentElement).getPropertyValue('--logo-text'))
+		freeboardUI.processResize(true);
+
+		
 	}
 
 	this.deserialize = async function(object, finishedCallback)
@@ -775,8 +784,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	}
 }
 
-function FreeboardUI()
-{
+function FreeboardUI() {
 	var PANE_MARGIN = 10;
 	var PANE_WIDTH = 300;
 	var MIN_COLUMNS = 3;
@@ -787,14 +795,13 @@ function FreeboardUI()
 	var loadingIndicator = $('<div class="wrapperloading"><div class="loading up" ></div><div class="loading down"></div></div>');
 	var grid;
 
-	function processResize(layoutWidgets)
-	{
+
+
+	function processResize(layoutWidgets) {
 		var maxDisplayableColumns = getMaxDisplayableColumnCount();
-		var repositionFunction = function(){};
-		if(layoutWidgets)
-		{
-			repositionFunction = function(index)
-			{
+		var repositionFunction = function () { };
+		if (layoutWidgets) {
+			repositionFunction = function (index) {
 				var paneElement = this;
 				var paneModel = ko.dataFor(paneElement);
 
@@ -812,14 +819,30 @@ function FreeboardUI()
 
 		repositionGrid(repositionFunction);
 		updateGridColumnControls();
+		if (getComputedStyle(document.documentElement).getPropertyValue('--header-font-size') == '') {
+			try {
+				textFit($('#board-logo'))
+				textFit($('.gs_w header h1'))
+				textFit($('#datasources h2'))
+				textFit($('#globalSettingsDialog h2'))
+			}
+			catch (e) {
+				console.log(e)
+			}
+		}
+		try {
+			textFit($('.fullwidth-button'),{alignHoriz: true,alignVert:true})		
+		}
+		catch (e) {
+			console.log(e)
+		}
+
 	}
 
-	function addGridColumn(shift)
-	{
+	function addGridColumn(shift) {
 		var num_cols = grid.cols + 1;
-		if(updateGridWidth(num_cols))
-		{
-			repositionGrid(function() {
+		if (updateGridWidth(num_cols)) {
+			repositionGrid(function () {
 				var paneElement = this;
 				var paneModel = ko.dataFor(paneElement);
 
@@ -827,16 +850,14 @@ function FreeboardUI()
 				var prevCol = paneModel.col[prevColumnIndex];
 				var prevRow = paneModel.row[prevColumnIndex];
 				var newPosition;
-				if(shift)
-				{
+				if (shift) {
 					leftPreviewCol = true;
 					var newCol = prevCol < grid.cols ? prevCol + 1 : grid.cols;
-					newPosition = {row: prevRow, col: newCol};
+					newPosition = { row: prevRow, col: newCol };
 				}
-				else
-				{
+				else {
 					rightPreviewCol = true;
-					newPosition = {row: prevRow, col: prevCol};
+					newPosition = { row: prevRow, col: prevCol };
 				}
 				$(paneElement).attr("data-sizex", Math.min(paneModel.col_width(), grid.cols))
 					.attr("data-row", newPosition.row)
@@ -847,12 +868,10 @@ function FreeboardUI()
 		userColumns = grid.cols;
 	}
 
-	function subtractGridColumn(shift)
-	{
+	function subtractGridColumn(shift) {
 		var num_cols = grid.cols - 1;
-		if(updateGridWidth(num_cols))
-		{
-			repositionGrid(function() {
+		if (updateGridWidth(num_cols)) {
+			repositionGrid(function () {
 				var paneElement = this;
 				var paneModel = ko.dataFor(paneElement);
 
@@ -860,15 +879,13 @@ function FreeboardUI()
 				var prevCol = paneModel.col[prevColumnIndex];
 				var prevRow = paneModel.row[prevColumnIndex];
 				var newPosition;
-				if(shift)
-				{
+				if (shift) {
 					var newCol = prevCol > 1 ? prevCol - 1 : 1;
-					newPosition = {row: prevRow, col: newCol};
+					newPosition = { row: prevRow, col: newCol };
 				}
-				else
-				{
+				else {
 					var newCol = prevCol <= grid.cols ? prevCol : grid.cols;
-					newPosition = {row: prevRow, col: newCol};
+					newPosition = { row: prevRow, col: newCol };
 				}
 				$(paneElement).attr("data-sizex", Math.min(paneModel.col_width(), grid.cols))
 					.attr("data-row", newPosition.row)
@@ -879,47 +896,38 @@ function FreeboardUI()
 		userColumns = grid.cols;
 	}
 
-	function updateGridColumnControls()
-	{
+	function updateGridColumnControls() {
 		var col_controls = $(".column-tool");
 		var available_width = $("#board-content").width();
 		var max_columns = Math.floor(available_width / COLUMN_WIDTH);
 
-		if(grid.cols <= MIN_COLUMNS)
-		{
+		if (grid.cols <= MIN_COLUMNS) {
 			col_controls.addClass("min");
 		}
-		else
-		{
+		else {
 			col_controls.removeClass("min");
 		}
 
-		if(grid.cols >= max_columns)
-		{
+		if (grid.cols >= max_columns) {
 			col_controls.addClass("max");
 		}
-		else
-		{
+		else {
 			col_controls.removeClass("max");
 		}
 	}
 
-	function getMaxDisplayableColumnCount()
-	{
+	function getMaxDisplayableColumnCount() {
 		var available_width = $("#board-content").width();
 		return Math.floor(available_width / COLUMN_WIDTH);
 	}
 
-	function updateGridWidth(newCols)
-	{
-		if(newCols === undefined || newCols < MIN_COLUMNS)
-		{
+	function updateGridWidth(newCols) {
+		if (newCols === undefined || newCols < MIN_COLUMNS) {
 			newCols = MIN_COLUMNS;
 		}
 
 		var max_columns = getMaxDisplayableColumnCount();
-		if(newCols > max_columns)
-		{
+		if (newCols > max_columns) {
 			newCols = max_columns;
 		}
 
@@ -927,18 +935,15 @@ function FreeboardUI()
 		var new_width = (COLUMN_WIDTH * newCols) + newCols;
 		$(".responsive-column-width").css("max-width", new_width);
 
-		if(newCols === grid.cols)
-		{
-			return false; 
+		if (newCols === grid.cols) {
+			return false;
 		}
-		else
-		{
+		else {
 			return true;
 		}
 	}
 
-	function repositionGrid(repositionFunction)
-	{
+	function repositionGrid(repositionFunction) {
 		var rootElement = grid.$el;
 
 		rootElement.find("> li").unbind().removeData();
@@ -951,26 +956,23 @@ function FreeboardUI()
 		$(".responsive-column-width").css("width", grid.cols * PANE_WIDTH + (grid.cols * PANE_MARGIN * 2));
 	}
 
-	function getUserColumns()
-	{
+	function getUserColumns() {
 		return userColumns;
 	}
 
-	function setUserColumns(numCols)
-	{
+	function setUserColumns(numCols) {
 		userColumns = Math.max(MIN_COLUMNS, numCols);
 	}
 
 	ko.bindingHandlers.grid = {
-		init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext)
-		{
+		init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			// Initialize our grid
 			grid = $(element).gridster({
-				widget_margins        : [PANE_MARGIN, PANE_MARGIN],
+				widget_margins: [PANE_MARGIN, PANE_MARGIN],
 				widget_base_dimensions: [PANE_WIDTH, 10],
 				resize: {
-					enabled : false,
-					axes : "x"
+					enabled: false,
+					axes: "x"
 				}
 			}).data("gridster");
 
@@ -980,8 +982,7 @@ function FreeboardUI()
 		}
 	}
 
-	function addPane(element, viewModel, isEditing)
-	{
+	function addPane(element, viewModel, isEditing) {
 		var position = getPositionForScreenSize(viewModel);
 		var col = position.col;
 		var row = position.row;
@@ -990,8 +991,7 @@ function FreeboardUI()
 
 		grid.add_widget(element, width, height, col, row);
 
-		if(isEditing)
-		{
+		if (isEditing) {
 			showPaneEditIcons(true);
 		}
 
@@ -999,105 +999,85 @@ function FreeboardUI()
 
 		$(element).attrchange({
 			trackValues: true,
-			callback   : function(event)
-			{
-				if(event.attributeName == "data-row")
-				{
-                    updatePositionForScreenSize(viewModel, Number(event.newValue), undefined);
+			callback: function (event) {
+				if (event.attributeName == "data-row") {
+					updatePositionForScreenSize(viewModel, Number(event.newValue), undefined);
 				}
-				else if(event.attributeName == "data-col")
-				{
-                    updatePositionForScreenSize(viewModel, undefined, Number(event.newValue));
+				else if (event.attributeName == "data-col") {
+					updatePositionForScreenSize(viewModel, undefined, Number(event.newValue));
 				}
 			}
 		});
 	}
 
-	function updatePane(element, viewModel)
-	{
+	function updatePane(element, viewModel) {
 		// If widget has been added or removed
 		var calculatedHeight = viewModel.getCalculatedHeight();
 
 		var elementHeight = Number($(element).attr("data-sizey"));
 		var elementWidth = Number($(element).attr("data-sizex"));
 
-		if(calculatedHeight != elementHeight || viewModel.col_width() !=  elementWidth)
-		{
-			grid.resize_widget($(element), viewModel.col_width(), calculatedHeight, function(){
+		if (calculatedHeight != elementHeight || viewModel.col_width() != elementWidth) {
+			grid.resize_widget($(element), viewModel.col_width(), calculatedHeight, function () {
 				grid.set_dom_grid_height();
 			});
 		}
 	}
 
-	function updatePositionForScreenSize(paneModel, row, col)
-	{
+	function updatePositionForScreenSize(paneModel, row, col) {
 		var displayCols = grid.cols;
 
-		if(!_.isUndefined(row)) paneModel.row[displayCols] = row;
-		if(!_.isUndefined(col)) paneModel.col[displayCols] = col;
+		if (!_.isUndefined(row)) paneModel.row[displayCols] = row;
+		if (!_.isUndefined(col)) paneModel.col[displayCols] = col;
 	}
 
-	function showLoadingIndicator(show)
-	{
-		if(show)
-		{
+	function showLoadingIndicator(show) {
+		if (show) {
 			loadingIndicator.fadeOut(0).appendTo("body").fadeIn(500);
 		}
-		else
-		{
-	    		loadingIndicator.fadeOut(500).remove();
+		else {
+			loadingIndicator.fadeOut(500).remove();
 		}
 	}
 
-	function showPaneEditIcons(show, animate)
-	{
-		if(_.isUndefined(animate))
-		{
+	function showPaneEditIcons(show, animate) {
+		if (_.isUndefined(animate)) {
 			animate = true;
 		}
 
 		var animateLength = (animate) ? 250 : 0;
 
-		if(show)
-		{
+		if (show) {
 			$(".pane-tools").fadeIn(animateLength);//.css("display", "block").animate({opacity: 1.0}, animateLength);
 			$("#column-tools").fadeIn(animateLength);
 		}
-		else
-		{
+		else {
 			$(".pane-tools").fadeOut(animateLength);//.animate({opacity: 0.0}, animateLength).css("display", "none");//, function()
 			$("#column-tools").fadeOut(animateLength);
 		}
 	}
 
-	function attachWidgetEditIcons(element)
-	{
-		$(element).hover(function()
-		{
+	function attachWidgetEditIcons(element) {
+		$(element).hover(function () {
 			showWidgetEditIcons(this, true);
-		}, function()
-		{
+		}, function () {
 			showWidgetEditIcons(this, false);
 		});
 	}
 
-	function showWidgetEditIcons(element, show)
-	{
-		if(show)
-		{
+	function showWidgetEditIcons(element, show) {
+		if (show) {
 			$(element).find(".sub-section-tools").fadeIn(250);
 		}
-		else
-		{
+		else {
 			$(element).find(".sub-section-tools").fadeOut(250);
 		}
 	}
 
-	function getPositionForScreenSize(paneModel)
-	{
+	function getPositionForScreenSize(paneModel) {
 		var cols = grid.cols;
 
-		if(_.isNumber(paneModel.row) && _.isNumber(paneModel.col)) // Support for legacy format
+		if (_.isNumber(paneModel.row) && _.isNumber(paneModel.col)) // Support for legacy format
 		{
 			var obj = {};
 			obj[cols] = paneModel.row;
@@ -1112,13 +1092,12 @@ function FreeboardUI()
 		var newColumnIndex = 1;
 		var columnDiff = 1000;
 
-		for(var columnIndex in paneModel.col)
-		{
-			if(columnIndex == cols)	 // If we already have a position defined for this number of columns, return that position
+		for (var columnIndex in paneModel.col) {
+			if (columnIndex == cols)	 // If we already have a position defined for this number of columns, return that position
 			{
-				return {row: paneModel.row[columnIndex], col: paneModel.col[columnIndex]};
+				return { row: paneModel.row[columnIndex], col: paneModel.col[columnIndex] };
 			}
-			else if(paneModel.col[columnIndex] > cols) // If it's greater than our display columns, put it in the last column
+			else if (paneModel.col[columnIndex] > cols) // If it's greater than our display columns, put it in the last column
 			{
 				newColumnIndex = cols;
 			}
@@ -1126,91 +1105,72 @@ function FreeboardUI()
 			{
 				var delta = cols - columnIndex;
 
-				if(delta < columnDiff)
-				{
+				if (delta < columnDiff) {
 					newColumnIndex = columnIndex;
 					columnDiff = delta;
 				}
 			}
 		}
 
-		if(newColumnIndex in paneModel.col && newColumnIndex in paneModel.row)
-		{
-			return {row: paneModel.row[newColumnIndex], col: paneModel.col[newColumnIndex]};
+		if (newColumnIndex in paneModel.col && newColumnIndex in paneModel.row) {
+			return { row: paneModel.row[newColumnIndex], col: paneModel.col[newColumnIndex] };
 		}
 
-		return {row:1,col:newColumnIndex};
+		return { row: 1, col: newColumnIndex };
 	}
 
 
 	// Public Functions
 	return {
-		showLoadingIndicator : function(show)
-		{
+		showLoadingIndicator: function (show) {
 			showLoadingIndicator(show);
 		},
-		showPaneEditIcons : function(show, animate)
-		{
+		showPaneEditIcons: function (show, animate) {
 			showPaneEditIcons(show, animate);
 		},
-		attachWidgetEditIcons : function(element)
-		{
+		attachWidgetEditIcons: function (element) {
 			attachWidgetEditIcons(element);
 		},
-		getPositionForScreenSize : function(paneModel)
-		{
+		getPositionForScreenSize: function (paneModel) {
 			return getPositionForScreenSize(paneModel);
 		},
-		processResize : function(layoutWidgets)
-		{
+		processResize: function (layoutWidgets) {
 			processResize(layoutWidgets);
 		},
-		disableGrid : function()
-		{
+		disableGrid: function () {
 			grid.disable();
 		},
-		enableGrid : function()
-		{
+		enableGrid: function () {
 			grid.enable();
 		},
-		addPane : function(element, viewModel, isEditing)
-		{
+		addPane: function (element, viewModel, isEditing) {
 			addPane(element, viewModel, isEditing);
 		},
-		updatePane : function(element, viewModel)
-		{
+		updatePane: function (element, viewModel) {
 			updatePane(element, viewModel);
 		},
-		removePane : function(element)
-		{
+		removePane: function (element) {
 			grid.remove_widget(element);
 		},
-		removeAllPanes : function()
-		{
+		removeAllPanes: function () {
 			grid.remove_all_widgets();
 		},
-		addGridColumnLeft : function()
-		{
+		addGridColumnLeft: function () {
 			addGridColumn(true);
 		},
-		addGridColumnRight : function()
-		{
+		addGridColumnRight: function () {
 			addGridColumn(false);
 		},
-		subGridColumnLeft : function()
-		{
+		subGridColumnLeft: function () {
 			subtractGridColumn(true);
 		},
-		subGridColumnRight : function()
-		{
+		subGridColumnRight: function () {
 			subtractGridColumn(false);
 		},
-		getUserColumns : function()
-		{
+		getUserColumns: function () {
 			return getUserColumns();
 		},
-		setUserColumns : function(numCols)
-		{
+		setUserColumns: function (numCols) {
 			setUserColumns(numCols);
 		}
 	}
@@ -1289,6 +1249,11 @@ function PaneModel(theFreeboardModel, widgetPlugins) {
 	this.col = {};
 
 	this.col_width = ko.observable(1);
+
+	//refit the text
+	this.title.subscribe(function(v){
+		freeboard.ui.processResize()
+	})
 	this.col_width.subscribe(function(newValue)
 	{
 		self.processSizeChange();
@@ -1356,7 +1321,7 @@ function PaneModel(theFreeboardModel, widgetPlugins) {
 
 		// sumHeights+= extraGridSize;
 
-		var titleHeight = getComputedStyle(document.documentElement).getPropertyValue('--title-line-height')
+		var titleHeight = getComputedStyle(document.documentElement).getPropertyValue('--pane-header-line-height')
 		//Remove the px
 		titleHeight = titleHeight.substring(0,titleHeight.length-2);
 		var rows = Math.ceil((sumHeights + parseFloat(titleHeight)) / 30);
@@ -3234,9 +3199,11 @@ var freeboard = (function () {
 	return {
 		model: theFreeboardModel,
 
+
 		setGlobalSettings = theFreeboardModel.setGlobalSettings,
 		globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		globalSettings = theFreeboardModel.globalSettings,
+		ui=freeboardUI,
 		defaultSounds={
 			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
 			'scifi-beep': 'sounds/220176__gameaudio__confirm-click-spacey.opus',
@@ -3531,7 +3498,7 @@ globalSettingsSchema = {
 
         imageData: {
             type: "object",
-            title: "Images(saved as part of board for CSS. Name must start with --)",
+            title: "Images(name must start with --)",
             additionalProperties: {
                 type: "string",
                 "media": {
@@ -3611,7 +3578,7 @@ globalSettingsSchema = {
                     type: "string",
                     enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
                 },
-                "--title-font": {
+                "--header-font": {
                     type: "string",
                     enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
                 },
@@ -3623,7 +3590,7 @@ globalSettingsSchema = {
                     type: "string",
                     enum: ['small', 'medium', 'large', 'x-large', 'xx-large', '12px', '16px', '24px', '32px', '48px', '64px', '80px']
                 },
-                "--title-font-size": {
+                "--header-font-size": {
                     type: "string",
                     enum: ['small', 'medium', 'large', 'x-large', 'xx-large', '12px', '16px', '24px', '32px', '48px', '64px', '80px']
                 },
@@ -3673,7 +3640,7 @@ globalSettingsSchema = {
                         }
                     }
                 },
-                "--header-bg-color":
+                "--pane-header-bg-color":
                 {
                     type: "string",
                     format: 'color',
@@ -3715,7 +3682,7 @@ globalSettingsSchema = {
                         }
                     }
                 },
-                "--title-shadow":
+                "--header-shadow":
                 {
                     type: "string",
                     format: 'color',
@@ -3818,7 +3785,7 @@ globalSettingsSchema = {
                 },
 
 
-                "--title-line-height":
+                "--pane-header-line-height":
                 {
                     type: "string",
                     enum: ['20px', '40px', '60px', '80px', '100px']
@@ -5023,6 +4990,13 @@ function uuidv4() {
                 type: "text",
                 default_value: '',
                 options: freeboard.getAvailableSounds
+			},
+			{
+                name: "height",
+                display_name: "Height(px)",
+                type: "number",
+                default_value: 30,
+                
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -5044,7 +5018,7 @@ function uuidv4() {
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', { type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%');
+		var inputElement = $('<button/>', {class:'fullwidth-button',type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height',self.currentSettings.height+'px');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -5093,7 +5067,8 @@ function uuidv4() {
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
 					freeboard.playSound(self.currentSettings.sound)
-					
+					textFit($(theButton),{alignHoriz: true,alignVert:true})		
+
 				}
 					
 				);
@@ -5109,12 +5084,8 @@ function uuidv4() {
 	//
 	// Blocks of different sizes may be supported in the future.
 	self.getHeight = function () {
-		if (self.currentSettings.size == "big") {
-			return 2;
-		}
-		else {
-			return 1;
-		}
+	    //Round Up
+		return(parseInt((self.currentSettings.height+59)/60))
 	}
 
 	// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
@@ -5123,6 +5094,7 @@ function uuidv4() {
 		self.currentSettings = newSettings;
 		self.currentSettings.unit = self.currentSettings.unit || ''
 		$(theButton).attr('tooltip', newSettings.placeholder);
+		$(theButton).css('height',self.currentSettings.height+'px')
 	}
 
 
@@ -5133,6 +5105,7 @@ function uuidv4() {
 
 		if (settingName == 'html') {
 			$(theButton).html(newValue);
+			textFit($('.fullwidth-button'),{alignHoriz: true,alignVert:true})		
 		}
 		if (settingName == 'value') {
 			self.value = newValue;

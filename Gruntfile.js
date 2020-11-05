@@ -53,6 +53,7 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/spectrum.min.js',
                         'lib/js/thirdparty/print.min.js',
                         'lib/js/thirdparty/purify.js',
+                        'lib/js/thirdparty/textFit.min.js'
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
