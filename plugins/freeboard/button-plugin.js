@@ -68,6 +68,13 @@
                 type: "text",
                 default_value: '',
                 options: freeboard.getAvailableSounds
+			},
+			{
+                name: "height",
+                display_name: "Height(px)",
+                type: "number",
+                default_value: 30,
+                
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -89,7 +96,7 @@
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', { type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%');
+		var inputElement = $('<button/>', {class:'fullwidth-button',type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height',self.currentSettings.height+'px');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -138,7 +145,8 @@
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
 					freeboard.playSound(self.currentSettings.sound)
-					
+					textFit($(theButton),{alignHoriz: true,alignVert:true})		
+
 				}
 					
 				);
@@ -154,12 +162,8 @@
 	//
 	// Blocks of different sizes may be supported in the future.
 	self.getHeight = function () {
-		if (self.currentSettings.size == "big") {
-			return 2;
-		}
-		else {
-			return 1;
-		}
+	    //Round Up
+		return(parseInt((self.currentSettings.height+59)/60))
 	}
 
 	// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
@@ -168,6 +172,7 @@
 		self.currentSettings = newSettings;
 		self.currentSettings.unit = self.currentSettings.unit || ''
 		$(theButton).attr('tooltip', newSettings.placeholder);
+		$(theButton).css('height',self.currentSettings.height+'px')
 	}
 
 
@@ -178,6 +183,7 @@
 
 		if (settingName == 'html') {
 			$(theButton).html(newValue);
+			textFit($('.fullwidth-button'),{alignHoriz: true,alignVert:true})		
 		}
 		if (settingName == 'value') {
 			self.value = newValue;

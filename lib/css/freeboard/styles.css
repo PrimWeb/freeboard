@@ -2217,8 +2217,8 @@ ul.datasource-input-suffix {
 	border-radius: var(--logo-border-radius);
 	background-size: contain;
 	background-position: center;
-	width: 120px;
-	height: 60px;
+	width: 250px;
+	height: 100px;
 	text-align: center;
 	font-size: 150%;
 	background-repeat: no-repeat;

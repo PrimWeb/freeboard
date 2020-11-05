@@ -486,7 +486,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			document.body.style.setProperty(i, x)
 		}
 		$("#board-logo").html(getComputedStyle(document.documentElement).getPropertyValue('--logo-text'))
-		freeboardUI.processResize(true);
+		setTimeout(function(){freeboardUI.processResize(true)},30);
 
 		
 	}
@@ -548,7 +548,6 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		
 			self.setGlobalSettings(object.globalSettings||{})
 
-			freeboardUI.processResize(true);
 
 			
 		}
@@ -819,7 +818,7 @@ function FreeboardUI() {
 
 		repositionGrid(repositionFunction);
 		updateGridColumnControls();
-		if (getComputedStyle(document.documentElement).getPropertyValue('--header-font-size') == '') {
+		if (true) {
 			try {
 				textFit($('#board-logo'))
 				textFit($('.gs_w header h1'))
@@ -3353,6 +3352,7 @@ var freeboard = (function () {
 				}
 
 				freeboard.emit("initialized");
+				freeboardUI.processResize()
 			}
 		},
 
