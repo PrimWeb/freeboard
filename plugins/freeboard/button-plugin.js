@@ -63,18 +63,18 @@
 				type: "target"
 			},
 			{
-                name: "sound",
-                display_name: "Sound(URL or builtin)",
-                type: "text",
-                default_value: '',
-                options: freeboard.getAvailableSounds
+				name: "sound",
+				display_name: "Sound(URL or builtin)",
+				type: "text",
+				default_value: '',
+				options: freeboard.getAvailableSounds
 			},
 			{
-                name: "height",
-                display_name: "Height(px)",
-                type: "number",
-                default_value: 30,
-                
+				name: "height",
+				display_name: "Height(px)",
+				type: "number",
+				default_value: 30,
+
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -96,7 +96,7 @@
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', {class:'fullwidth-button',type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height',self.currentSettings.height+'px');
+		var inputElement = $('<button/>', { class: 'fullwidth-button', type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height', self.currentSettings.height + 'px');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -130,71 +130,83 @@
 					//If an async background function is happening here,
 					//disable user input until  everything is completed. so you can't
 					//queue up a billion events
-					$(theButton).attr('disabled', true).html(settings.html+"(waiting)")
+					$(theButton).attr('disabled', true).html(settings.html + "(waiting)")
 
-					//We can refreshed in pull mode here
-					await self.processCalculatedSetting('value');
 					
+					//We can refreshed in pull mode here
+					await self.processCalculatedSetting('value',true);
+					
+
 					if (!_.isUndefined(self.currentSettings.value)) {
 						v = self.value
 					}
 
-		
-					await self.dataTargets.target(v);
-				
+					try {
+						//We can refreshed in pull mode here
+						await self.dataTargets.target(v);
+					}
+					catch (e) {
+						freeboard.showDialog(e, "Error in click handler", "OK")
+						freeboard.playSound('error');
+					}
+
+					if (!_.isUndefined(self.currentSettings.value)) {
+						v = self.value
+					}
+
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
 					freeboard.playSound(self.currentSettings.sound)
-					textFit($(theButton),{alignHoriz: true,alignVert:true})		
+					textFit($(theButton), { alignHoriz: true, alignVert: true })
 
 				}
-					
-				);
+
+			);
 
 
 
-		$(theButton).removeClass("ui-widget-content");
-	}
-
-	// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
-	//
-	// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
-	//
-	// Blocks of different sizes may be supported in the future.
-	self.getHeight = function () {
-	    //Round Up
-		return(parseInt((self.currentSettings.height+59)/60))
-	}
-
-	// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
-	self.onSettingsChanged = function (newSettings) {
-		// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
-		self.currentSettings = newSettings;
-		self.currentSettings.unit = self.currentSettings.unit || ''
-		$(theButton).attr('tooltip', newSettings.placeholder);
-		$(theButton).css('height',self.currentSettings.height+'px')
-	}
-
-
-
-	// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
-	self.onCalculatedValueChanged = function (settingName, newValue) {
-
-
-		if (settingName == 'html') {
-			$(theButton).html(newValue);
-			textFit($('.fullwidth-button'),{alignHoriz: true,alignVert:true})		
-		}
-		if (settingName == 'value') {
-			self.value = newValue;
+			$(theButton).removeClass("ui-widget-content");
 		}
 
+		// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
+		//
+		// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
+		//
+		// Blocks of different sizes may be supported in the future.
+		self.getHeight = function () {
+			//Round Up
+			return (parseInt((self.currentSettings.height + 59) / 60))
+		}
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function (newSettings) {
+			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
+			self.currentSettings = newSettings;
+			self.currentSettings.unit = self.currentSettings.unit || ''
+			$(theButton).attr('tooltip', newSettings.placeholder);
+			$(theButton).css('height', self.currentSettings.height + 'px')
+		}
+
+
+
+		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
+		self.onCalculatedValueChanged = function (settingName, newValue) {
+
+
+			if (settingName == 'html') {
+				$(theButton).html(newValue);
+				textFit($('.fullwidth-button'), { alignHoriz: true, alignVert: true })
+			}
+			if (settingName == 'value') {
+				self.value = newValue;
+			}
+
+		}
+
+
+		// **onDispose()** (required) : Same as with datasource plugins.
+		self.onDispose = function () {
+		}
+
 	}
-
-
-	// **onDispose()** (required) : Same as with datasource plugins.
-	self.onDispose = function () {
-	}
-
-}
 }());

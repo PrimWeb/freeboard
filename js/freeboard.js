@@ -2591,7 +2591,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	
 	//This function is now a public API function.
 	//Will not complete till the effect is resolved, but the function itself is async
-	this.processCalculatedSetting = async function (settingName) {
+	this.processCalculatedSetting = async function (settingName,showError) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;
 
@@ -2605,6 +2605,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
 					returnValue = rawValue;
 				}
+				if(showError)
+				{
+					freeboard.showDialog(e, "Error with: "+settingName, "OK")
+					freeboard.playSound('error')
+				}				
 			}
 
 			var f = async function(returnValue)
@@ -2616,6 +2621,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 					catch (e) {
 						console.log(e.toString());
+						
 					}
 				}
 			}
@@ -2737,8 +2743,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							//The do nothing function
 							self.dataTargets[settingDef.name]=function(v){}
                         }
-                    }
-					await self.processCalculatedSetting(settingDef.name);
+					}
+					
+					//No error dialog for targets, they are created on-demand
+					await self.processCalculatedSetting(settingDef.name,settingDef.type == "calculated");
 
 					// Are there any datasources we need to be subscribed to?
 					var matches;
@@ -3210,6 +3218,12 @@ var freeboard = (function () {
 			'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
 			'drop': 'sounds/DM-CGS-32.opus',
 			'bamboo': 'sounds/DM-CGS-50.opus',
+			'snap': '333431__brandondelehoy__ui-series-miscellaneous-01.opus',
+			'click': '333427__brandondelehoy__ui-series-gravel-y-click.opus',
+			'typewriter': '380137__yottasounds__typewriter-single-key-type-2.opus',
+			'scifi-descending': '422515__nightflame__menu-fx-03-descending.opus',
+			'scifi-ascending': '422515__nightflame__menu-fx-03-ascending.opus',
+			'scifi-flat': '422515__nightflame__menu-fx-03-normal.opus'
 
 		},
 

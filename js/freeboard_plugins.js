@@ -2591,7 +2591,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	
 	//This function is now a public API function.
 	//Will not complete till the effect is resolved, but the function itself is async
-	this.processCalculatedSetting = async function (settingName) {
+	this.processCalculatedSetting = async function (settingName,showError) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;
 
@@ -2605,6 +2605,11 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
 					returnValue = rawValue;
 				}
+				if(showError)
+				{
+					freeboard.showDialog(e, "Error with: "+settingName, "OK")
+					freeboard.playSound('error')
+				}				
 			}
 
 			var f = async function(returnValue)
@@ -2616,6 +2621,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 					catch (e) {
 						console.log(e.toString());
+						
 					}
 				}
 			}
@@ -2737,8 +2743,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							//The do nothing function
 							self.dataTargets[settingDef.name]=function(v){}
                         }
-                    }
-					await self.processCalculatedSetting(settingDef.name);
+					}
+					
+					//No error dialog for targets, they are created on-demand
+					await self.processCalculatedSetting(settingDef.name,settingDef.type == "calculated");
 
 					// Are there any datasources we need to be subscribed to?
 					var matches;
@@ -3210,6 +3218,12 @@ var freeboard = (function () {
 			'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
 			'drop': 'sounds/DM-CGS-32.opus',
 			'bamboo': 'sounds/DM-CGS-50.opus',
+			'snap': '333431__brandondelehoy__ui-series-miscellaneous-01.opus',
+			'click': '333427__brandondelehoy__ui-series-gravel-y-click.opus',
+			'typewriter': '380137__yottasounds__typewriter-single-key-type-2.opus',
+			'scifi-descending': '422515__nightflame__menu-fx-03-descending.opus',
+			'scifi-ascending': '422515__nightflame__menu-fx-03-ascending.opus',
+			'scifi-flat': '422515__nightflame__menu-fx-03-normal.opus'
 
 		},
 
@@ -4985,18 +4999,18 @@ function uuidv4() {
 				type: "target"
 			},
 			{
-                name: "sound",
-                display_name: "Sound(URL or builtin)",
-                type: "text",
-                default_value: '',
-                options: freeboard.getAvailableSounds
+				name: "sound",
+				display_name: "Sound(URL or builtin)",
+				type: "text",
+				default_value: '',
+				options: freeboard.getAvailableSounds
 			},
 			{
-                name: "height",
-                display_name: "Height(px)",
-                type: "number",
-                default_value: 30,
-                
+				name: "height",
+				display_name: "Height(px)",
+				type: "number",
+				default_value: 30,
+
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -5018,7 +5032,7 @@ function uuidv4() {
 		var thisWidgetContainer = $('<div class="button-widget button-label" id="__' + thisWidgetId + '"></div>');
 
 
-		var inputElement = $('<button/>', {class:'fullwidth-button',type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height',self.currentSettings.height+'px');
+		var inputElement = $('<button/>', { class: 'fullwidth-button', type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height', self.currentSettings.height + 'px');
 		var theButton = '#' + thisWidgetId;
 
 		//console.log( "theButton ", theButton);
@@ -5052,73 +5066,85 @@ function uuidv4() {
 					//If an async background function is happening here,
 					//disable user input until  everything is completed. so you can't
 					//queue up a billion events
-					$(theButton).attr('disabled', true).html(settings.html+"(waiting)")
+					$(theButton).attr('disabled', true).html(settings.html + "(waiting)")
 
-					//We can refreshed in pull mode here
-					await self.processCalculatedSetting('value');
 					
+					//We can refreshed in pull mode here
+					await self.processCalculatedSetting('value',true);
+					
+
 					if (!_.isUndefined(self.currentSettings.value)) {
 						v = self.value
 					}
 
-		
-					await self.dataTargets.target(v);
-				
+					try {
+						//We can refreshed in pull mode here
+						await self.dataTargets.target(v);
+					}
+					catch (e) {
+						freeboard.showDialog(e, "Error in click handler", "OK")
+						freeboard.playSound('error');
+					}
+
+					if (!_.isUndefined(self.currentSettings.value)) {
+						v = self.value
+					}
+
 					self.clickCount += 1;
 					$(theButton).attr('disabled', false).html(settings.html);
 					freeboard.playSound(self.currentSettings.sound)
-					textFit($(theButton),{alignHoriz: true,alignVert:true})		
+					textFit($(theButton), { alignHoriz: true, alignVert: true })
 
 				}
-					
-				);
+
+			);
 
 
 
-		$(theButton).removeClass("ui-widget-content");
-	}
-
-	// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
-	//
-	// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
-	//
-	// Blocks of different sizes may be supported in the future.
-	self.getHeight = function () {
-	    //Round Up
-		return(parseInt((self.currentSettings.height+59)/60))
-	}
-
-	// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
-	self.onSettingsChanged = function (newSettings) {
-		// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
-		self.currentSettings = newSettings;
-		self.currentSettings.unit = self.currentSettings.unit || ''
-		$(theButton).attr('tooltip', newSettings.placeholder);
-		$(theButton).css('height',self.currentSettings.height+'px')
-	}
-
-
-
-	// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
-	self.onCalculatedValueChanged = function (settingName, newValue) {
-
-
-		if (settingName == 'html') {
-			$(theButton).html(newValue);
-			textFit($('.fullwidth-button'),{alignHoriz: true,alignVert:true})		
-		}
-		if (settingName == 'value') {
-			self.value = newValue;
+			$(theButton).removeClass("ui-widget-content");
 		}
 
+		// **getHeight()** (required) : A public function we must implement that will be called when freeboard wants to know how big we expect to be when we render, and returns a height. This function will be called any time a user updates their settings (including the first time they create the widget).
+		//
+		// Note here that the height is not in pixels, but in blocks. A block in freeboard is currently defined as a rectangle that is fixed at 300 pixels wide and around 45 pixels multiplied by the value you return here.
+		//
+		// Blocks of different sizes may be supported in the future.
+		self.getHeight = function () {
+			//Round Up
+			return (parseInt((self.currentSettings.height + 59) / 60))
+		}
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function (newSettings) {
+			// Normally we'd update our text element with the value we defined in the user settings above (the_text), but there is a special case for settings that are of type **"calculated"** -- see below.
+			self.currentSettings = newSettings;
+			self.currentSettings.unit = self.currentSettings.unit || ''
+			$(theButton).attr('tooltip', newSettings.placeholder);
+			$(theButton).css('height', self.currentSettings.height + 'px')
+		}
+
+
+
+		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
+		self.onCalculatedValueChanged = function (settingName, newValue) {
+
+
+			if (settingName == 'html') {
+				$(theButton).html(newValue);
+				textFit($('.fullwidth-button'), { alignHoriz: true, alignVert: true })
+			}
+			if (settingName == 'value') {
+				self.value = newValue;
+			}
+
+		}
+
+
+		// **onDispose()** (required) : Same as with datasource plugins.
+		self.onDispose = function () {
+		}
+
 	}
-
-
-	// **onDispose()** (required) : Same as with datasource plugins.
-	self.onDispose = function () {
-	}
-
-}
 }());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
@@ -8119,11 +8145,18 @@ freeboard.loadDatasourcePlugin({
 			$(theValue).html(self.value + self.currentSettings.unit);
 
 			$(theTextbox).on('change',
-				function (e) {
+				async function (e) {
 						//Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(e.target.value);
-						}
+						if (_.isUndefined(self.currentSettings.target)) {}{
+							try {
+								//We can refreshed in pull mode here
+								await self.dataTargets.target(e.target.value);
+							}
+							catch (e) {
+								freeboard.showDialog(e, "Bad data target", "OK")
+								freeboard.playSound('error');
+							}						
+					}
 				});
             
 			$(theTextbox).on('input',
@@ -8135,7 +8168,7 @@ freeboard.loadDatasourcePlugin({
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(self.currentSettings.target)) { }
+					if (_.isUndefined(self.currentSettings.target)) {}
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {

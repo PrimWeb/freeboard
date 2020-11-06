@@ -132,11 +132,18 @@
 			$(theValue).html(self.value + self.currentSettings.unit);
 
 			$(theTextbox).on('change',
-				function (e) {
+				async function (e) {
 						//Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(e.target.value);
-						}
+						if (_.isUndefined(self.currentSettings.target)) {}{
+							try {
+								//We can refreshed in pull mode here
+								await self.dataTargets.target(e.target.value);
+							}
+							catch (e) {
+								freeboard.showDialog(e, "Bad data target", "OK")
+								freeboard.playSound('error');
+							}						
+					}
 				});
             
 			$(theTextbox).on('input',
@@ -148,7 +155,7 @@
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(self.currentSettings.target)) { }
+					if (_.isUndefined(self.currentSettings.target)) {}
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {

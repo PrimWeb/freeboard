@@ -842,6 +842,8 @@ select, textarea, input[type="text"], input[type="password"], input[type="dateti
 	width: 400px;
 	font-size: var(--widget-font-size);
 	/* 2 */
+	background-image: var(--widget-bg-image);
+
 	background-color: var(--widget-bg-color);
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
@@ -2191,7 +2193,8 @@ ul.datasource-input-suffix {
 	height: 30px;
 	-webkit-appearance: none;
 	border: 2px inset var(--border-color);
-	background: url(../../../img/dropdown-arrow.png) no-repeat right var(--widget-bg-color);
+	background: url(../../../img/dropdown-arrow.png) no-repeat right var(--widget-bg-image);
+	background-color:var(--widget-bg-color);
 }
 
 .title {
