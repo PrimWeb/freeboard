@@ -2484,6 +2484,11 @@ header h1 {
 	border-bottom: none;
 }
 
+
+h2.section-title{
+	height: 20px;
+	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
+}
 #pump-icon {
 	padding: 10px;
 	padding-bottom: 12px;
@@ -2497,10 +2502,10 @@ header h1 {
 }
 
 .small-text {
-	color: #d3d4d4;
+	color: var(--greyout-color);
 	font-size: 20px;
 	font-weight: 100;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: var(--main-font), 'FontAwesome', 'NotoColorEmoji';
 	overflow: hidden;
 	text-overflow: ellipsis;
 	letter-spacing: 1px;
