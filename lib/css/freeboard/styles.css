@@ -88,13 +88,14 @@ h3.je-header button{
 	bottom: 0px;
 	min-height: 1.5em;
 	border-width: var(--border-width);
-	border-style: solid;
+	border-style: solid none none none;
 	width: 100%;
 	background-color: var(--bar-bg-color);
 	background-image: var(--bar-bg-image);
 	border-color: var(--border-color);
 	flex-direction: horizontal;
 	display: flex;
+	backdrop-filter: var(--box-backdrop);
 }
 
 #freeboard-extra-tools div {
@@ -495,6 +496,70 @@ button, input, select {
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
 	border-radius: var(--widget-border-radius);
 	background-image: var(--widget-bg-image);
+}
+
+input[type=range]{
+    -webkit-appearance: none;
+}
+
+ input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+
+	border-color:  var(--widget-fg-color);
+	background-color: var(--widget-bg-color);
+	height: 1.2em;
+	width: 1.2em;
+	border: 2px solid;
+	box-shadow: 3px 3px 8px var(--widget-shadow);
+	border-radius: 1.2em;
+
+  }
+  input[type="range"]::-moz-range-thumb {
+
+	border-color: var(--widget-fg-color);
+	background-color: var(--widget-bg-color);
+	height: 1.2em;
+	width: 1.2em;
+	border: 2px solid;
+	box-shadow: 3px 3px 8px var(--widget-shadow);
+	border-radius: 1.2em;
+  
+}
+
+  input[type="range"]::-ms-thumb {
+
+	border-color:  var(--widget-fg-color);
+	background-color: var(--widget-bg-color);
+	height: 1.2em;
+	width: 1.2em;
+	border: 2px solid;
+	box-shadow: 3px 3px 8px var(--widget-shadow);
+	border-radius: 1.2em;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+	-webkit-appearance: none;
+
+	background-color: var(--widget-bg-color);
+	border-radius: 1em;
+	border: 2px inset;
+	background-image: var(--widget-bg-image);
+  }
+  input[type="range"]::-moz-range-track {
+
+	background-color: var(--widget-bg-color);
+	border-radius: 1em;
+	border: 2px inset;
+	background-image: var(--widget-bg-image);  }
+  input[type="range"]::-ms-track {
+	background-color: var(--widget-bg-color);
+	border-radius: 1em;
+	border: 2px inset;
+	background-image: var(--widget-bg-image);
+  }
+
+input::-webkit-slider-runnable-track{
+
 }
 
 button{
@@ -1060,6 +1125,10 @@ header h1 {
 	display: none;
 }
 
+#main-header-inner{
+	backdrop-filter: var(--box-backdrop);
+	height: 300px;
+}
 #admin-bar {
 	background-color: var(--bar-bg-color);
 	background-image: var(--bar-bg-image);
@@ -1164,6 +1233,7 @@ header h1 {
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
+
 }
 
 .sub-section h2 {
