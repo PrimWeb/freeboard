@@ -1,3 +1,8 @@
+freeboardTemplates = {
+    blank: {"version":1,"allow_edit":true,"plugins":[],"panes":[],"datasources":[],"columns":3,"globalSettings":{"theme":{}}},
+
+    example:{"version":1,"allow_edit":true,"plugins":[],"panes":[{"title":"HTML Template rendering","width":1,"row":{"3":1},"col":{"3":2},"col_width":2,"widgets":[{"type":"html-template","settings":{"html":"<p><span style=\"font-size: 1em; white-space: pre-wrap; background-color: var(--box-bg-color); color: var(--fg-color); font-family: Stencil;\">The text the user entered is</span>: <span style=\"font-family: Chalkboard;\">{{txt}}</span></p>","data":"={txt: datasources[\"vars\"][\"txt\"]}","background":"transparent","backgroundRepeat":"no-repeat","backgroundSize":"cover","height":1,"toolbar":true}},{"type":"textbox_plugin","settings":{"title":"Enter Some Text","tooltip":"","pattern":".*","placeholder":"","mode":"input","target":"datasources[\"vars\"].txt"}}]},{"title":"Switch and LED with SFX","width":1,"row":{"3":1},"col":{"3":1},"col_width":1,"widgets":[{"type":"switch_plugin","settings":{"title":"A switch","target":"datasources[\"vars\"].sw","on_text":"On","off_text":"Off","sound":"low-click"}},{"type":"indicator","settings":{"title":"An indicator light","value":"=datasources[\"vars\"][\"sw\"]"}}]},{"title":"Sum","width":1,"row":{"3":7},"col":{"3":1},"col_width":1,"widgets":[{"type":"gauge","settings":{"title":"A+B","heading":"Sum","style":{"pointerCircleInner":"rgb(57,43,21)","pointerCircleInnerEnd":"rgb(57,43,21)","pointerCircleOuter":"rgb(87,63,41)","pointerCircleOuterEnd":"rgb(57,43,21)","pointerShadowTop":"#000000","pointerShadowBottom":"#000000","pointerColor":"#000000","pointerTipColor":"#002000","fgColor":"rgb(57,43,21)","borderInner":"rgb(77,68,56)","borderInnerEnd":"rgb(59,44,36)","borderMiddle":"rgb(202,192,155)","borderMiddleEnd":"rgb(163,145,96)","borderOuter":"rgb(102,90,67)","borderOuterEnd":"rgb(57,41,34)","borderInnerWidth":2,"borderMiddleWidth":3,"borderOuterWidth":2,"borderShadow":"#000000","plateColor":"rgb(204,198,190)","plateColorEnd":"rgb(195,190,180)","fontTitleSize":32,"fontValueSize":40,"size":4},"value":"=datasources[\"vars\"][\"a\"]+datasources[\"vars\"][\"b\"]","min_value":0,"max_value":"200","tick_interval":"25","minor_ticks":5,"digits":4}},{"type":"slider_plugin","settings":{"title":"Input B","unit":"","min":"0","max":"100","step":"1","default":"0","mode":"input","target":"datasources[\"vars\"][\"a\"]"}},{"type":"slider_plugin","settings":{"title":"Input A","unit":"","min":"0","max":"100","step":"1","default":"0","mode":"input","target":"datasources[\"vars\"][\"b\"]"}}]},{"width":1,"row":{"3":7},"col":{"3":2},"col_width":1,"widgets":[{"type":"text_widget","settings":{"title":"Count","size":"regular","value":"=datasources[\"vars\"].btn","animate":false}},{"type":"button_plugin","settings":{"html":"<i>Button</i>","tooltip":"","target":"datasources[\"vars\"][\"btn\"]","sound":"","height":30}}]}],"datasources":[{"name":"vars","type":"core_scratchpad_plugin","settings":{"data":"={}","persist":"off","lock":false}}],"columns":3,"globalSettings":{"theme":{},"imageData":{}}}
+}
 DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 	var self = this;
 
@@ -96,9 +101,8 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 	this.deserialize = async function(object)
 	{
-		self.setSettings(object.settings);
+		await self.setSettings(object.settings);
 		self.name(object.name);
-		self.type=object.type;
 		await self.setType(object.type);
 	}
 
@@ -824,6 +828,7 @@ function FreeboardUI() {
 				textFit($('.gs_w header h1'))
 				textFit($('#datasources h2'))
 				textFit($('#globalSettingsDialog h2'))
+				textFit($('.jsgrid-header-cell:not(.jsgrid-control-field)'))
 			}
 			catch (e) {
 				console.log(e)
@@ -3202,6 +3207,21 @@ var freeboard = (function () {
 
 	});
 
+
+	function showTemplatesPage(){
+
+		var p = $("<select></select>")
+		for (i in freeboard.templates)
+		{
+			p.append($("<option>"+i+"</option>"))
+		}
+		freeboard.showDialog(p,"Load example board(deleting the current board?)","Load","Cancel",
+		function(){
+		
+			freeboard.loadDashboard(freeboard.templates[p.val()])
+		}
+		)
+	}
 	// PUBLIC FUNCTIONS
 	return {
 		model: theFreeboardModel,
@@ -3210,6 +3230,8 @@ var freeboard = (function () {
 		setGlobalSettings = theFreeboardModel.setGlobalSettings,
 		globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		globalSettings = theFreeboardModel.globalSettings,
+		showTemplatesPage=showTemplatesPage,
+		templates=freeboardTemplates,
 		ui=freeboardUI,
 		defaultSounds={
 			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
@@ -3493,6 +3515,12 @@ var freeboard = (function () {
 
 $.extend(freeboard, jQuery.eventEmitter);
 
+
+
+var fontlist = ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+
+var freeboardFontsList = fontlist
+
 globalSettingsSchema = {
     type: "object",
     title: "Settings",
@@ -3590,15 +3618,15 @@ globalSettingsSchema = {
                 },
                 "--main-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--header-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--widget-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--main-font-size": {
                     type: "string",
@@ -4251,46 +4279,46 @@ $ € ¥ ¢ £ ₽ ₨ ₩ ฿ ₺ ₮ ₱ ₭ ₴ ₦ ৲ ৳ ૱ ௹ ﷼ ₹ �
 // └────────────────────────────────────────────────────────────────────┘ \\
 
 
-var Button = function(config) {
+var Button = function (config) {
 	jsGrid.Field.call(this, config);
 };
- 
+
 Button.prototype = new jsGrid.Field({
- 
+
 	align: "center", // redefine general property 'align'
-			  
-	sorter: function(date1, date2) {
+
+	sorter: function (date1, date2) {
 		return 0;
 	},
- 
-	itemTemplate: function(value,item) {
-		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+
+	itemTemplate: function (value, item) {
+		return $("<input>").on('click', function () { this.fn(item) }).title(this.title)
 	},
- 
-	insertTemplate: function(value,item) {
+
+	insertTemplate: function (value, item) {
 		return ""
 	},
- 
-	editTemplate: function(value,item) {
-		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+
+	editTemplate: function (value, item) {
+		return $("<input>").on('click', function () { this.fn(item) }).title(this.title)
 	},
- 
-	insertValue: function() {
+
+	insertValue: function () {
 		return ''
 	},
- 
-	editValue: function() {
+
+	editValue: function () {
 		return ''
 	}
 });
- 
+
 jsGrid.fields.button = Button;
 
 function uuidv4() {
-	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+	return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+		(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 	);
-  }
+}
 
 (function () {
 	//
@@ -4325,79 +4353,63 @@ function uuidv4() {
 				"name": "title",
 				"display_name": "Title",
 				"type": "text",
-                "default_value": ""
-			},
-            
-		
-            {
-				"name": "backend",
-				"display_name": "Data backend(JS Grid CSontroller)",
-				"type": "calculated",
 				"default_value": ""
-            },
-			
+			},
+
+
+			{
+				"name": "backend",
+				"display_name": "Data backend. Can be any array, or a freeboard DB controller datasource.",
+				"type": "target",
+				"default_value": "=[]"
+			},
+
 			{
 				"name": "selection",
 				"display_name": "Selection",
-				'description':"Selection gets assigned here. If no selection, empty obj.  Set obj._arrival to save changes back to array(The data doesn't matter, it reads as the time when it was set.)",
+				'description': "Selection gets assigned here. If no selection, empty obj.  Set obj.arrival to save changes back to array(The data doesn't matter, it reads as the time when it was set.)",
 				"type": "target",
 				"default_value": ""
 			},
-				
 			{
-				"name": "data",
-				"display_name": "Direct data array",
-				'description':"",
-				"type": "target",
-				"default_value": ""
-            },
-            {
-				"name": "columns",
-                "display_name": "Display Columns",
-				"type": "array",
-
-				"settings"    : [
-					{
-						"name"        : "name",
-						"display_name": "Data Field(match key on row)",
-						"type"        : "text",
-					},
-					{
-						"name":"type",
-						"display_name": "Type",
-						"type": 'option',
-						'options':[
-						{
-							'name': 'Text',
-							'value': 'text'
-						},
-						{
-							'name': 'Long Textarea',
-							'value': 'textarea'
-						},
-						{
-							'name': 'Number',
-							'value': 'number'
-						},
-						{
-							'name': 'Checkbox',
-							'value': 'checkbox'
-						},
-						{
-							'name': 'Add/Edit/Del Controls',
-							'value': 'control'
+				name: 'columns',
+				type: 'json',
+				display_name: "Columns",
+				schema: {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"properties": {
+							"title": {
+								"type": "string",
+								"required":true,
+							},
+							"name": {
+								"type": "string",
+								"title":"Data column",
+								"required":true,
+							},
+							"type":{
+									"type": "string",
+									"title":"Type",
+									"required":true,
+									"enum":['control','text','number','checkbox']
+							},
+							"width":{
+								"type": "number",
+								"title":"Width(px)",
+								"required":true,
+								"default": 40
 						}
-					]
+						}
 					}
-				],
-			},
-		
-			{
-				name: "selectionTarget",
-				display_name: "Data target when selection changes. ",
-                description:'Value pushed will be a value, timestamp pair. Value will be the entire selected record object',
-				type: "target"
+				},
+				default_value:[{type:'text', title:"Name", name:"name",width:50},{type:'control', title:"", name:"",width:40}]
+
 			}
+
+	
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -4407,7 +4419,7 @@ function uuidv4() {
 
 
 
-    
+
 
 	// ### Widget Implementation
 	//
@@ -4417,12 +4429,11 @@ function uuidv4() {
 
 		//jsgrid.sortStrategies.natural = Intl.Collator(undefined, {numeric: true, sensitivity: 'base'}).compare;
 
-		if(settings.backend && settings.data)
-		{
+		if (settings.backend && settings.data) {
 			throw new Error("Cannot use both the backend and the data options at the same time")
 		}
-        var self = this;
-        
+		var self = this;
+
 
 
 		self.currentSettings = settings;
@@ -4435,7 +4446,7 @@ function uuidv4() {
 
 		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
 
-		var gridBox = $('<div>',{id:thisWidgetId}).css('width', '90%');
+		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%');
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
@@ -4446,205 +4457,205 @@ function uuidv4() {
 		//that they can use it to edit stuff, and have the grid auto-update.
 
 		//When we use a backend, it is expected that the backend object will provide the listeners.
-		self.makeExternalEditRow= function(d){
-			var m={
-				set: function(o,k,v)
-				{
+		self.makeExternalEditRow = function (d) {
+			var m = {
+				set: function (o, k, v) {
 
 					//We use time-triggered updates.
 					//Saving a record is done by putting a listener on the arrival time.
 					//The value we set is irrelevant, it is always set to the current time.
-					if (k=='_arrival')
-					{
-						o._arrival= Date.now()*1000
+					if (k == 'arrival') {
+						o.arrival = Date.now() * 1000
 						self.upsert(o)
 						$(theGridbox).jsGrid('refresh');
 					}
-					else{
+					else {
 						//If we make a local change, update the timestamp to tell about it.
-						o.__time= Date.now()*1000
-						o[k]=v;
+						o.time = Date.now() * 1000
+						o[k] = v;
 					}
 				}
 			}
 
-			return new Proxy(d,m)
+			return new Proxy(d, m)
 		}
 
 		//Cleans up the data, so it has all the Freeboard DB spec required keys.
-		var normalize = function(f)
-		{
-			f._uuid = f._uuid || uuidv4()
-			f._name = f._name || f._uuid
-			f._time = f._time || parseInt(Date.now()*1000)
-			f._arrival = f._arrival || f._time
+		var normalize = function (f) {
+			f.id = f.id || uuidv4()
+			f.name = f.name || f.id
+			f.time = f.time || parseInt(Date.now() * 1000)
+			f.arrival = f.arrival || f.time
 		}
 
 
-		self.upsert = function(d){
+		self.upsert = function (d) {
 			var x = 0
-			if(!d)
-			{
+			if (!d) {
 				return;
 			}
 
-			for(i of self.data)
+			//Insert and update are always the same for now, on any of our builtin backends.
+			if(self.backend)
 			{
-				if(i._uuid==d._uuid)
-				{
+				return self.backend.insertItem(d)
+			}
+
+
+			if ((self.data == undefined) || (self.data == '')) {
+				self.data = []
+			}
+			for (i of self.data) {
+				if (i.id == d.id) {
 					//No need to do anything, user never actually updated anything.
-					if(_.isMatch(i, d))
-					{
+					if (_.isEqual(i, d)) {
 						return;
 					}
-					Object.assign(i,d);
-					self.dataTargets['data'](self.data)
+					Object.assign(i, d);
+					self.dataTargets['backend'](self.data)
 					return;
 				}
 			}
 
 			normalize(d)
 
-			if(self.data == undefined || self.data=='')
-			{
-				self.data = []
-			}
-			self.data.push(d)
-			self.dataTargets['data'](self.data)
-		}
 		
+			self.data.push(d)
+			self.dataTargets['backend'](self.data)
+		}
+
 
 		self.arrayController =
 		{
-		
-			deleteItem: function(d){
+
+			deleteItem: function (d) {
 				var x = 0
-				if(_.isMatch(i.selection, d))
-				{
+				if (_.isEqual(i.selection, d)) {
 					self.setSelection({})
 				}
-				for(i of self.data)
-				{
-					if(i._uuid==d._uuid)
-					{
-						self.data = _.without(self.data,i)
+				for (i of self.data) {
+					if (i.id == d.id) {
+						self.data = _.without(self.data, i)
 					}
 				}
-				self.dataTargets['data'](self.data)
-				
+				self.dataTargets['backend'](self.data)
+
 			},
 			updateItem: self.upsert,
 			insertItem: self.upsert,
-			loadData: function(filter)
-			{
-				var q = nSQL(self.data||[]).query('select')
-				for(i in filter)
-				{
-					if(filter[i] && !(['sortField','sortOrder','pageIndex','pageSize'].indexOf(i)>-1))
-					{
-						q=q.where(['LOWER('+i+')','=',String(filter[i]).toLowerCase()])
+			loadData: function (filter) {
+				var q = nSQL(self.data || []).query('select')
+				for (i in filter) {
+					if (filter[i] && !(['sortField', 'sortOrder', 'pageIndex', 'pageSize'].indexOf(i) > -1)) {
+						q = q.where(['LOWER(' + i + ')', '=', String(filter[i]).toLowerCase()])
 					}
 				}
-				if(filter.sortOrder)
-				{
-				q=q.orderBy([filter.sortField+' '+filter.sortOrder.toUpperCase()])
+				if (filter.sortOrder) {
+					q = q.orderBy([filter.sortField + ' ' + filter.sortOrder.toUpperCase()])
 				}
-				q=q.limit(filter.pageSize).offset((filter.pageIndex-1)*filter.pageSize)
+				q = q.limit(filter.pageSize).offset((filter.pageIndex - 1) * filter.pageSize)
 
-				var f = async function ex()
-				{
+				var f = async function ex() {
 					var d = await q.exec()
 					//Someday this should show the right page count after filtering?
-					return {data:d, itemsCount:self.data.length}
+					return { data: d, itemsCount: self.data.length }
 				}
 				return f()
 			}
 
 		}
 
-		self.setSelection = function(d){
+		self.setSelection = function (d) {
 			self.dataTargets.selection(self.makeExternalEditRow(d))
 		}
 
 
-		self.acceptData = function(x){
-			if(x==0)
-			{
+		self.acceptData = function (x) {
+			if (x == 0) {
 				x = self.data
 			}
-			
-			self.data=x;
+
+			self.data = x;
 
 			//Normalize by adding the special DB properties.
-			for (f in self.data)
-			{
+			for (f in self.data) {
 				normalize(f)
 			}
 
 		}
 
-        self.refreshGrid= function(x){
-			if(x==0)
-			{
+		self.refreshGrid = function (x) {
+			if (x == 0) {
 				x = self.data
 			}
-			
-			self.data=x;
+
+			self.data = x;
 
 			//Normalize by adding the special DB properties.
-			for (f in self.data)
-			{
+			for (f in self.data) {
 				normalize(f)
 			}
 
 
 
 			$(theGridbox).jsGrid('destroy');
-			
-			var writebackData = function()
-			{
-				self.dataTargets['data'](self.data);
+
+			var writebackData = function () {
+				self.dataTargets['backend'](self.data);
 			}
 
 
-			var columns = {}
-			for(i of self.currentSettings.columns||[])
-			{
+			var columns = []
+			for (i of self.currentSettings.columns || []) {
 				var c = {}
-				Object.assign(c,i)
+				Object.assign(c, i)
 
-				if(c.type=="SelectButton")
-				{
-					
+				if (c.type == "SelectButton") {
 				}
+				columns.push(c)
 			}
-            $(theGridbox).jsGrid({
-                width: "95%",
-                height: "250px",
-         
-                inserting: true,
-                editing: true,
-                sorting: true,
+
+			var s ={
+				width: "95%",
+				height: "250px",
+
+				inserting: true,
+				editing: true,
+				sorting: true,
 				paging: true,
 				pageLoading: true,
-				filtering:true,
-				onItemDeleted: writebackData,
-				onItemUpdated: writebackData,
-				onItemInserted: writebackData,
-				rowClick: function(r){
+				filtering: true,
+				
+				rowClick: function (r) {
 					self.setSelection(r.item)
 				},
 
+				controller: self.backend || self.arrayController,
 
-         
-                controller: self.backend || self.arrayController,
-         
-                fields: columns
-                
-            });
+				fields: columns
+			}
+
+
+			//Real backends do this themaselves.
+			if(self.backend==0)
+			{
+				s.onItemDeleted=writebackData
+				s.onItemUpdated=writebackData
+				s.onItemInserted=writebackData
+			}
+
+			$(theGridbox).jsGrid(s);
+			$(theGridbox).jsGrid('loadData');
+			try {
+				textFit($('.jsgrid-header-cell:not(.jsgrid-control-field)'))
+			}
+			catch (e) {
+				console.log(e)
+			}
+
 		}
 		$(theGridbox).jsGrid('refresh');
-            
+
 
 
 		//console.log( "theGridbox ", theGridbox);
@@ -4662,11 +4673,11 @@ function uuidv4() {
 			$(containerElement)
 				.append(thisWidgetContainer);
 			titleElement.appendTo(thisWidgetContainer);
-            gridBox.appendTo(thisWidgetContainer);
-            
-            self.refreshGrid(0)
+			gridBox.appendTo(thisWidgetContainer);
 
- 
+			self.refreshGrid(0)
+
+
 
 			$(theValue).html(self.value + self.currentSettings.unit);
 			$(theGridbox).removeClass("ui-widget-content");
@@ -4678,13 +4689,12 @@ function uuidv4() {
 		//
 		// Blocks of different sizes may be supported in the future.
 		self.getHeight = function () {
-				return 6;
+			return 6;
 		}
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
-			if(newSettings.backend && newSettings.data)
-			{
+			if (newSettings.backend && newSettings.data) {
 				throw new Error("Cannot use both the backend and the data options at the same time")
 			}
 
@@ -4692,6 +4702,7 @@ function uuidv4() {
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
+			self.refreshGrid(0)
 
 			self.setSelection({});
 
@@ -4700,26 +4711,42 @@ function uuidv4() {
 		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
 		self.onCalculatedValueChanged = function (settingName, newValue) {
 
-			
-			if(settingName=='columns')
-			{
-                self.refreshGrid(0)
-			}
 
-				
-			if(settingName=='backend')
-			{
-				self.backend=newValue;
+			if (settingName == 'columns') {
 				self.refreshGrid(0)
 			}
 
 
-			if(settingName=='data')
-			{
-				self.acceptData(newValue||[])
-				$(theGridbox).jsGrid('refresh');
+			if (settingName == 'backend') {
+				//Special case handle switching between locally managed data array mode, and backend mode.
+				//The way we tell the difference is looking for a loadData function.
+
+				if(typeof(newValue.loadData)=='function')
+				{
+					if(self.backend)
+					{
+						self.backend = newValue;
+						$(theGridbox).jsGrid('loadData');
+					}
+					else{
+						self.backend = newValue;
+						self.refreshGrid(0)
+					}
+				}
+				else{
+					if(self.backend)
+					{
+						self.backend = 0;
+						self.acceptData(newValue || []);
+						self.refreshGrid(0);
+					}
+					else{
+						self.acceptData(newValue || [])
+						$(theGridbox).jsGrid('loadData');
+					}
+				}
 			}
-			
+
 		}
 
 
@@ -5043,6 +5070,7 @@ function uuidv4() {
 
 		self.clickCount = 0;
 		self.value = ''
+		
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
@@ -5073,7 +5101,7 @@ function uuidv4() {
 					await self.processCalculatedSetting('value',true);
 					
 
-					if (!_.isUndefined(self.currentSettings.value)) {
+					if (self.currentSettings.value) {
 						v = self.value
 					}
 
@@ -5135,7 +5163,10 @@ function uuidv4() {
 			}
 			if (settingName == 'value') {
 				self.value = newValue;
+				
 			}
+
+		
 
 		}
 
@@ -5383,6 +5414,238 @@ function uuidv4() {
         self.onDispose = function () {
         }
     }
+}());
+
+// # Building a Freeboard Plugin
+//
+// A freeboard plugin is simply a javascript file that is loaded into a web page after the main freeboard.js file is loaded.
+//
+// Let's get started with an example of a datasource plugin and a widget plugin.
+//
+// -------------------
+
+
+//This is a limited, easy-to-use nosql db build on alasql
+
+function uuidv4() {
+	return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+		(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+	);
+}
+
+// Best to encapsulate your plugin in a closure, although not required.
+(function () {
+	// ## A Datasource Plugin
+	//
+	// -------------------
+	// ### Datasource Definition
+	//
+	// -------------------
+	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
+	freeboard.loadDatasourcePlugin({
+		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
+		"type_name": "document_database_plugin",
+		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
+		"display_name": "In-browser database",
+		// **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
+		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view.  EXPERIMENTAL RAM ONLY DB",
+		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
+
+		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
+		"settings": [
+			{
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "dbname",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "Database Name",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "text",
+				// **default_value** : A default value for this setting.
+				"default_value": "my_db",
+
+				// **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
+				"required": true
+			}
+
+		],
+		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
+		// * **settings** : A javascript object with the initial settings set by the user. The names of the properties in the object will correspond to the setting names defined above.
+		// * **newInstanceCallback** : A callback function that you'll call when the new instance of the plugin is ready. This function expects a single argument, which is the new instance of your plugin object.
+		// * **updateCallback** : A callback function that you'll call if and when your datasource has an update for freeboard to recalculate. This function expects a single parameter which is a javascript object with the new, updated data. You should hold on to this reference and call it when needed.
+		newInstance: async function (settings, newInstanceCallback, updateCallback) {
+			var x = new myDatasourcePlugin(settings, updateCallback)
+			// myDatasourcePlugin is defined below.
+			await x.makeDB();
+			newInstanceCallback(x);
+		}
+	});
+
+
+	// ### Datasource Implementation
+	//
+	// -------------------
+	// Here we implement the actual datasource plugin. We pass in the settings and updateCallback.
+	var myDatasourcePlugin = function (settings, updateCallback) {
+		var self = this;
+		self.settings = settings
+
+
+		self.makeDB = async function () {
+			self.db = await nSQL().createDatabase({
+				id: self.settings.dbname,
+				mode: "TEMP", // pass in "PERM" to switch to persistent storage mode!
+				tables: [
+					{
+						name: "records",
+						model:
+						{
+							"id:uuid": {pk: true},
+							"time:int":{},
+							"arrival:int":{},
+							"type:string":{},
+							"name:string":{},
+						}
+					}
+				]
+			})
+		}
+
+		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
+		var currentSettings = settings;
+
+		self.handler = {
+			set: function (obj, prop, val) {
+				throw new Error("You can't set anything here. Use getMatching({}) to get all matching records, and set() to set a record.");
+			}
+
+		}
+		self.makeExternalEditRow = function (d) {
+			var m = {
+				set: function (o, k, v) {
+
+					//We use time-triggered updates.
+					//Saving a record is done by putting a listener on the arrival time.
+					//The value we set is irrelevant, it is always set to the current time.
+					if (k == 'arrival') {
+						o.arrival = Date.now() * 1000
+						self.upsert(o);
+						self.data.set(o);
+					}
+					else {
+						//If we make a local change, update the timestamp to tell about it.
+						o.time = Date.now() * 1000
+						o[k] = v;
+					}
+				}
+			}
+
+			return new Proxy(d, m)
+		}
+
+		self.data = {
+			loadData: async function (filter) {
+				"Returns a query object for getting the"
+				nSQL().useDatabase(self.settings.dbname);
+				var x = nSQL('records').query('select');
+
+				//Everything in the DB must match
+				for (i in filter) {
+					if(filter[i])
+					{
+						if (((i != 'sortField') && (i != "sortOrder") && (i != "pageSize") && (i != "pageIndex") && (i != "pageLoading"))) {
+							x = x.where([i, '=', filter[i]]);
+						}
+					}
+				}
+
+
+				if (filter.sortOrder) {
+					x = x.orderBy([filter.sortField + ' ' + filter.sortOrder.toUpperCase()])
+				}
+
+				x = x.limit(filter.pageSize).offset((filter.pageIndex -1) * filter.pageSize)
+
+
+				var d = await x.exec()
+				
+			
+				//Someday this should show the right page count after filtering?
+				return { data: d, itemsCount: (filter.pageIndex + 1) * filter.pageSize }
+					
+				},
+
+			insertItem: async function (record) {
+				try {
+					var r = {}
+					Object.assign(r, record);
+					r['time'] = r['time'] || Date.now() * 1000;
+					r['arrival'] = r['arrival'] || r['time']
+					r['id'] = r['id'] || freeboard.genUUID();
+					r['name'] = r['name'] || r['id']
+
+					nSQL().useDatabase(self.settings.dbname);
+					await nSQL('records').query('delete').where(["id", '=', record.id]).exec()
+					var x =nSQL('records').query('upsert', [r]).exec()
+					await x
+					updateCallback(self.proxy);
+				}
+				catch (e) {
+					console.log(e);
+					throw e;
+				}
+			},
+			deleteItem: async function (record) {
+				nSQL().useDatabase(self.settings.dbname);
+				var x = nSQL('records').query('delete').where(['id', '=', record.id]).exec()
+				await x
+				updateCallback(self.proxy);
+				
+
+				return x
+			}
+
+		}
+		self.data.updateItem = self.data.insertItem
+		self.proxy = new Proxy(self.data, self.handler)
+
+
+		/* This is some function where I'll get my data from somewhere */
+		function getData() {
+			var newData = self.proxy; // Just putting some sample data in for fun.
+
+			/* Get my data from somewhere and populate newData with it... Probably a JSON API or something. */
+			/* ... */
+			// I'm calling updateCallback to tell it I've got new data for it to munch on.
+			updateCallback(newData);
+		}
+
+
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function (newSettings) {
+
+			var oldDBName = newSettings.dbname;
+
+			// Here we update our current settings with the variable that is passed in.
+			currentSettings = newSettings;
+			self.data = freeboard.eval(newSettings['data']);
+
+			updateCallback(self.proxy)
+		}
+
+		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
+		self.updateNow = function () {
+			// Most likely I'll just call getData() here.
+			getData();
+		}
+
+		// **onDispose()** (required) : A public function we must implement that will be called when this instance of this plugin is no longer needed. Do anything you need to cleanup after yourself here.
+		self.onDispose = function () {
+
+		}
+
+	}
+
 }());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
@@ -7677,6 +7940,12 @@ freeboard.loadDatasourcePlugin({
 				"default_value": "1"
 			},
 			{
+				"name": "default",
+				"display_name": "Default Value",
+				"type": "calculated",
+				"default_value": "0"
+			},
+			{
 				"name": "mode",
 				"display_name": "Mode",
 				"type": "option",
@@ -7694,7 +7963,7 @@ freeboard.loadDatasourcePlugin({
 			{
 				name: "target",
 				display_name: "Data target when value changes. ",
-                description:'Value pushed will be a value, timestamp pair.',
+				description: 'Value pushed will be a value, timestamp pair.',
 				type: "target"
 			}
 		],
@@ -7732,7 +8001,7 @@ freeboard.loadDatasourcePlugin({
 		self.max = (_.isUndefined(currentSettings.max) ? 100 : currentSettings.max);
 		self.step = (_.isUndefined(currentSettings.step) ? 100 : currentSettings.step);
 
-		self.value = currentSettings.value || 0;
+		self.value = undefined;
 
 		var requestChange = false;
 		var target;
@@ -7750,21 +8019,21 @@ freeboard.loadDatasourcePlugin({
 			$(theSlider).attr('min', self.min);
 			$(theSlider).attr('max', self.max);
 			$(theSlider).attr('step', self.step);
-            $(theSlider).css('width', "95%");
+			$(theSlider).css('width', "95%");
 
 			$(theSlider).on('input', function (e) { $("#value-" + thisWidgetId).html(e.value) });
 
 
-			$(theValue).html(self.value + currentSettings.unit);
+			$(theValue).html((self.value || 0) + currentSettings.unit);
 
 			$(theSlider).on('change',
 				function (e) {
-						//Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(parseFloat(e.target.value));
-						}
+					//Avoid loops, only real user input triggers this
+					if (true) {
+						self.dataTargets.target(parseFloat(e.target.value));
+					}
 				});
-            
+
 			$(theSlider).on('input',
 				function (e) {
 					self.value = e.target.value;
@@ -7774,12 +8043,12 @@ freeboard.loadDatasourcePlugin({
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-				
-						//todo Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(parseFloat(e.target.value));
-						}
-					
+
+					//todo Avoid loops, only real user input triggers this
+					if (true) {
+						self.dataTargets.target(parseFloat(e.target.value));
+					}
+
 				}
 			);
 			$(theSlider).removeClass("ui-widget-content");
@@ -7807,7 +8076,7 @@ freeboard.loadDatasourcePlugin({
 			$(titleElement).append(valueElement);
 			currentSettings.unit = currentSettings.unit || ''
 
-			$(theValue).html(self.value + currentSettings.unit);
+			$(theValue).html((self.value || 0) + currentSettings.unit);
 
 		}
 
@@ -7817,21 +8086,38 @@ freeboard.loadDatasourcePlugin({
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "target") {
 				self.value = newValue
-				
-				var value= newValue
+
+				var value = newValue
 
 
 				$(valueElement).html(value + currentSettings.unit);
 
 				//Attempt to break l00ps
-				if(value!=$(theSlider).val())
-				{
+				if (value != $(theSlider).val()) {
 					$(theSlider).val(value);
 				}
 			}
-			if(settingName=='step')
-			{
-				self.step=newValue
+			if (settingName == 'default') {
+				if (_.isUndefined(self.value)) {
+					newValue=parseFloat(newValue)
+					self.dataTargets.target(newValue);
+
+
+					self.value = newValue
+
+					var value = newValue
+
+
+					$(valueElement).html(value + currentSettings.unit);
+
+					//Attempt to break l00ps
+					if (value != $(theSlider).val()) {
+						$(theSlider).val(value);
+					}
+				}
+			}
+			if (settingName == 'step') {
+				self.step = newValue
 				$(theSlider).attr('step', self.step);
 			}
 			if (settingName == "max") {
@@ -7844,7 +8130,7 @@ freeboard.loadDatasourcePlugin({
 				}
 			}
 			if (settingName == "min") {
-				if (newValue <self. max) {
+				if (newValue < self.max) {
 					self.min = newValue;
 					$(theSlider).attr('min', newValue);
 				} else {
@@ -7897,6 +8183,11 @@ freeboard.loadDatasourcePlugin({
                 description:"Bind state to this datasource"
             },
             {
+                name: "default",
+                display_name: "Default",
+                type: "calculated",
+            },
+            {
                 name: "on_text",
                 display_name: "On Text",
                 type: "text",
@@ -7942,11 +8233,12 @@ freeboard.loadDatasourcePlugin({
         onOffSwitch.prependTo(box1);
         
         self.isOn = false;
+
+        self.rawTargetValue= undefined;
     
         
         function updateState() {
             $('#'+thisWidgetId).prop('checked', self.isOn);
-            console.log(onOffSwitch.find("span.on"));
             onOffSwitch.find("span.on").text(self.onText);
             onOffSwitch.find("span.off").text(self.offText);
         }
@@ -7964,7 +8256,8 @@ freeboard.loadDatasourcePlugin({
 						if (true) {
                             freeboard.playSound(currentSettings.sound)
 
-							self.dataTargets.target(self.isOn);
+                            self.dataTargets.target(self.isOn);
+                            self.rawTargetValue=self.isOn;
 						}
                     
                 });
@@ -7973,16 +8266,16 @@ freeboard.loadDatasourcePlugin({
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
             box2.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
-            console.log( "isUndefined on_text: " + _.isUndefined(newSettings.on_text) );
             self.onText = newSettings.on_text;
             self.offText = newSettings.off_text;
             updateState();
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
-            console.log(settingName, newValue);
             
              if (settingName == "target") {
+                self.rawTargetValue = newValue
+
                 var value = newValue
 
 
@@ -7992,6 +8285,21 @@ freeboard.loadDatasourcePlugin({
                 {
                     self.isOn=x;
                     freeboard.playSound(currentSettings.sound)
+                }
+            }
+
+            if (settingName == "default") {
+                if(_.isUndefined(self.rawTargetValue))
+                {
+                    self.rawTargetValue = newValue
+                    var value = newValue
+                    var x = Boolean(value);
+
+                    if(x!=self.isOn)
+                    {
+                        self.isOn=x;
+                    }
+                    self.dataTargets.target(x);
                 }
             }
             
@@ -8053,9 +8361,9 @@ freeboard.loadDatasourcePlugin({
 				"name": "title",
 				"display_name": "Title",
 				"type": "text",
-                "default_value": ""
+				"default_value": ""
 			},
-            
+
 			{
 				"name": "tooltip",
 				"display_name": "Tooltip hint",
@@ -8068,7 +8376,7 @@ freeboard.loadDatasourcePlugin({
 				"type": "text",
 				"default_value": ".*"
 			},
-            {
+			{
 				"name": "placeholder",
 				"display_name": "Placeholder text",
 				"type": "calculated",
@@ -8092,8 +8400,13 @@ freeboard.loadDatasourcePlugin({
 			{
 				name: "target",
 				display_name: "Data target when value changes. ",
-                description:'Value pushed will be the text',
+				description: 'Value pushed will be the text',
 				type: "target"
+			},
+			{
+				name: "default",
+				display_name: "Default Value",
+				type: "calculated"
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -8116,14 +8429,14 @@ freeboard.loadDatasourcePlugin({
 
 
 		var titleElement = $('<h2 class="section-title textbox-label"></h2>');
-		var inputElement = $('<input/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId,name:thisWidgetId}).css('width', '90%');
+		var inputElement = $('<input/>', { type: 'text', pattern: settings.pattern, id: thisWidgetId, name: thisWidgetId }).css('width', '90%');
 		var theTextbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
 		//console.log( "theTextbox ", theTextbox);
 
 		titleElement.html(self.currentSettings.title);
-		self.value = ''
+		self.value = undefined
 
 		var requestChange = false;
 		var target;
@@ -8140,25 +8453,25 @@ freeboard.loadDatasourcePlugin({
 			$(theTextbox).attr('placeholder', self.currentSettings.placeholder);
 			$(theTextbox).attr('title', self.currentSettings.tooltip);
 			$(theTextbox).attr('pattern', self.currentSettings.pattern);
-			
 
-			$(theValue).html(self.value + self.currentSettings.unit);
+
+			$(theValue).html((self.value || '') + self.currentSettings.unit);
 
 			$(theTextbox).on('change',
 				async function (e) {
-						//Avoid loops, only real user input triggers this
-						if (_.isUndefined(self.currentSettings.target)) {}{
-							try {
-								//We can refreshed in pull mode here
-								await self.dataTargets.target(e.target.value);
-							}
-							catch (e) {
-								freeboard.showDialog(e, "Bad data target", "OK")
-								freeboard.playSound('error');
-							}						
+					//Avoid loops, only real user input triggers this
+					if (_.isUndefined(self.currentSettings.target)) { } {
+						try {
+							//We can refreshed in pull mode here
+							await self.dataTargets.target(e.target.value);
+						}
+						catch (e) {
+							freeboard.showDialog(e, "Bad data target", "OK")
+							freeboard.playSound('error');
+						}
 					}
 				});
-            
+
 			$(theTextbox).on('input',
 				function (e) {
 					self.value = e.target.value;
@@ -8168,7 +8481,7 @@ freeboard.loadDatasourcePlugin({
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(self.currentSettings.target)) {}
+					if (_.isUndefined(self.currentSettings.target)) { }
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
@@ -8200,9 +8513,9 @@ freeboard.loadDatasourcePlugin({
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
-            $(theTextbox).attr('pattern', newSettings.pattern);
-            $(theTextbox).attr('placeholder', newSettings.placeholder);
-            $(theTextbox).attr('tooltip', newSettings.placeholder);
+			$(theTextbox).attr('pattern', newSettings.pattern);
+			$(theTextbox).attr('placeholder', newSettings.placeholder);
+			$(theTextbox).attr('tooltip', newSettings.placeholder);
 
 
 
@@ -8214,24 +8527,38 @@ freeboard.loadDatasourcePlugin({
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "target") {
 				self.value = newValue;
-				
-				var value= newValue;
-				
-			
+
+				var value = newValue;
+
+
 
 				//Attempt to break l00ps
-				if(value!=$(theTextbox).val())
-				{
+				if (value != $(theTextbox).val()) {
 					$(theTextbox).val(value);
 				}
 			}
 
-			
-			if(settingName=='placeholder')
-			{
-                $(theTextbox).attr('placeholder', newValue);
+			// Remember we defined "the_text" up above in our settings.
+			if (settingName == "default") {
+				if (_.isUndefined(self.value)) {
+					self.value = newValue;
+
+					var value = newValue;
+
+
+
+					//Attempt to break l00ps
+					if (value != $(theTextbox).val()) {
+						$(theTextbox).val(value);
+					}
+					self.dataTargets.target(newValue);
+				}
 			}
-			
+
+			if (settingName == 'placeholder') {
+				$(theTextbox).attr('placeholder', newValue);
+			}
+
 		}
 
 

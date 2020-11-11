@@ -1382,12 +1382,17 @@ Note use of generic font names
 
 @font-face {
 	font-family: FBSerif;
-	src: url(fonts/Lora-Regular.ttf);
+	src: url(fonts/Lora-Regular.woff);
+}
+
+@font-face {
+	font-family: FBSans;
+	src: url(fonts/Lato-Regular.woff);
 }
 
 @font-face {
 	font-family: FBMono;
-	src: url(fonts/Hack-Regular.ttf);
+	src: url(fonts/Hack-Regular.woff);
 }
 
 @font-face {
@@ -1457,7 +1462,7 @@ Note use of generic font names
 
 @font-face {
 	font-family: Chalkboard;
-	src: url(fonts/RockSalt-Regular.ttf);
+	src: url(fonts/RockSalt-Regular.woff);
 }
 
 @font-face {
@@ -1963,37 +1968,72 @@ html {
 	overflow: hidden;
 }
 
+.jsgrid-table{
+	color: var(--widget-fg-color);
+	background-color: var(--widget-bg-color);
+	border-radius: var(--widget-border-radius);
+	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
+	font-size: var(--widget-font-size);
+	border-color: var(--widget-fg-color);
+	border-width: 1px;
+	border-style: outset;
+	background-image: var(--widget-bg-image);
+	background-size: auto;
+	background-repeat: repeat;
+}
+
 .jsgrid-header-row, .jsgrid-header-row>.jsgrid-header-cell {
-	background-color: var(--main-bg-color);
 	font-family: 'NotoColorEmoji', var(--header-font);
 	font-size: var(--header-font-size);
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	text-shadow: 1px 1px 2px var(--label-text-shadow);
+	backdrop-filter: blur(4px);
+	background: transparent;
+	padding: 0px;
+	font-weight: normal;
+
+
 }
 
 .jsgrid-insert-row, .jsgrid-insert-row>.jsgrid-cell {
-	background-color: var(--main-bg-color);
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	background: transparent;
+
 }
 
 .jsgrid-nodata-row, .jsgrid-nodata-row>.jsgrid-cell {
 	background-color: darkred;
 	color: white;
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	background: transparent;
+
 }
 
 .jsgrid-edit-row, .jsgrid-edit-row>.jsgrid-cell {
-	background-color: var(--main-bg-color);
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	background: transparent;
+
 }
 
 .jsgrid-filter-row, .jsgrid-filter-row>.jsgrid-cell {
-	background-color: var(--main-bg-color);
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	background: transparent;
+
+}
+.jsgrid-cell{
+	overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .jsgrid-row, .jsgrid-row>.jsgrid-cell {
-	background-color: var(--main-bg-color);
-	border-bottom: #000 1px solid;
+	border-bottom: var(--border-color) 1px solid;
+	border-color: var(--border-color);
+	background: transparent;
 }
 
 .jsgrid-body {
@@ -2002,8 +2042,10 @@ html {
 }
 
 .jsgrid-alt-row, .jsgrid-edit-row, .jsgrid-alt-row>.jsgrid-cell, jsgrid-edit-row>.jsgrid-cell {
-	background-color: color(var(--main-bg-color) blackness(+ 5%));
+	background-color: rgba(100,100,100,0.4);
 }
+
+
 
 body {
 	background-color: var(--main-bg-color);
@@ -2160,7 +2202,6 @@ select, textarea, input[type="text"], input[type="password"], input[type="dateti
 	line-height: 20px;
 	vertical-align: middle;
 	border-radius: var(--widget-border-radius);
-	width: 400px;
 	font-size: var(--widget-font-size);
 	/* 2 */
 	background-image: var(--widget-bg-image);
@@ -2393,6 +2434,7 @@ header h1 {
 	position: relative;
 	-webkit-box-shadow: 0 0 5px #000;
 	box-shadow: 0 0 5px #000;
+	overflow: scroll;
 }
 
 #toggle-header {
@@ -3411,7 +3453,7 @@ ul.board-toolbar.vertical {
 	margin-bottom: -10px;
 }
 
-.text-button {
+.text-button,.jsgrid-pager-nav-button,.jsgrid-pager-page {
 	color: var(--widget-fg-color);
 	background-color: var(--widget-bg-color);
 	border-radius: var(--widget-border-radius);
@@ -3596,6 +3638,14 @@ body {
 
 #pane-holding-pen {
 	display: none;
+}
+
+
+#board-actions{
+	height: 160px;
+	overflow: auto;
+	border: 1px solid;
+	padding: 3px;
 }
 
 @media screen and (max-width: 960px) {

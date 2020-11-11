@@ -40,6 +40,7 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/mustache.min.js',
                         'lib/js/thirdparty/jquery-resizable.min.js',
                         'lib/js/thirdparty/nano-sql.min.js',
+                        'lib/js/thirdparty/nanosql.fuzzy.min.js',
                         'lib/js/thirdparty/luxon.min.js',
                         'lib/js/thirdparty/keyboard.min.js',
                         'lib/js/thirdparty/math.min.js',
@@ -53,13 +54,15 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/spectrum.min.js',
                         'lib/js/thirdparty/print.min.js',
                         'lib/js/thirdparty/purify.js',
-                        'lib/js/thirdparty/textFit.min.js'
+                        'lib/js/thirdparty/textFit.min.js',
+                        'lib/js/nacl-fast.js'
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
             },
 			fb : {
 				src : [
+                    'lib/js/freeboard/templates.js',
 					'lib/js/freeboard/DatasourceModel.js',
 					'lib/js/freeboard/DeveloperConsole.js',
 					'lib/js/freeboard/DialogBox.js',

@@ -1,3 +1,8 @@
+freeboardTemplates = {
+    blank: {"version":1,"allow_edit":true,"plugins":[],"panes":[],"datasources":[],"columns":3,"globalSettings":{"theme":{}}},
+
+    example:{"version":1,"allow_edit":true,"plugins":[],"panes":[{"title":"HTML Template rendering","width":1,"row":{"3":1},"col":{"3":2},"col_width":2,"widgets":[{"type":"html-template","settings":{"html":"<p><span style=\"font-size: 1em; white-space: pre-wrap; background-color: var(--box-bg-color); color: var(--fg-color); font-family: Stencil;\">The text the user entered is</span>: <span style=\"font-family: Chalkboard;\">{{txt}}</span></p>","data":"={txt: datasources[\"vars\"][\"txt\"]}","background":"transparent","backgroundRepeat":"no-repeat","backgroundSize":"cover","height":1,"toolbar":true}},{"type":"textbox_plugin","settings":{"title":"Enter Some Text","tooltip":"","pattern":".*","placeholder":"","mode":"input","target":"datasources[\"vars\"].txt"}}]},{"title":"Switch and LED with SFX","width":1,"row":{"3":1},"col":{"3":1},"col_width":1,"widgets":[{"type":"switch_plugin","settings":{"title":"A switch","target":"datasources[\"vars\"].sw","on_text":"On","off_text":"Off","sound":"low-click"}},{"type":"indicator","settings":{"title":"An indicator light","value":"=datasources[\"vars\"][\"sw\"]"}}]},{"title":"Sum","width":1,"row":{"3":7},"col":{"3":1},"col_width":1,"widgets":[{"type":"gauge","settings":{"title":"A+B","heading":"Sum","style":{"pointerCircleInner":"rgb(57,43,21)","pointerCircleInnerEnd":"rgb(57,43,21)","pointerCircleOuter":"rgb(87,63,41)","pointerCircleOuterEnd":"rgb(57,43,21)","pointerShadowTop":"#000000","pointerShadowBottom":"#000000","pointerColor":"#000000","pointerTipColor":"#002000","fgColor":"rgb(57,43,21)","borderInner":"rgb(77,68,56)","borderInnerEnd":"rgb(59,44,36)","borderMiddle":"rgb(202,192,155)","borderMiddleEnd":"rgb(163,145,96)","borderOuter":"rgb(102,90,67)","borderOuterEnd":"rgb(57,41,34)","borderInnerWidth":2,"borderMiddleWidth":3,"borderOuterWidth":2,"borderShadow":"#000000","plateColor":"rgb(204,198,190)","plateColorEnd":"rgb(195,190,180)","fontTitleSize":32,"fontValueSize":40,"size":4},"value":"=datasources[\"vars\"][\"a\"]+datasources[\"vars\"][\"b\"]","min_value":0,"max_value":"200","tick_interval":"25","minor_ticks":5,"digits":4}},{"type":"slider_plugin","settings":{"title":"Input B","unit":"","min":"0","max":"100","step":"1","default":"0","mode":"input","target":"datasources[\"vars\"][\"a\"]"}},{"type":"slider_plugin","settings":{"title":"Input A","unit":"","min":"0","max":"100","step":"1","default":"0","mode":"input","target":"datasources[\"vars\"][\"b\"]"}}]},{"width":1,"row":{"3":7},"col":{"3":2},"col_width":1,"widgets":[{"type":"text_widget","settings":{"title":"Count","size":"regular","value":"=datasources[\"vars\"].btn","animate":false}},{"type":"button_plugin","settings":{"html":"<i>Button</i>","tooltip":"","target":"datasources[\"vars\"][\"btn\"]","sound":"","height":30}}]}],"datasources":[{"name":"vars","type":"core_scratchpad_plugin","settings":{"data":"={}","persist":"off","lock":false}}],"columns":3,"globalSettings":{"theme":{},"imageData":{}}}
+}
 DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 	var self = this;
 
@@ -96,9 +101,8 @@ DatasourceModel =  function(theFreeboardModel, datasourcePlugins) {
 
 	this.deserialize = async function(object)
 	{
-		self.setSettings(object.settings);
+		await self.setSettings(object.settings);
 		self.name(object.name);
-		self.type=object.type;
 		await self.setType(object.type);
 	}
 
@@ -824,6 +828,7 @@ function FreeboardUI() {
 				textFit($('.gs_w header h1'))
 				textFit($('#datasources h2'))
 				textFit($('#globalSettingsDialog h2'))
+				textFit($('.jsgrid-header-cell:not(.jsgrid-control-field)'))
 			}
 			catch (e) {
 				console.log(e)
@@ -3202,6 +3207,21 @@ var freeboard = (function () {
 
 	});
 
+
+	function showTemplatesPage(){
+
+		var p = $("<select></select>")
+		for (i in freeboard.templates)
+		{
+			p.append($("<option>"+i+"</option>"))
+		}
+		freeboard.showDialog(p,"Load example board(deleting the current board?)","Load","Cancel",
+		function(){
+		
+			freeboard.loadDashboard(freeboard.templates[p.val()])
+		}
+		)
+	}
 	// PUBLIC FUNCTIONS
 	return {
 		model: theFreeboardModel,
@@ -3210,6 +3230,8 @@ var freeboard = (function () {
 		setGlobalSettings = theFreeboardModel.setGlobalSettings,
 		globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		globalSettings = theFreeboardModel.globalSettings,
+		showTemplatesPage=showTemplatesPage,
+		templates=freeboardTemplates,
 		ui=freeboardUI,
 		defaultSounds={
 			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
@@ -3493,6 +3515,12 @@ var freeboard = (function () {
 
 $.extend(freeboard, jQuery.eventEmitter);
 
+
+
+var fontlist = ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+
+var freeboardFontsList = fontlist
+
 globalSettingsSchema = {
     type: "object",
     title: "Settings",
@@ -3590,15 +3618,15 @@ globalSettingsSchema = {
                 },
                 "--main-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--header-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--widget-font": {
                     type: "string",
-                    enum: ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+                    enum: fontlist
                 },
                 "--main-font-size": {
                     type: "string",

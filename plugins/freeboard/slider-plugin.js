@@ -67,6 +67,12 @@
 				"default_value": "1"
 			},
 			{
+				"name": "default",
+				"display_name": "Default Value",
+				"type": "calculated",
+				"default_value": "0"
+			},
+			{
 				"name": "mode",
 				"display_name": "Mode",
 				"type": "option",
@@ -84,7 +90,7 @@
 			{
 				name: "target",
 				display_name: "Data target when value changes. ",
-                description:'Value pushed will be a value, timestamp pair.',
+				description: 'Value pushed will be a value, timestamp pair.',
 				type: "target"
 			}
 		],
@@ -122,7 +128,7 @@
 		self.max = (_.isUndefined(currentSettings.max) ? 100 : currentSettings.max);
 		self.step = (_.isUndefined(currentSettings.step) ? 100 : currentSettings.step);
 
-		self.value = currentSettings.value || 0;
+		self.value = undefined;
 
 		var requestChange = false;
 		var target;
@@ -140,21 +146,21 @@
 			$(theSlider).attr('min', self.min);
 			$(theSlider).attr('max', self.max);
 			$(theSlider).attr('step', self.step);
-            $(theSlider).css('width', "95%");
+			$(theSlider).css('width', "95%");
 
 			$(theSlider).on('input', function (e) { $("#value-" + thisWidgetId).html(e.value) });
 
 
-			$(theValue).html(self.value + currentSettings.unit);
+			$(theValue).html((self.value || 0) + currentSettings.unit);
 
 			$(theSlider).on('change',
 				function (e) {
-						//Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(parseFloat(e.target.value));
-						}
+					//Avoid loops, only real user input triggers this
+					if (true) {
+						self.dataTargets.target(parseFloat(e.target.value));
+					}
 				});
-            
+
 			$(theSlider).on('input',
 				function (e) {
 					self.value = e.target.value;
@@ -164,12 +170,12 @@
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-				
-						//todo Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(parseFloat(e.target.value));
-						}
-					
+
+					//todo Avoid loops, only real user input triggers this
+					if (true) {
+						self.dataTargets.target(parseFloat(e.target.value));
+					}
+
 				}
 			);
 			$(theSlider).removeClass("ui-widget-content");
@@ -197,7 +203,7 @@
 			$(titleElement).append(valueElement);
 			currentSettings.unit = currentSettings.unit || ''
 
-			$(theValue).html(self.value + currentSettings.unit);
+			$(theValue).html((self.value || 0) + currentSettings.unit);
 
 		}
 
@@ -207,21 +213,38 @@
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "target") {
 				self.value = newValue
-				
-				var value= newValue
+
+				var value = newValue
 
 
 				$(valueElement).html(value + currentSettings.unit);
 
 				//Attempt to break l00ps
-				if(value!=$(theSlider).val())
-				{
+				if (value != $(theSlider).val()) {
 					$(theSlider).val(value);
 				}
 			}
-			if(settingName=='step')
-			{
-				self.step=newValue
+			if (settingName == 'default') {
+				if (_.isUndefined(self.value)) {
+					newValue=parseFloat(newValue)
+					self.dataTargets.target(newValue);
+
+
+					self.value = newValue
+
+					var value = newValue
+
+
+					$(valueElement).html(value + currentSettings.unit);
+
+					//Attempt to break l00ps
+					if (value != $(theSlider).val()) {
+						$(theSlider).val(value);
+					}
+				}
+			}
+			if (settingName == 'step') {
+				self.step = newValue
 				$(theSlider).attr('step', self.step);
 			}
 			if (settingName == "max") {
@@ -234,7 +257,7 @@
 				}
 			}
 			if (settingName == "min") {
-				if (newValue <self. max) {
+				if (newValue < self.max) {
 					self.min = newValue;
 					$(theSlider).attr('min', newValue);
 				} else {

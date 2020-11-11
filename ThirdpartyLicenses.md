@@ -1,3 +1,7 @@
+
+## Tweetnacl-JS-Blake2b(nacl-fast.js)
+https://github.com/dvdbng/tweetnacl-blake2b-js
+
 ## freeboard-plugins
 http://blog.onlinux.fr/
 The MIT License (MIT)

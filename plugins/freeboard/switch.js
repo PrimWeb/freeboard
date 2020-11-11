@@ -34,6 +34,11 @@
                 description:"Bind state to this datasource"
             },
             {
+                name: "default",
+                display_name: "Default",
+                type: "calculated",
+            },
+            {
                 name: "on_text",
                 display_name: "On Text",
                 type: "text",
@@ -79,11 +84,12 @@
         onOffSwitch.prependTo(box1);
         
         self.isOn = false;
+
+        self.rawTargetValue= undefined;
     
         
         function updateState() {
             $('#'+thisWidgetId).prop('checked', self.isOn);
-            console.log(onOffSwitch.find("span.on"));
             onOffSwitch.find("span.on").text(self.onText);
             onOffSwitch.find("span.off").text(self.offText);
         }
@@ -101,7 +107,8 @@
 						if (true) {
                             freeboard.playSound(currentSettings.sound)
 
-							self.dataTargets.target(self.isOn);
+                            self.dataTargets.target(self.isOn);
+                            self.rawTargetValue=self.isOn;
 						}
                     
                 });
@@ -110,16 +117,16 @@
         this.onSettingsChanged = function (newSettings) {
             currentSettings = newSettings;
             box2.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
-            console.log( "isUndefined on_text: " + _.isUndefined(newSettings.on_text) );
             self.onText = newSettings.on_text;
             self.offText = newSettings.off_text;
             updateState();
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
-            console.log(settingName, newValue);
             
              if (settingName == "target") {
+                self.rawTargetValue = newValue
+
                 var value = newValue
 
 
@@ -129,6 +136,21 @@
                 {
                     self.isOn=x;
                     freeboard.playSound(currentSettings.sound)
+                }
+            }
+
+            if (settingName == "default") {
+                if(_.isUndefined(self.rawTargetValue))
+                {
+                    self.rawTargetValue = newValue
+                    var value = newValue
+                    var x = Boolean(value);
+
+                    if(x!=self.isOn)
+                    {
+                        self.isOn=x;
+                    }
+                    self.dataTargets.target(x);
                 }
             }
             

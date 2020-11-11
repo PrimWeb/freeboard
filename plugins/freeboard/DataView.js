@@ -9,46 +9,46 @@
 // └────────────────────────────────────────────────────────────────────┘ \\
 
 
-var Button = function(config) {
+var Button = function (config) {
 	jsGrid.Field.call(this, config);
 };
- 
+
 Button.prototype = new jsGrid.Field({
- 
+
 	align: "center", // redefine general property 'align'
-			  
-	sorter: function(date1, date2) {
+
+	sorter: function (date1, date2) {
 		return 0;
 	},
- 
-	itemTemplate: function(value,item) {
-		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+
+	itemTemplate: function (value, item) {
+		return $("<input>").on('click', function () { this.fn(item) }).title(this.title)
 	},
- 
-	insertTemplate: function(value,item) {
+
+	insertTemplate: function (value, item) {
 		return ""
 	},
- 
-	editTemplate: function(value,item) {
-		return $("<input>").on('click',function(){this.fn(item)}).title(this.title)
+
+	editTemplate: function (value, item) {
+		return $("<input>").on('click', function () { this.fn(item) }).title(this.title)
 	},
- 
-	insertValue: function() {
+
+	insertValue: function () {
 		return ''
 	},
- 
-	editValue: function() {
+
+	editValue: function () {
 		return ''
 	}
 });
- 
+
 jsGrid.fields.button = Button;
 
 function uuidv4() {
-	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-	  (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+	return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+		(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 	);
-  }
+}
 
 (function () {
 	//
@@ -83,79 +83,63 @@ function uuidv4() {
 				"name": "title",
 				"display_name": "Title",
 				"type": "text",
-                "default_value": ""
-			},
-            
-		
-            {
-				"name": "backend",
-				"display_name": "Data backend(JS Grid CSontroller)",
-				"type": "calculated",
 				"default_value": ""
-            },
-			
+			},
+
+
+			{
+				"name": "backend",
+				"display_name": "Data backend. Can be any array, or a freeboard DB controller datasource.",
+				"type": "target",
+				"default_value": "=[]"
+			},
+
 			{
 				"name": "selection",
 				"display_name": "Selection",
-				'description':"Selection gets assigned here. If no selection, empty obj.  Set obj._arrival to save changes back to array(The data doesn't matter, it reads as the time when it was set.)",
+				'description': "Selection gets assigned here. If no selection, empty obj.  Set obj.arrival to save changes back to array(The data doesn't matter, it reads as the time when it was set.)",
 				"type": "target",
 				"default_value": ""
 			},
-				
 			{
-				"name": "data",
-				"display_name": "Direct data array",
-				'description':"",
-				"type": "target",
-				"default_value": ""
-            },
-            {
-				"name": "columns",
-                "display_name": "Display Columns",
-				"type": "array",
-
-				"settings"    : [
-					{
-						"name"        : "name",
-						"display_name": "Data Field(match key on row)",
-						"type"        : "text",
-					},
-					{
-						"name":"type",
-						"display_name": "Type",
-						"type": 'option',
-						'options':[
-						{
-							'name': 'Text',
-							'value': 'text'
-						},
-						{
-							'name': 'Long Textarea',
-							'value': 'textarea'
-						},
-						{
-							'name': 'Number',
-							'value': 'number'
-						},
-						{
-							'name': 'Checkbox',
-							'value': 'checkbox'
-						},
-						{
-							'name': 'Add/Edit/Del Controls',
-							'value': 'control'
+				name: 'columns',
+				type: 'json',
+				display_name: "Columns",
+				schema: {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"properties": {
+							"title": {
+								"type": "string",
+								"required":true,
+							},
+							"name": {
+								"type": "string",
+								"title":"Data column",
+								"required":true,
+							},
+							"type":{
+									"type": "string",
+									"title":"Type",
+									"required":true,
+									"enum":['control','text','number','checkbox']
+							},
+							"width":{
+								"type": "number",
+								"title":"Width(px)",
+								"required":true,
+								"default": 40
 						}
-					]
+						}
 					}
-				],
-			},
-		
-			{
-				name: "selectionTarget",
-				display_name: "Data target when selection changes. ",
-                description:'Value pushed will be a value, timestamp pair. Value will be the entire selected record object',
-				type: "target"
+				},
+				default_value:[{type:'text', title:"Name", name:"name",width:50},{type:'control', title:"", name:"",width:40}]
+
 			}
+
+	
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -165,7 +149,7 @@ function uuidv4() {
 
 
 
-    
+
 
 	// ### Widget Implementation
 	//
@@ -175,12 +159,11 @@ function uuidv4() {
 
 		//jsgrid.sortStrategies.natural = Intl.Collator(undefined, {numeric: true, sensitivity: 'base'}).compare;
 
-		if(settings.backend && settings.data)
-		{
+		if (settings.backend && settings.data) {
 			throw new Error("Cannot use both the backend and the data options at the same time")
 		}
-        var self = this;
-        
+		var self = this;
+
 
 
 		self.currentSettings = settings;
@@ -193,7 +176,7 @@ function uuidv4() {
 
 		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
 
-		var gridBox = $('<div>',{id:thisWidgetId}).css('width', '90%');
+		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%');
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
@@ -204,205 +187,205 @@ function uuidv4() {
 		//that they can use it to edit stuff, and have the grid auto-update.
 
 		//When we use a backend, it is expected that the backend object will provide the listeners.
-		self.makeExternalEditRow= function(d){
-			var m={
-				set: function(o,k,v)
-				{
+		self.makeExternalEditRow = function (d) {
+			var m = {
+				set: function (o, k, v) {
 
 					//We use time-triggered updates.
 					//Saving a record is done by putting a listener on the arrival time.
 					//The value we set is irrelevant, it is always set to the current time.
-					if (k=='_arrival')
-					{
-						o._arrival= Date.now()*1000
+					if (k == 'arrival') {
+						o.arrival = Date.now() * 1000
 						self.upsert(o)
 						$(theGridbox).jsGrid('refresh');
 					}
-					else{
+					else {
 						//If we make a local change, update the timestamp to tell about it.
-						o.__time= Date.now()*1000
-						o[k]=v;
+						o.time = Date.now() * 1000
+						o[k] = v;
 					}
 				}
 			}
 
-			return new Proxy(d,m)
+			return new Proxy(d, m)
 		}
 
 		//Cleans up the data, so it has all the Freeboard DB spec required keys.
-		var normalize = function(f)
-		{
-			f._uuid = f._uuid || uuidv4()
-			f._name = f._name || f._uuid
-			f._time = f._time || parseInt(Date.now()*1000)
-			f._arrival = f._arrival || f._time
+		var normalize = function (f) {
+			f.id = f.id || uuidv4()
+			f.name = f.name || f.id
+			f.time = f.time || parseInt(Date.now() * 1000)
+			f.arrival = f.arrival || f.time
 		}
 
 
-		self.upsert = function(d){
+		self.upsert = function (d) {
 			var x = 0
-			if(!d)
-			{
+			if (!d) {
 				return;
 			}
 
-			for(i of self.data)
+			//Insert and update are always the same for now, on any of our builtin backends.
+			if(self.backend)
 			{
-				if(i._uuid==d._uuid)
-				{
+				return self.backend.insertItem(d)
+			}
+
+
+			if ((self.data == undefined) || (self.data == '')) {
+				self.data = []
+			}
+			for (i of self.data) {
+				if (i.id == d.id) {
 					//No need to do anything, user never actually updated anything.
-					if(_.isMatch(i, d))
-					{
+					if (_.isEqual(i, d)) {
 						return;
 					}
-					Object.assign(i,d);
-					self.dataTargets['data'](self.data)
+					Object.assign(i, d);
+					self.dataTargets['backend'](self.data)
 					return;
 				}
 			}
 
 			normalize(d)
 
-			if(self.data == undefined || self.data=='')
-			{
-				self.data = []
-			}
-			self.data.push(d)
-			self.dataTargets['data'](self.data)
-		}
 		
+			self.data.push(d)
+			self.dataTargets['backend'](self.data)
+		}
+
 
 		self.arrayController =
 		{
-		
-			deleteItem: function(d){
+
+			deleteItem: function (d) {
 				var x = 0
-				if(_.isMatch(i.selection, d))
-				{
+				if (_.isEqual(i.selection, d)) {
 					self.setSelection({})
 				}
-				for(i of self.data)
-				{
-					if(i._uuid==d._uuid)
-					{
-						self.data = _.without(self.data,i)
+				for (i of self.data) {
+					if (i.id == d.id) {
+						self.data = _.without(self.data, i)
 					}
 				}
-				self.dataTargets['data'](self.data)
-				
+				self.dataTargets['backend'](self.data)
+
 			},
 			updateItem: self.upsert,
 			insertItem: self.upsert,
-			loadData: function(filter)
-			{
-				var q = nSQL(self.data||[]).query('select')
-				for(i in filter)
-				{
-					if(filter[i] && !(['sortField','sortOrder','pageIndex','pageSize'].indexOf(i)>-1))
-					{
-						q=q.where(['LOWER('+i+')','=',String(filter[i]).toLowerCase()])
+			loadData: function (filter) {
+				var q = nSQL(self.data || []).query('select')
+				for (i in filter) {
+					if (filter[i] && !(['sortField', 'sortOrder', 'pageIndex', 'pageSize'].indexOf(i) > -1)) {
+						q = q.where(['LOWER(' + i + ')', '=', String(filter[i]).toLowerCase()])
 					}
 				}
-				if(filter.sortOrder)
-				{
-				q=q.orderBy([filter.sortField+' '+filter.sortOrder.toUpperCase()])
+				if (filter.sortOrder) {
+					q = q.orderBy([filter.sortField + ' ' + filter.sortOrder.toUpperCase()])
 				}
-				q=q.limit(filter.pageSize).offset((filter.pageIndex-1)*filter.pageSize)
+				q = q.limit(filter.pageSize).offset((filter.pageIndex - 1) * filter.pageSize)
 
-				var f = async function ex()
-				{
+				var f = async function ex() {
 					var d = await q.exec()
 					//Someday this should show the right page count after filtering?
-					return {data:d, itemsCount:self.data.length}
+					return { data: d, itemsCount: self.data.length }
 				}
 				return f()
 			}
 
 		}
 
-		self.setSelection = function(d){
+		self.setSelection = function (d) {
 			self.dataTargets.selection(self.makeExternalEditRow(d))
 		}
 
 
-		self.acceptData = function(x){
-			if(x==0)
-			{
+		self.acceptData = function (x) {
+			if (x == 0) {
 				x = self.data
 			}
-			
-			self.data=x;
+
+			self.data = x;
 
 			//Normalize by adding the special DB properties.
-			for (f in self.data)
-			{
+			for (f in self.data) {
 				normalize(f)
 			}
 
 		}
 
-        self.refreshGrid= function(x){
-			if(x==0)
-			{
+		self.refreshGrid = function (x) {
+			if (x == 0) {
 				x = self.data
 			}
-			
-			self.data=x;
+
+			self.data = x;
 
 			//Normalize by adding the special DB properties.
-			for (f in self.data)
-			{
+			for (f in self.data) {
 				normalize(f)
 			}
 
 
 
 			$(theGridbox).jsGrid('destroy');
-			
-			var writebackData = function()
-			{
-				self.dataTargets['data'](self.data);
+
+			var writebackData = function () {
+				self.dataTargets['backend'](self.data);
 			}
 
 
-			var columns = {}
-			for(i of self.currentSettings.columns||[])
-			{
+			var columns = []
+			for (i of self.currentSettings.columns || []) {
 				var c = {}
-				Object.assign(c,i)
+				Object.assign(c, i)
 
-				if(c.type=="SelectButton")
-				{
-					
+				if (c.type == "SelectButton") {
 				}
+				columns.push(c)
 			}
-            $(theGridbox).jsGrid({
-                width: "95%",
-                height: "250px",
-         
-                inserting: true,
-                editing: true,
-                sorting: true,
+
+			var s ={
+				width: "95%",
+				height: "250px",
+
+				inserting: true,
+				editing: true,
+				sorting: true,
 				paging: true,
 				pageLoading: true,
-				filtering:true,
-				onItemDeleted: writebackData,
-				onItemUpdated: writebackData,
-				onItemInserted: writebackData,
-				rowClick: function(r){
+				filtering: true,
+				
+				rowClick: function (r) {
 					self.setSelection(r.item)
 				},
 
+				controller: self.backend || self.arrayController,
 
-         
-                controller: self.backend || self.arrayController,
-         
-                fields: columns
-                
-            });
+				fields: columns
+			}
+
+
+			//Real backends do this themaselves.
+			if(self.backend==0)
+			{
+				s.onItemDeleted=writebackData
+				s.onItemUpdated=writebackData
+				s.onItemInserted=writebackData
+			}
+
+			$(theGridbox).jsGrid(s);
+			$(theGridbox).jsGrid('loadData');
+			try {
+				textFit($('.jsgrid-header-cell:not(.jsgrid-control-field)'))
+			}
+			catch (e) {
+				console.log(e)
+			}
+
 		}
 		$(theGridbox).jsGrid('refresh');
-            
+
 
 
 		//console.log( "theGridbox ", theGridbox);
@@ -420,11 +403,11 @@ function uuidv4() {
 			$(containerElement)
 				.append(thisWidgetContainer);
 			titleElement.appendTo(thisWidgetContainer);
-            gridBox.appendTo(thisWidgetContainer);
-            
-            self.refreshGrid(0)
+			gridBox.appendTo(thisWidgetContainer);
 
- 
+			self.refreshGrid(0)
+
+
 
 			$(theValue).html(self.value + self.currentSettings.unit);
 			$(theGridbox).removeClass("ui-widget-content");
@@ -436,13 +419,12 @@ function uuidv4() {
 		//
 		// Blocks of different sizes may be supported in the future.
 		self.getHeight = function () {
-				return 6;
+			return 6;
 		}
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
-			if(newSettings.backend && newSettings.data)
-			{
+			if (newSettings.backend && newSettings.data) {
 				throw new Error("Cannot use both the backend and the data options at the same time")
 			}
 
@@ -450,6 +432,7 @@ function uuidv4() {
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
+			self.refreshGrid(0)
 
 			self.setSelection({});
 
@@ -458,26 +441,42 @@ function uuidv4() {
 		// **onCalculatedValueChanged(settingName, newValue)** (required) : A public function we must implement that will be called when a calculated value changes. Since calculated values can change at any time (like when a datasource is updated) we handle them in a special callback function here.
 		self.onCalculatedValueChanged = function (settingName, newValue) {
 
-			
-			if(settingName=='columns')
-			{
-                self.refreshGrid(0)
-			}
 
-				
-			if(settingName=='backend')
-			{
-				self.backend=newValue;
+			if (settingName == 'columns') {
 				self.refreshGrid(0)
 			}
 
 
-			if(settingName=='data')
-			{
-				self.acceptData(newValue||[])
-				$(theGridbox).jsGrid('refresh');
+			if (settingName == 'backend') {
+				//Special case handle switching between locally managed data array mode, and backend mode.
+				//The way we tell the difference is looking for a loadData function.
+
+				if(typeof(newValue.loadData)=='function')
+				{
+					if(self.backend)
+					{
+						self.backend = newValue;
+						$(theGridbox).jsGrid('loadData');
+					}
+					else{
+						self.backend = newValue;
+						self.refreshGrid(0)
+					}
+				}
+				else{
+					if(self.backend)
+					{
+						self.backend = 0;
+						self.acceptData(newValue || []);
+						self.refreshGrid(0);
+					}
+					else{
+						self.acceptData(newValue || [])
+						$(theGridbox).jsGrid('loadData');
+					}
+				}
 			}
-			
+
 		}
 
 

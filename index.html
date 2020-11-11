@@ -22,6 +22,9 @@
         function showFreeboardHelp() {
             freeboard.showDialog(generateFreeboardHelp(), "Help", "Close")
         }
+        function showFreeboadTemplatesMenu() {
+            freeboard.showTemplatesPage()
+        }
         function showEmoji() {
             freeboard.showDialog(generateFreeboardEmojiCheats(), "Help", "Close")
         }
@@ -89,6 +92,7 @@
                     <div id="board-logo" class="title freeboard-branding">freeboard</div>
                     <div id="board-actions">
                         <ul class="board-toolbar vertical">
+                            <li data-bind="click: showFreeboadTemplatesMenu"><label>📂 Load Example</label></li>
                             <li data-bind="click: showFreeboardHelp"><label> Show Help</label></li>
                             <li data-bind="click: showEmoji"><label>🍄 Show Emoji</label></li>
 
@@ -105,7 +109,7 @@
                             <li id="add-pane" data-bind="click: createPane"><i
                                     class="icon-plus icon-white"></i><label>Add Pane</label></li>
                         </ul>
-                        <button onclick="$('#globalSettingsDialog').css({display:'block'})">Global Settings</button>
+                        <button onclick="$('#globalSettingsDialog').css({display:'block'})">Board Settings</button>
 
                     </div>
                 </div>

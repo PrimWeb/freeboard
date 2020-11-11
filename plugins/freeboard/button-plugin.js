@@ -107,6 +107,7 @@
 
 		self.clickCount = 0;
 		self.value = ''
+		
 
 		// Here we create an element to hold the text we're going to display. We're going to set the value displayed in it below.
 
@@ -137,7 +138,7 @@
 					await self.processCalculatedSetting('value',true);
 					
 
-					if (!_.isUndefined(self.currentSettings.value)) {
+					if (self.currentSettings.value) {
 						v = self.value
 					}
 
@@ -199,7 +200,10 @@
 			}
 			if (settingName == 'value') {
 				self.value = newValue;
+				
 			}
+
+		
 
 		}
 

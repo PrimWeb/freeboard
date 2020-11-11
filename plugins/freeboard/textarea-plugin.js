@@ -40,9 +40,9 @@
 				"name": "title",
 				"display_name": "Title",
 				"type": "text",
-                "default_value": ""
+				"default_value": ""
 			},
-            
+
 			{
 				"name": "tooltip",
 				"display_name": "Tooltip hint",
@@ -55,7 +55,7 @@
 				"type": "text",
 				"default_value": ".*"
 			},
-            {
+			{
 				"name": "placeholder",
 				"display_name": "Placeholder text",
 				"type": "calculated",
@@ -79,8 +79,13 @@
 			{
 				name: "target",
 				display_name: "Data target when value changes. ",
-                description:'Value pushed will be the text',
+				description: 'Value pushed will be the text',
 				type: "target"
+			},
+			{
+				name: "default",
+				display_name: "Default Value",
+				type: "calculated"
 			}
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
@@ -103,14 +108,14 @@
 
 
 		var titleElement = $('<h2 class="section-title textbox-label"></h2>');
-		var inputElement = $('<input/>', { type: 'text', pattern:settings.pattern, id: thisWidgetId,name:thisWidgetId}).css('width', '90%');
+		var inputElement = $('<input/>', { type: 'text', pattern: settings.pattern, id: thisWidgetId, name: thisWidgetId }).css('width', '90%');
 		var theTextbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
 		//console.log( "theTextbox ", theTextbox);
 
 		titleElement.html(self.currentSettings.title);
-		self.value = ''
+		self.value = undefined
 
 		var requestChange = false;
 		var target;
@@ -127,25 +132,25 @@
 			$(theTextbox).attr('placeholder', self.currentSettings.placeholder);
 			$(theTextbox).attr('title', self.currentSettings.tooltip);
 			$(theTextbox).attr('pattern', self.currentSettings.pattern);
-			
 
-			$(theValue).html(self.value + self.currentSettings.unit);
+
+			$(theValue).html((self.value || '') + self.currentSettings.unit);
 
 			$(theTextbox).on('change',
 				async function (e) {
-						//Avoid loops, only real user input triggers this
-						if (_.isUndefined(self.currentSettings.target)) {}{
-							try {
-								//We can refreshed in pull mode here
-								await self.dataTargets.target(e.target.value);
-							}
-							catch (e) {
-								freeboard.showDialog(e, "Bad data target", "OK")
-								freeboard.playSound('error');
-							}						
+					//Avoid loops, only real user input triggers this
+					if (_.isUndefined(self.currentSettings.target)) { } {
+						try {
+							//We can refreshed in pull mode here
+							await self.dataTargets.target(e.target.value);
+						}
+						catch (e) {
+							freeboard.showDialog(e, "Bad data target", "OK")
+							freeboard.playSound('error');
+						}
 					}
 				});
-            
+
 			$(theTextbox).on('input',
 				function (e) {
 					self.value = e.target.value;
@@ -155,7 +160,7 @@
 						//This mode does not affect anything till the user releases the mouse
 						return;
 					}
-					if (_.isUndefined(self.currentSettings.target)) {}
+					if (_.isUndefined(self.currentSettings.target)) { }
 					else {
 						//todo Avoid loops, only real user input triggers this
 						if (true) {
@@ -187,9 +192,9 @@
 			self.currentSettings = newSettings;
 			titleElement.html((_.isUndefined(newSettings.title) ? "" : newSettings.title));
 			self.currentSettings.unit = self.currentSettings.unit || ''
-            $(theTextbox).attr('pattern', newSettings.pattern);
-            $(theTextbox).attr('placeholder', newSettings.placeholder);
-            $(theTextbox).attr('tooltip', newSettings.placeholder);
+			$(theTextbox).attr('pattern', newSettings.pattern);
+			$(theTextbox).attr('placeholder', newSettings.placeholder);
+			$(theTextbox).attr('tooltip', newSettings.placeholder);
 
 
 
@@ -201,24 +206,38 @@
 			// Remember we defined "the_text" up above in our settings.
 			if (settingName == "target") {
 				self.value = newValue;
-				
-				var value= newValue;
-				
-			
+
+				var value = newValue;
+
+
 
 				//Attempt to break l00ps
-				if(value!=$(theTextbox).val())
-				{
+				if (value != $(theTextbox).val()) {
 					$(theTextbox).val(value);
 				}
 			}
 
-			
-			if(settingName=='placeholder')
-			{
-                $(theTextbox).attr('placeholder', newValue);
+			// Remember we defined "the_text" up above in our settings.
+			if (settingName == "default") {
+				if (_.isUndefined(self.value)) {
+					self.value = newValue;
+
+					var value = newValue;
+
+
+
+					//Attempt to break l00ps
+					if (value != $(theTextbox).val()) {
+						$(theTextbox).val(value);
+					}
+					self.dataTargets.target(newValue);
+				}
 			}
-			
+
+			if (settingName == 'placeholder') {
+				$(theTextbox).attr('placeholder', newValue);
+			}
+
 		}
 
 
