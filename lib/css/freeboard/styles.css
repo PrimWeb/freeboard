@@ -714,16 +714,23 @@ html {
 
 .jsgrid-table{
 	color: var(--widget-fg-color);
-	background-color: var(--widget-bg-color);
 	border-radius: var(--widget-border-radius);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
 	font-size: var(--widget-font-size);
 	border-color: var(--widget-fg-color);
 	border-width: 1px;
 	border-style: outset;
+
 	background-image: var(--widget-bg-image);
+	background-color: var(--widget-bg-color);
+
 	background-size: auto;
 	background-repeat: repeat;
+}
+
+.jsgrid-body{
+	background-image: var(--widget-bg-image);
+	background-color: var(--widget-bg-color);
 }
 
 .jsgrid-header-row, .jsgrid-header-row>.jsgrid-header-cell {
@@ -740,6 +747,14 @@ html {
 
 }
 
+.jsgrid-grid-header{
+	border: none;
+}
+
+.jsgrid-header-scrollbar::-webkit-scrollbar-track{
+	background: var(--widget-bg-image);
+	background-color: var(--widget-bg-color);
+}
 .jsgrid-insert-row, .jsgrid-insert-row>.jsgrid-cell {
 	border-bottom: var(--border-color) 1px solid;
 	border-color: var(--border-color);
@@ -783,6 +798,7 @@ html {
 .jsgrid-body {
 	background-color: var(--main-bg-color);
 	border: 2px black solid;
+	height: 200px;
 }
 
 .jsgrid-alt-row, .jsgrid-edit-row, .jsgrid-alt-row>.jsgrid-cell, jsgrid-edit-row>.jsgrid-cell {
@@ -2210,6 +2226,19 @@ ul.board-toolbar.vertical {
 	background-image: var(--widget-bg-image);
 
 }
+
+.jsgrid-pager-nav-button{
+	float: left;
+}
+.jsgrid-pager-container{
+	height: 40px;
+	border: 1px var(--border-color) solid;
+	background: var(--widget-bg-image);
+	color: var(--widget-fg-color);
+	overflow: auto;
+	width: 100%;
+}
+
 
 button {
 	font-size: var(--widget-font-size);

@@ -124,7 +124,7 @@ function uuidv4() {
 									"type": "string",
 									"title":"Type",
 									"required":true,
-									"enum":['control','text','number','checkbox']
+									"enum":['control','text','number','checkbox','textarea']
 							},
 							"width":{
 								"type": "number",
@@ -176,7 +176,7 @@ function uuidv4() {
 
 		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
 
-		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%');
+		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%').css('height','400px');
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 

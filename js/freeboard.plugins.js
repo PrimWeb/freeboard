@@ -124,7 +124,7 @@ function uuidv4() {
 									"type": "string",
 									"title":"Type",
 									"required":true,
-									"enum":['control','text','number','checkbox']
+									"enum":['control','text','number','checkbox','textarea']
 							},
 							"width":{
 								"type": "number",
@@ -176,7 +176,7 @@ function uuidv4() {
 
 		var titleElement = $('<h2 class="section-title datagrid-label"></h2>');
 
-		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%');
+		var gridBox = $('<div>', { id: thisWidgetId }).css('width', '90%').css('height','400px');
 		var theGridbox = '#' + thisWidgetId;
 		var theValue = '#' + "value-" + thisWidgetId;
 
@@ -1178,7 +1178,7 @@ function uuidv4() {
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
 		"display_name": "In-browser database",
 		// **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
-		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view.  EXPERIMENTAL RAM ONLY DB",
+		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view. Choose permanent or temp when creating. If you choose wrong, you may need to refresh the page to switch.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 
 		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
@@ -1195,6 +1195,20 @@ function uuidv4() {
 
 				// **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
 				"required": true
+			},
+
+			{
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "perm",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "Permanant",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "boolean",
+				// **default_value** : A default value for this setting.
+				"default_value": false,
+
+				"description": "If true, data is saved to the user's browser",
+			
 			}
 
 		],
@@ -1219,24 +1233,48 @@ function uuidv4() {
 		var self = this;
 		self.settings = settings
 
+		var pt = "TEMP"
+
+		if(settings.perm)
+		{
+			pt = "PERM"
+		}
+
 
 		self.makeDB = async function () {
 			self.db = await nSQL().createDatabase({
 				id: self.settings.dbname,
-				mode: "TEMP", // pass in "PERM" to switch to persistent storage mode!
+				mode: pt, // pass in "PERM" to switch to persistent storage mode!
 				tables: [
 					{
 						name: "records",
 						model:
 						{
 							"id:uuid": {pk: true},
+							"parent:uuid": {},
 							"time:int":{},
 							"arrival:int":{},
 							"type:string":{},
 							"name:string":{},
+							"title:string":{},
+							"body:string":{},
+							"description:string":{}
+						},
+						indexes:
+						{
+							"arrival:int":{},
+							"parent:uuid":{},
+							"time:int":{},
+							"name:string":{search:true},
+							"type:string":{},
+							"body:string":{search:true},
+							"title:string":{search:true},
 						}
 					}
-				]
+				],
+				plugins: [
+					FuzzySearch()
+				  ]
 			})
 		}
 
@@ -1256,6 +1294,13 @@ function uuidv4() {
 					//We use time-triggered updates.
 					//Saving a record is done by putting a listener on the arrival time.
 					//The value we set is irrelevant, it is always set to the current time.
+					if(k =='id')
+					{
+						if(v != o.id)
+						{
+							throw new Error("You cannot change a record's ID")
+						}
+					}
 					if (k == 'arrival') {
 						o.arrival = Date.now() * 1000
 						self.upsert(o);
@@ -1283,7 +1328,14 @@ function uuidv4() {
 					if(filter[i])
 					{
 						if (((i != 'sortField') && (i != "sortOrder") && (i != "pageSize") && (i != "pageIndex") && (i != "pageLoading"))) {
-							x = x.where([i, '=', filter[i]]);
+							if((i=='body') || (i=='name') || (i=='title') || (i=='description'))
+							{
+								x=x.where(["SEARCH("+ i.replace("'",'') +",'"+filter[i].replace("'",'') +"')", "=", 0])
+							}
+							else
+							{
+								x = x.where([i, '=', filter[i]]);
+							}
 						}
 					}
 				}
@@ -1295,12 +1347,18 @@ function uuidv4() {
 
 				x = x.limit(filter.pageSize).offset((filter.pageIndex -1) * filter.pageSize)
 
+				try{
 
 				var d = await x.exec()
 				
-			
 				//Someday this should show the right page count after filtering?
 				return { data: d, itemsCount: (filter.pageIndex + 1) * filter.pageSize }
+				}
+				catch(e)
+				{
+
+					console.log(e)
+				}
 					
 				},
 
@@ -1314,7 +1372,7 @@ function uuidv4() {
 					r['name'] = r['name'] || r['id']
 
 					nSQL().useDatabase(self.settings.dbname);
-					await nSQL('records').query('delete').where(["id", '=', record.id]).exec()
+					await nSQL('records').query('delete').where(["id", '=', r.id]).exec()
 					var x =nSQL('records').query('upsert', [r]).exec()
 					await x
 					updateCallback(self.proxy);
