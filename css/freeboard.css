@@ -1354,8 +1354,34 @@ h3.je-header button{
 	backdrop-filter: var(--box-backdrop);
 }
 
+
+.trumbowyg-box
+{
+	min-height: 2em;
+	width: auto;
+}
 #freeboard-extra-tools div {
 	flex-grow: 0.05;
+}
+
+.trumbowyg-button-pane{
+	background-color: var(--widget-bg-color);
+	color: var(--widget-fg-color);
+	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
+	background-image: var(--widget-bg-image);
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.trumbowyg-button-pane button
+{
+	width: auto;
+	height: 90%;
+}
+.trumbowyg-button-pane .trumbowyg-button-group::after
+{
+	background: none;
 }
 
 /*JSON editor*/

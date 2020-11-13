@@ -17,7 +17,7 @@
 
                 document.body.style.setProperty("--box-backdrop", 'initial')
 
-                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':'var(--box-bg-color)'})
+                containerElement.css({height:'100vh', width:'100vw', position:'fixed', "z-index":'100',top:'0px','left':'0px','background-color':getComputedStyle(document.body).getPropertyValue("--box-bg-color")})
                 containerElement.css({"background-image":currentSettings.background||''})
                 containerElement.css({'background-repeat':currentSettings.backgroundRepeat||''})
                 containerElement.css({'background-size':currentSettings.backgroundSize||''})
