@@ -55,7 +55,9 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/print.min.js',
                         'lib/js/thirdparty/purify.js',
                         'lib/js/thirdparty/textFit.min.js',
-                        'lib/js/nacl-fast.js'
+                        'lib/js/thirdparty/nacl-fast.js',
+                        'lib/js/thirdparty/filesaver.js'
+
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'

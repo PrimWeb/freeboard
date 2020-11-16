@@ -196,6 +196,7 @@ function uuidv4() {
 					//The value we set is irrelevant, it is always set to the current time.
 					if (k == 'arrival') {
 						o.arrival = Date.now() * 1000
+						o.time = Date.now() * 1000
 						self.upsert(o)
 						$(theGridbox).jsGrid('refresh');
 					}
@@ -235,11 +236,19 @@ function uuidv4() {
 			if ((self.data == undefined) || (self.data == '')) {
 				self.data = []
 			}
+			normalize(d)
+
 			for (i of self.data) {
 				if (i.id == d.id) {
 					//No need to do anything, user never actually updated anything.
 					if (_.isEqual(i, d)) {
 						return;
+					}
+
+					//Newer takes precedence
+					if(i.time >= d.time)
+					{
+						return
 					}
 					Object.assign(i, d);
 					self.dataTargets['backend'](self.data)
@@ -247,7 +256,6 @@ function uuidv4() {
 				}
 			}
 
-			normalize(d)
 
 		
 			self.data.push(d)
