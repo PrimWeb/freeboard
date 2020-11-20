@@ -1265,14 +1265,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
  */
 
 :root {
-	--main-bg-color: #534d5c;
+	--main-bg-color: rgb(50,57,59);
 	--main-bg-size: default;
 	--main-bg-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='12' viewBox='0 0 20 12'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='charlie-brown' fill='%23302145' fill-opacity='0.2'%3E%3Cpath d='M9.8 12L0 2.2V.8l10 10 10-10v1.4L10.2 12h-.4zm-4 0L0 6.2V4.8L7.2 12H5.8zm8.4 0L20 6.2V4.8L12.8 12h1.4zM9.8 0l.2.2.2-.2h-.4zm-4 0L10 4.2 14.2 0h-1.4L10 2.8 7.2 0H5.8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-	--box-bg-color: #444659d7;
-	--widget-bg-color: #A1A1A1;
+	--box-bg-color:rgba(66,68,64,1);
+	--widget-bg-color:rgba(195,195,195,1);
 	--widget-fg-color: black;
 	--border-color: #26362f;
-	--bar-bg-color: #534152;
+	--widget-border-color: #26362f;
+
+	--bar-bg-color: rgba(51,68,72,1);
 	--fg-color: #cfcfcf;
 	--reverseout-bg: #dddddd;
 	--reverseout-fg: black;
@@ -1290,9 +1292,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	--dialog-border-radius: 2em;
 	--border-width: 2px;
 	--border-style: solid;
-	--widget-border-radius: 0.6em;
+	--widget-border-radius: 0em;
 	--header-fg-color: white;
-	--pane-header-bg-color: #444659;
+	--pane-header-bg-color: rgba(56,67,65,1);
 	--error-color: red;
 	--widget-font: var(--main-font);
 	--widget-font-size: var(--main-font-size);
@@ -1300,7 +1302,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	--label-fg-color: var(--fg-color);
 	--header-shadow: rgba(0, 0, 0, 0.5);
 	--pane-shadow: rgba(0, 0, 0, 0.5);
-	--widget-shadow: rgba(0, 0, 0, 0.6);
+	--widget-shadow: rgba(36,46,31,0.45);
 	--label-text-shadow: rgba(0, 0, 0, 0.0);
 
 	--widget-bg-image: "";
@@ -1783,6 +1785,7 @@ button, input, select {
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
 	border-radius: var(--widget-border-radius);
 	background-image: var(--widget-bg-image);
+	border-color: var(--widget-border-color);
 }
 
 input[type=range]{
@@ -1797,7 +1800,7 @@ input[type=range]{
 	height: 1.2em;
 	width: 1.2em;
 	border: 2px solid;
-	box-shadow: 3px 3px 8px var(--widget-shadow);
+	box-shadow: 3px 3px 5px var(--widget-shadow);
 	border-radius: 1.2em;
 
   }
@@ -1808,7 +1811,7 @@ input[type=range]{
 	height: 1.2em;
 	width: 1.2em;
 	border: 2px solid;
-	box-shadow: 3px 3px 8px var(--widget-shadow);
+	box-shadow: 3px 3px 5px var(--widget-shadow);
 	border-radius: 1.2em;
   
 }
@@ -1820,7 +1823,7 @@ input[type=range]{
 	height: 1.2em;
 	width: 1.2em;
 	border: 2px solid;
-	box-shadow: 3px 3px 8px var(--widget-shadow);
+	box-shadow: 2px 2px 5px var(--widget-shadow);
 	border-radius: 1.2em;
   }
 
@@ -1850,7 +1853,7 @@ input::-webkit-slider-runnable-track{
 }
 
 button{
-	box-shadow: 2px 2px 8px var(--widget-shadow);
+	box-shadow: 2px 2px 3px var(--widget-shadow);
 
 }
 
@@ -1864,6 +1867,7 @@ textarea {
 	font-family: FBMono, 'NotoColorEmoji', FontAwesome;
 	border-radius: var(--widget-border-radius);
 	background-image: var(--widget-bg-image);
+	border-color: var(--widget-border-color);
 }
 
 /**
@@ -2079,7 +2083,7 @@ html {
 
 .jsgrid-body {
 	background-color: var(--main-bg-color);
-	border: 2px black solid;
+	border: 2px black var(--widget-border-color);
 	height: 200px;
 }
 
@@ -2087,7 +2091,10 @@ html {
 	background-color: rgba(100,100,100,0.4);
 }
 
-
+/*Used for embedding the data right in the page*/
+freeboard-data{
+	display: none;
+}
 
 body {
 	background-color: var(--main-bg-color);
@@ -2273,7 +2280,7 @@ textarea {
 
 textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input {
 	background-color: var(--widget-bg-color);
-	border: 2px inset var(--border-color);
+	border: 2px inset var(--widget-border-color);
 	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
@@ -3514,7 +3521,7 @@ ul.board-toolbar.vertical {
 }
 .jsgrid-pager-container{
 	height: 40px;
-	border: 1px var(--border-color) solid;
+	border: 1px var(--widget-border-color) solid;
 	background: var(--widget-bg-image);
 	color: var(--widget-fg-color);
 	overflow: auto;
@@ -3526,11 +3533,11 @@ button {
 	font-size: var(--widget-font-size);
 	/* 2 */
 	background-color: var(--widget-bg-color);
-	box-shadow: 2px 2px 8px var(--widget-shadow);
+	box-shadow: 2px 2px 5px var(--widget-shadow);
 	color: var(--widget-fg-color);
 	font-family: var(--widget-font), 'FontAwesome', 'NotoColorEmoji';
 	text-shadow: 1px 1px 3px var(--widget-text-shadow);
-
+	border-width: 2px;
 }
 
 button:active{
@@ -3620,7 +3627,7 @@ ul.datasource-input-suffix {
 	width: 16em;
 	height: 30px;
 	-webkit-appearance: none;
-	border: 2px inset var(--border-color);
+	border: 2px inset var(--widget-border-color);
 	background: url(../img/dropdown-arrow.png) no-repeat right var(--widget-bg-image);
 	background-color:var(--widget-bg-color);
 }
@@ -4008,12 +4015,12 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 	display: block;
 	overflow: hidden;
 	cursor: pointer;
-	border: 2px inset var(--border-color);
+	border: 2px inset var(--widget-border-color);
 	border-radius: 0px;
 }
 
 .onoffswitch-title{
-	font-size: 17px; line-height: 29px; width: 65%; height: 29px; padding-left: 10px;border: 2px inset var(--border-color);
+	font-size: 17px; line-height: 29px; width: 65%; height: 29px; padding-left: 10px;border: 2px inset var(--widget-border-color);
 }
 
 .onoffswitch-inner {
@@ -4055,7 +4062,7 @@ input:-moz-placeholder, textarea:-moz-placeholder {
 	width: 21px;
 	margin: 4px;
 	background: var(--widget-bg-color);
-	border: 2px outset var(--border-color);
+	border: 2px outset var(--widget-border-color);
 	border-radius: 0px;
 	position: absolute;
 	top: 0;

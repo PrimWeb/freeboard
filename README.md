@@ -34,6 +34,7 @@ freeboard(fork!)
 * The UI tries to render emoji with the Noto Color font(included) and supports FontAwesome glyphs wherever you want to paste them.
 
 * freeboard.playSound function plays sounds either from a URL, or defined in the soundData global settings namespace.   There's a UI in settings to upload files.
+* New setting type: constructor. This is to let your users define a JS object directly, for more advanced event handling.
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 
@@ -189,6 +190,34 @@ Attach to a global freeboard event.
 > **"initialized"** - Occurs after freeboard has first been initialized.
 
 > **callback** (function) - The callback function to be called when the event occurs.
+
+-------
+
+**freeboard.bindHandlers(obj, \[element\])**
+
+Binds supported handler functions on obj to event handlers. Element specific ones are skipped if no element is provided.
+
+The reason for this is to allow your plugins to expose a scripting api, when combined with the constructor datatype,
+in a consistent way.   The calculated setting result for these settings in widgets will be suitable for use as a handler.
+
+Since datasources do not support calculated settings, you must compile the raw data given, manually, to make it a handler.
+```
+var constructor = new Function('datasources', settingValue)
+var handler = new constructor(datasources)
+```
+
+Current support:
+
+* onClick() (element specific, the same as JQ's .on() API)
+* onSecond() (Calls function every second)
+* onTick() (Calls every "tick" which is 1/48 seconds currently, may become adjustable)
+
+-------
+
+**freeboard.unbindHandlers(obj, \[element\])**
+
+Does exactly the opposite of bindHandlers.  Use it on the exact original object, with none of the functions changed, to
+implement cleanup of an old set of bindings, when settings change or plugins are unloaded.
 
 -------
 

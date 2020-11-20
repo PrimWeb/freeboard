@@ -14,5 +14,7 @@
   "--widget-shadow": "rgba(0,0,0,0.335)",
   "--widget-text-shadow": "rgba(218,216,211,1)",
   "--border-color": "rgba(145,130,118,1)",
-  "--pane-header-line-height": "40px"
+  "--pane-header-line-height": "40px",
+  "--widget-border-radius": "0.6em",
+  "--widget-border-color": "rgba(101,102,69,1)"
 }

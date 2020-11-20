@@ -799,6 +799,25 @@ function FreeboardUI() {
 	var grid;
 
 
+	// function doNetWidget(){
+	// 	var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+	// 	if(connection){
+	// 	var type = connection.effectiveType;
+
+	// 	var main = $('<label id="freeboard-net-status-widget"><span>Net:</span></label>').appendTo($('#freeboard-extra-tools'))
+	// 	var inner = $('<span></span>').html(type).appendTo(main)
+
+
+	// 	function updateConnectionStatus() {
+	// 		inner.html(connection.effectiveType);
+	// 		}
+	
+	// 		connection.addEventListener('change', updateConnectionStatus);
+	// 	}
+	// }
+	// doNetWidget()
+
 
 	function processResize(layoutWidgets) {
 		var maxDisplayableColumns = getMaxDisplayableColumnCount();
@@ -1421,7 +1440,7 @@ PluginEditor = function (jsEditor, valueEditor) {
 		var wrapperDiv = $('<div class="calculated-setting-row"></div>');
 		wrapperDiv.append(input).append(datasourceToolbox);
 
-		if (target) {
+		if (settingDef.type=='target') {
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATATARGET</label></li>')
 				.mousedown(function (e) {
 					e.preventDefault();
@@ -1432,8 +1451,11 @@ PluginEditor = function (jsEditor, valueEditor) {
 						$(input).val("").focus().insertAtCaret("datasources[\"").trigger("freeboard-eval");
 					}
 				});
+				datasourceToolbox.append(datasourceTool);
+
 		}
 		else {
+			if(settingDef.type=='calculated')
 			var datasourceTool = $('<li><i class="icon-plus icon-white"></i><label>DATASOURCE</label></li>')
 				.mousedown(function (e) {
 					e.preventDefault();
@@ -1444,11 +1466,12 @@ PluginEditor = function (jsEditor, valueEditor) {
 					$(input).insertAtCaret("datasources[\"").trigger("freeboard-eval");
 
 				});
-		}
-		datasourceToolbox.append(datasourceTool);
+				datasourceToolbox.append(datasourceTool);
 
-		if (!target) {
-			var jsEditorTool = $('<li><i class="icon-fullscreen icon-white"></i><label>.JS EDITOR</label></li>')
+		}
+
+		if (!(settingDef.type=='target')) {
+			var jsEditorTool = $('<li><i class="icon-fullscreen icon-white"></i><label>JS EDITOR</label></li>')
 				.mousedown(function (e) {
 					e.preventDefault();
 					jsEditor.displayJSEditor(input.val(), function (result) {
@@ -1854,7 +1877,7 @@ PluginEditor = function (jsEditor, valueEditor) {
 		{
 			newSettings.settings[settingDef.name] = currentSettingsValues[settingDef.name];
 
-			if (settingDef.type == "calculated" || settingDef.type == "target") {
+			if (settingDef.type == "calculated" || settingDef.type == "target" || settingDef.type == "constructor") {
 				var target = settingDef.type == "target";
 
 				if (settingDef.name in currentSettingsValues) {
@@ -2654,7 +2677,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 		for(var settingDefIndex in settingsDefs) {
 			var settingDef=settingsDefs[settingDefIndex]
-			if (settingDef.type == "calculated" || settingDef.type == "target") {
+			if (settingDef.type == "calculated" || settingDef.type == "target" || settingDef.type == "constructor") {
 				var script = currentSettings[settingDef.name];
 
 				if (!_.isUndefined(script)) {
@@ -2673,7 +2696,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 							{
 								s.push(i.substring(1))
 							}
-							else if(settingDef.type == "target")
+							else if(settingDef.type == "target" || settingDef.type == "constructor")
                             {
                                 s.push(i)
                             }
@@ -2691,7 +2714,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					{
 						valueFunction = new Function("datasources", "return undefined;");   
 					}
-                    else if ((script[0]=='=' || settingDef.type == "target" || wasArray)){
+                    else if ((script[0]=='=' || settingDef.type == "target" || settingDef.type == "constructor"   || wasArray)){
                         
                         //We use the spreadsheet convention here. 
                         if (script[0]=='=')
@@ -2704,16 +2727,38 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 						
 						// If there is no return, add one
 						//Only th the getter though, not the setter if it's a target.
-                        if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
-                            getter = "return " + script;
+						//But constructors have the implicit return.
+						if(!(settingDef.type == "constructor")){
+							if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
+								getter = "return " + script;
+							}
 						}
 
                         var valueFunction;
+						
+						//Turns a constructor into just a regular function returning the thing you want.
+						var wrapConstructerFunction = function(f1)
+						{
+							var f2 = function(datasources){
+								return new f1(datasources)
+							}
+							return f2
+						}
 
                         try {
-                            valueFunction = new Function("datasources", getter);
+							var valueFunction = new Function("datasources", getter);
+
+							//If it is a constructor, wrap it so we can return the constructed object.
+							if (settingDef.type == "constructor")
+							{
+								valueFunction = wrapConstructerFunction(valueFunction)
+							}
                         }
                         catch (e) {
+							if(settingDef.type == "constructor")
+							{
+								throw e;
+							}
                             console.log(" arg "+getter+"\nlooks like a function but won't compile, treating as text")
                             isLiteralText=1
                         }
@@ -2751,28 +2796,32 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 					
 					//No error dialog for targets, they are created on-demand
-					await self.processCalculatedSetting(settingDef.name,settingDef.type == "calculated");
+					await self.processCalculatedSetting(settingDef.name,(settingDef.type == "calculated"|| settingDef.type == "constructor"));
+					
+					//Constructors do not auto-update like everything else.
+					if(!(settingDef.type == "constructor")){
+						// Are there any datasources we need to be subscribed to?
+						var matches;
 
-					// Are there any datasources we need to be subscribed to?
-					var matches;
+						while (matches = datasourceRegex.exec(script)) {
+							var dsName = (matches[1] || matches[2]);
+							var refreshSettingNames = self.datasourceRefreshNotifications[dsName];
 
-					while (matches = datasourceRegex.exec(script)) {
-						var dsName = (matches[1] || matches[2]);
-						var refreshSettingNames = self.datasourceRefreshNotifications[dsName];
+							if (_.isUndefined(refreshSettingNames)) {
+								refreshSettingNames = [];
+								self.datasourceRefreshNotifications[dsName] = refreshSettingNames;
+							}
 
-						if (_.isUndefined(refreshSettingNames)) {
-							refreshSettingNames = [];
-							self.datasourceRefreshNotifications[dsName] = refreshSettingNames;
-						}
-
-						if(_.indexOf(refreshSettingNames, settingDef.name) == -1) // Only subscribe to this notification once.
-						{
-							refreshSettingNames.push(settingDef.name);
+							if(_.indexOf(refreshSettingNames, settingDef.name) == -1) // Only subscribe to this notification once.
+							{
+								refreshSettingNames.push(settingDef.name);
+							}
 						}
 					}
 				}
 				else
 				{
+					//Dummy target setting
 					self.dataTargets[settingDef.name]=function(v){};
 				}
 			}
@@ -3240,13 +3289,56 @@ var freeboard = (function () {
 			'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
 			'drop': 'sounds/DM-CGS-32.opus',
 			'bamboo': 'sounds/DM-CGS-50.opus',
-			'snap': '333431__brandondelehoy__ui-series-miscellaneous-01.opus',
-			'click': '333427__brandondelehoy__ui-series-gravel-y-click.opus',
-			'typewriter': '380137__yottasounds__typewriter-single-key-type-2.opus',
-			'scifi-descending': '422515__nightflame__menu-fx-03-descending.opus',
-			'scifi-ascending': '422515__nightflame__menu-fx-03-ascending.opus',
-			'scifi-flat': '422515__nightflame__menu-fx-03-normal.opus'
+			'snap': 'sounds/333431__brandondelehoy__ui-series-miscellaneous-01.opus',
+			'click': 'sounds/333427__brandondelehoy__ui-series-gravel-y-click.opus',
+			'typewriter': 'sounds/380137__yottasounds__typewriter-single-key-type-2.opus',
+			'scifi-descending': 'sounds/422515__nightflame__menu-fx-03-descending.opus',
+			'scifi-ascending': 'sounds/422516__nightflame__menu-fx-03-ascending.opus',
+			'scifi-flat': 'sounds/422514__nightflame__menu-fx-03-normal.opus'
 
+		},
+
+		
+		/*Given a handlers object that contains functions like onClick, bind them so they get handled
+
+		*/
+		bindHandlers=function(h,element) {
+			if(element){
+				if(h.onClick){
+					element.on('click',h.onClick)
+				}
+			}
+
+			if(h.onSecond)
+			{
+				h.onSecond.fb_interval_id = setInterval(h.onSecond,1000)
+			}
+
+			if(h.onTick)
+			{
+				h.onSecond.fb_interval_id = setInterval(h.onSecond,48)
+			}
+			
+		},
+
+		//Unbind everything that happened in bindHandlers
+		unbindHandlers=function(h,element) {
+			if(element){
+				if(h.onClick){
+					element.off('click',h.onClick)
+				}
+			}
+
+			if(h.onSecond)
+			{
+				clearInterval(h.onSecond.fb_interval_id)
+			}
+
+			if(h.onTick)
+			{
+				clearInterval(h.onTick.fb_interval_id)
+			}
+			
 		},
 
 		getAvailableCSSImageVars=function () {
@@ -3781,6 +3873,17 @@ globalSettingsSchema = {
                         }
                     }
                 },
+                "--widget-border-color":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
                 "--border-width":
                 {
                     type: "string",
@@ -3817,7 +3920,7 @@ globalSettingsSchema = {
                 "--widget-border-radius":
                 {
                     type: "string",
-                    enum: ['0em', '0.3em', '0.6em', '1.2em', '2.4em', '4.8em']
+                    enum: ['0em', '0.15em','0.3em', '0.6em', '1.2em', '2.4em', '4.8em']
                 },
 
                 "--main-bg-size":
@@ -5046,7 +5149,14 @@ function uuidv4() {
 				type: "number",
 				default_value: 30,
 
-			}
+			},
+			{
+				name: "code",
+				display_name: "Code",
+				description: 'JS Code for custom event handling',//GANDLING
+				type: "constructor",
+				default_value: "this.onClick = function(){};"
+			},
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -5069,6 +5179,8 @@ function uuidv4() {
 
 		var inputElement = $('<button/>', { class: 'fullwidth-button', type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height', self.currentSettings.height + 'px');
 		var theButton = '#' + thisWidgetId;
+
+		self.oldUserCode = {}
 
 		//console.log( "theButton ", theButton);
 
@@ -5174,6 +5286,14 @@ function uuidv4() {
 				
 			}
 
+			if (settingName == 'code') {
+
+				freeboard.unbindHandlers(self.oldUserCode,inputElement)
+				freeboard.bindHandlers(newValue,inputElement)
+				self.oldUserCode = newValue;
+				
+			}
+
 		
 
 		}
@@ -5181,6 +5301,7 @@ function uuidv4() {
 
 		// **onDispose()** (required) : Same as with datasource plugins.
 		self.onDispose = function () {
+			freeboard.unbindHandlers(self.oldUserCode)
 		}
 
 	}

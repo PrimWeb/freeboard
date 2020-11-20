@@ -776,7 +776,14 @@ function uuidv4() {
 				type: "number",
 				default_value: 30,
 
-			}
+			},
+			{
+				name: "code",
+				display_name: "Code",
+				description: 'JS Code for custom event handling',//GANDLING
+				type: "constructor",
+				default_value: "this.onClick = function(){};"
+			},
 		],
 		// Same as with datasource plugin, but there is no updateCallback parameter in this case.
 		newInstance: function (settings, newInstanceCallback) {
@@ -799,6 +806,8 @@ function uuidv4() {
 
 		var inputElement = $('<button/>', { class: 'fullwidth-button', type: 'text', pattern: settings.pattern, id: thisWidgetId }).html(settings.html).css('width', '95%').css('height', self.currentSettings.height + 'px');
 		var theButton = '#' + thisWidgetId;
+
+		self.oldUserCode = {}
 
 		//console.log( "theButton ", theButton);
 
@@ -904,6 +913,14 @@ function uuidv4() {
 				
 			}
 
+			if (settingName == 'code') {
+
+				freeboard.unbindHandlers(self.oldUserCode,inputElement)
+				freeboard.bindHandlers(newValue,inputElement)
+				self.oldUserCode = newValue;
+				
+			}
+
 		
 
 		}
@@ -911,6 +928,7 @@ function uuidv4() {
 
 		// **onDispose()** (required) : Same as with datasource plugins.
 		self.onDispose = function () {
+			freeboard.unbindHandlers(self.oldUserCode)
 		}
 
 	}
