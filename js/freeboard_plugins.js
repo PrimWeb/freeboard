@@ -297,6 +297,10 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	this.version = 0;
 	this.isEditing = ko.observable(false);
+	this.currentPageName = ko.observable("default");
+
+	//Where we store all loadable panes, not just the active one.
+	this.pagesData= {}
 
 	this.allow_edit = ko.observable(false);
 	this.allow_edit.subscribe(function(newValue)
@@ -419,7 +423,10 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	this.globalSettingsHandlers={}
 
-	this.serialize = function()
+
+	//Swap out in the sense of push the data into the cold storage.
+	//We need ot do this before we can load a new pane
+	this.serializecurrentPage = function()
 	{
 		var panes = [];
 
@@ -427,20 +434,34 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			panes.push(pane.serialize());
 		});
+		var n =self.currentPageName()
+		//Time to update the panes data, it could have changed while it was the active pane
+		self.pagesData[n]={'contents':panes,name:n}
+	}
+
+
+	this.serialize = function()
+	{
+		
+
 
 		var datasources = [];
+
 
 		_.each(self.datasources(), function(datasource)
 		{
 			datasources.push(datasource.serialize());
 		});
 
+		self.serializecurrentPage()
+
+
 		return {
 			version     : SERIALIZATION_VERSION,
 			header_image: self.header_image(),
 			allow_edit  : self.allow_edit(),
 			plugins     : self.plugins(),
-			panes       : panes,
+			pages       : self.pagesData,
 			datasources : datasources,
 			columns     : freeboardUI.getUserColumns(),
 			globalSettings : self.globalSettings
@@ -514,7 +535,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			self.version = object.version || 0;
 			self.header_image(object.header_image);
 
-
+	
 			_.each(object.datasources, async function(datasourceConfig)
 			{
 				var datasource = new DatasourceModel(self, datasourcePlugins);
@@ -523,16 +544,19 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 				self.addDatasource(datasource);
 			});
 
-			var sortedPanes = _.sortBy(object.panes, function(pane){
-				return freeboardUI.getPositionForScreenSize(pane).row;
-			});
 
-			_.each(sortedPanes, function(paneConfig)
+			//Legacy single page model
+			if(object.panes)
 			{
-				var pane = new PaneModel(self, widgetPlugins);
-				pane.deserialize(paneConfig);
-				self.panes.push(pane);
-			});
+				await self.setPage({'contents':object.panes, name: 'default'})
+			}
+			else
+			{
+				Object.assign(self.pagesData,object.pages)
+				await self.setPage(object.pages['default'])
+
+			}
+
 
 			if(self.allow_edit() && self.panes().length == 0)
 			{
@@ -576,10 +600,105 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 	}
 
+	this.gotoPage = async function(pageName){
+		if(!pageName)
+		{
+			return
+		}
+		if(self.pagesData[pageName])
+		{
+			await self.setPage(self.pagesData[pageName])
+		}
+		else{
+			//Make a new empty page
+			await self.setPage({name:pageName,contents:[]})
+			//Make it show in listings right away
+			self.serializecurrentPage()
+		}
+
+	}
+
+	this.renamePage = async function(pageName){
+		if(!pageName)
+		{
+			return
+		}
+		var p =self.pagesData[self.currentPageName()]
+		p.name=pageName
+
+		delete self.pagesData[self.currentPageName()]
+		self.pagesData[pageName]=p
+		self.currentPageName(pageName)
+
+		await self.setPage(p)
+	}
+
+	this.deletePage = async function(pageName){
+		if(!pageName)
+		{
+			return
+		}
+		if(self.currentPageName()==pageName)
+		{
+			await self.gotoPage("default")
+		}
+
+		delete self.pagesData[pageName]
+	}
+
+	this.duplicatePage = async function(pageName){
+		if(!pageName)
+		{
+			return
+		}
+		if(	self.pagesData[pageName])
+		{
+			throw Error("Page exists!")
+		}
+		//Handle nonexistant current page
+		var p =self.pagesData[self.currentPageName()] || {name:pageName}
+		p =_.clone(p)
+		p.name=pageName
+		self.pagesData[pageName] = p
+		await self.setPage(p)
+	}
+
+	this.setPage = async function(page){
+
+		//Save any changes now that we are going to a new page
+		self.serializecurrentPage()
+
+		var contents = page.contents || []
+		self.currentPageName(page.name||String(freeboard.genUUID()))
+		page.name=self.currentPageName()
+
+
+		_.each(self.panes(), function(pane)
+		{
+			pane.dispose();
+		});
+		self.panes.removeAll();
+
+		var sortedPanes = _.sortBy(contents, function(pane){
+			return freeboardUI.getPositionForScreenSize(pane).row;
+		});
+
+		_.each(sortedPanes, function(paneConfig)
+		{
+			var pane = new PaneModel(self, widgetPlugins);
+			pane.deserialize(paneConfig);
+			self.panes.push(pane);
+		});
+		setTimeout(function(){freeboardUI.processResize(true)},30);
+	}
+
 	this.clearDashboard = function()
 	{
 		freeboardUI.removeAllPanes();
 
+		for (var member in self.pagesData) {delete self.pagesData[member]};
+
+		
 		_.each(self.datasources(), function(datasource)
 		{
 			datasource.dispose();
@@ -1359,6 +1478,11 @@ function PaneModel(theFreeboardModel, widgetPlugins) {
 			widgets.push(widget.serialize());
 		});
 
+		if(_.isUndefined(self.row)||_.isUndefined(self.row))
+		{
+			freeboard.showDialog($("<div>Invalid grid, cannot save. Perhaps element is in an invalid position?</div>"),"Error","OK")
+			throw Error("Undefined row or column attribute")
+		}
 		return {
 			title: self.title(),
 			width: self.width(),
@@ -3257,18 +3381,17 @@ var freeboard = (function () {
 	});
 
 
-	function showTemplatesPage(){
+	function showTemplatesPage() {
 
 		var p = $("<select></select>")
-		for (i in freeboard.templates)
-		{
-			p.append($("<option>"+i+"</option>"))
+		for (i in freeboard.templates) {
+			p.append($("<option>" + i + "</option>"))
 		}
-		freeboard.showDialog(p,"Load example board(deleting the current board?)","Load","Cancel",
-		function(){
-		
-			freeboard.loadDashboard(freeboard.templates[p.val()])
-		}
+		freeboard.showDialog(p, "Load example board(deleting the current board?)", "Load", "Cancel",
+			function () {
+
+				freeboard.loadDashboard(freeboard.templates[p.val()])
+			}
 		)
 	}
 	// PUBLIC FUNCTIONS
@@ -3298,47 +3421,43 @@ var freeboard = (function () {
 
 		},
 
-		
+
 		/*Given a handlers object that contains functions like onClick, bind them so they get handled
 
 		*/
-		bindHandlers=function(h,element) {
-			if(element){
-				if(h.onClick){
-					element.on('click',h.onClick)
+		bindHandlers=function (h, element) {
+			if (element) {
+				if (h.onClick) {
+					element.on('click', h.onClick)
 				}
 			}
 
-			if(h.onSecond)
-			{
-				h.onSecond.fb_interval_id = setInterval(h.onSecond,1000)
+			if (h.onSecond) {
+				h.onSecond.fb_interval_id = setInterval(h.onSecond, 1000)
 			}
 
-			if(h.onTick)
-			{
-				h.onSecond.fb_interval_id = setInterval(h.onSecond,48)
+			if (h.onTick) {
+				h.onSecond.fb_interval_id = setInterval(h.onSecond, 48)
 			}
-			
+
 		},
 
 		//Unbind everything that happened in bindHandlers
-		unbindHandlers=function(h,element) {
-			if(element){
-				if(h.onClick){
-					element.off('click',h.onClick)
+		unbindHandlers=function (h, element) {
+			if (element) {
+				if (h.onClick) {
+					element.off('click', h.onClick)
 				}
 			}
 
-			if(h.onSecond)
-			{
+			if (h.onSecond) {
 				clearInterval(h.onSecond.fb_interval_id)
 			}
 
-			if(h.onTick)
-			{
+			if (h.onTick) {
 				clearInterval(h.onTick.fb_interval_id)
 			}
-			
+
 		},
 
 		getAvailableCSSImageVars=function () {
@@ -3350,19 +3469,19 @@ var freeboard = (function () {
 					r['var(' + i + ')'] = 'Uploaded Image'
 				}
 			}
-			if(st.theme){
-			for (i in st.theme) {
-				var x = st.theme[i]
+			if (st.theme) {
+				for (i in st.theme) {
+					var x = st.theme[i]
 
-				//Wrap URLs in the URL tag
-				if (i.includes('-image')) {
-					if (x) {
-						r['var(' + i + ')'] = 'Image from settings'
+					//Wrap URLs in the URL tag
+					if (i.includes('-image')) {
+						if (x) {
+							r['var(' + i + ')'] = 'Image from settings'
+
+						}
 
 					}
-
 				}
-			}
 				document.body.style.setProperty(i, x)
 			}
 
@@ -3482,6 +3601,85 @@ var freeboard = (function () {
 				freeboard.emit("initialized");
 				freeboardUI.processResize()
 			}
+		},
+
+
+		showPageManager: function (p) {
+
+			//Make sure current is in the list
+			theFreeboardModel.serializecurrentPage()
+
+			var delf = function (p) {
+
+				return function () {
+					if (confirm("Really delete?")) {
+						theFreeboardModel.deletePage(p);
+						refresh()
+					}
+
+
+				}
+			}
+
+			var gtf = function (p) {
+				return function () {
+					theFreeboardModel.gotoPage(p);
+					refresh()
+				}
+			}
+
+			var outer = $("<div></div>")
+
+
+			var refresh = function () {
+				outer.empty()
+
+				outer.html("Current:")
+
+				var name = $("<input>").val(theFreeboardModel.currentPageName()).appendTo(outer)
+				var rename = $("<button></button>").on("click", async function () {
+					await theFreeboardModel.renamePage(name.val())
+					refresh()
+				}).appendTo(outer).html("Rename Current")
+
+
+				var duplicate = $("<button></button>").on("click", async function () {
+					await theFreeboardModel.duplicatePage(prompt("New page name"))
+					refresh()
+				}).appendTo(outer).html("Duplicate Current")
+
+
+				var duplicate = $("<button></button>").on("click", async function () {
+					await theFreeboardModel.gotoPage(prompt("New page name"))
+					refresh()
+				}).appendTo(outer).html("New Page")
+
+				var list = $("<ul></ul>").appendTo(outer)
+
+				for (var i in theFreeboardModel.pagesData) {
+					var li = $("<li></li>").html(i).appendTo(list)
+					var gt = $("<button></button>").on("click", gtf(i)).html(("Goto")).appendTo(li)
+
+					var gt2 = $("<button></button>").on("click", delf(i)).html(("Delete")).appendTo(li)
+
+				}
+			}
+			refresh()
+
+			freeboard.showDialog(outer, "Multipage Board Manager", "OK")
+		},
+
+		gotoPage: function (p) {
+			theFreeboardModel.gotoPage(p);
+		},
+		deletePage: function (p) {
+			theFreeboardModel.deletePage(p);
+		},
+		duplicatePage: function (p) {
+			theFreeboardModel.deletePage(p);
+		},
+		renamePage: function (p) {
+			theFreeboardModel.deletePage(p);
 		},
 
 		newDashboard: function () {
@@ -3874,6 +4072,17 @@ globalSettingsSchema = {
                     }
                 },
                 "--widget-border-color":
+                {
+                    type: "string",
+                    format: 'color',
+                    'options': {
+                        'colorpicker': {
+                            'editorFormat': 'rgb',
+                            'alpha': true
+                        }
+                    }
+                },
+                "--modal-tint":
                 {
                     type: "string",
                     format: 'color',

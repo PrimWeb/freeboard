@@ -16,5 +16,6 @@
   "--border-color": "rgba(145,130,118,1)",
   "--pane-header-line-height": "40px",
   "--widget-border-radius": "0.6em",
-  "--widget-border-color": "rgba(101,102,69,1)"
+  "--widget-border-color": "rgba(101,102,69,1)",
+  "--modal-tint":"rgba(135,146,106,0.215)"
 }

@@ -56,7 +56,10 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/purify.js',
                         'lib/js/thirdparty/textFit.min.js',
                         'lib/js/thirdparty/nacl-fast.js',
-                        'lib/js/thirdparty/filesaver.js'
+                        'lib/js/thirdparty/filesaver.js',
+                        'lib/js/thirdparty/blake2b.js',
+                        'lib/js/thirdparty/structjsfork.js'
+
 
                     ]
                 ],

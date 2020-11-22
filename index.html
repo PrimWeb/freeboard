@@ -28,6 +28,9 @@
         function showEmoji() {
             freeboard.showDialog(generateFreeboardEmojiCheats(), "Help", "Close")
         }
+        function showPages() {
+            freeboard.showPageManager();
+        }
         head.js("js/freeboard_plugins.min.js",
             // *** Load more plugins here ***
             function () {
@@ -107,9 +110,11 @@
                                     data-pretty="false">[Minified]</label>
                             </li>
                             <li id="add-pane" data-bind="click: createPane"><i
-                                    class="icon-plus icon-white"></i><label>Add Pane</label></li>
+                                    class="icon-plus icon-white"></i><label>Add Pane to Page</label></li>
+                            <li data-bind="click: showPages"><label>📜 Show Page Manager</label></li>
+                            <li onclick="$('#globalSettingsDialog').css({display:'block'})">🔧 Board Settings</li>
                         </ul>
-                        <button onclick="$('#globalSettingsDialog').css({display:'block'})">Board Settings</button>
+                     
 
                     </div>
                 </div>

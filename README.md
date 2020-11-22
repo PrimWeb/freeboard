@@ -225,6 +225,13 @@ implement cleanup of an old set of bindings, when settings change or plugins are
 
 See http://freeboard.github.io/freeboard/docs/plugin_example.html for info on how to build plugins for freeboard.
 
+Informal spec that this fork suggests:
+
+1. Your plugin must work if a datasurce or data target is missing.  Correctly handle undefined, and let the datatargets setter create in when needed
+2. Your plugin must not memory leak and should correctly clean up after itself, without doing anything bad.  Expect it to be used in 
+   multi-page boards
+
+
 ### Testing Plugins
 
 Just edit index.html and add a link to your javascript file near the end of the head.js script loader, like:

@@ -1280,6 +1280,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	--reverseout-fg: black;
 	--greyout-color: rgba(200, 200, 200, 0.8);
 	--dialog-bg: rgba(0, 0, 0, 0.25);
+	--modal-tint: rgba(100, 100, 100, 0.25);
+
 	--highlight-color: rgb(153, 235, 0);
 	--main-font: FBSerif;
 	--header-font: DIN;
@@ -2407,7 +2409,8 @@ a:focus {
 	left: 0px;
 	height: 100%;
 	width: 100%;
-	background: var(--dialog-bg);
+	background: var(--modal-tint);
+	backdrop-filter: var(--box-backdrop);
 	overflow: auto;
 }
 
