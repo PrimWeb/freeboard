@@ -315,7 +315,10 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 	});
     
-   
+   this.sleep = function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
 
 	this.header_image = ko.observable();
 	this.plugins = ko.observableArray();
@@ -443,7 +446,6 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	this.serialize = function()
 	{
 		
-
 
 		var datasources = [];
 
@@ -677,7 +679,9 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			pane.dispose();
 		});
-		self.panes.removeAll();
+		
+		self.panes.removeAll()
+		$(freeboard._gridRootElement).html('').append("<ul></ul>");
 
 		var sortedPanes = _.sortBy(contents, function(pane){
 			return freeboardUI.getPositionForScreenSize(pane).row;
@@ -689,7 +693,9 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			pane.deserialize(paneConfig);
 			self.panes.push(pane);
 		});
-		setTimeout(function(){freeboardUI.processResize(true)},30);
+
+		//Do after render and all, but wait for it
+		await async function(){freeboardUI.processResize(true)}()
 	}
 
 	this.clearDashboard = function()
@@ -712,6 +718,12 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		self.plugins.removeAll();
 		self.datasources.removeAll();
 		self.panes.removeAll();
+		//Needed to prevent 
+		//https://github.com/ducksboard/gridster.js/issues/271
+		//during rapid page switching
+		freeboard._gridRootElement.html('').append("<ul></ul>");
+
+
 	}
 
 	this.loadDashboard = function(dashboardData, callback)
@@ -1109,6 +1121,7 @@ function FreeboardUI() {
 	ko.bindingHandlers.grid = {
 		init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			// Initialize our grid
+			freeboard._gridRootElement = element
 			grid = $(element).gridster({
 				widget_margins: [PANE_MARGIN, PANE_MARGIN],
 				widget_base_dimensions: [PANE_WIDTH, 10],
@@ -3337,7 +3350,10 @@ var freeboard = (function () {
 		update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
 			// If pane has been removed
 			if (theFreeboardModel.panes.indexOf(viewModel) == -1) {
+				//Part of atttempts at a Hack of unknown purpose to make it not do this: https://github.com/ducksboard/gridster.js/issues/271
+				if(!_.isUndefined(element)){
 				freeboardUI.removePane(element);
+				}
 			}
 			freeboardUI.updatePane(element, viewModel);
 		}
