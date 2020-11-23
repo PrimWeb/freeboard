@@ -1,131 +1,131 @@
 .trumbowyg-viewHTML-button:after {
-	font-family: FontAwesome;
-	content: "\f121";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-undo-button:after {
-	font-family: FontAwesome;
-	content: "\f0e2";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-redo-button:after {
-	font-family: FontAwesome;
-	content: "\f01e";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-formatting-button:before {
-	font-family: FontAwesome;
-	content: "\f1dd";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-strong-button:after {
-	font-family: FontAwesome;
-	content: "\f032";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-em-button:after {
-	font-family: FontAwesome;
-	content: "\f033";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-del-button:after {
-	font-family: FontAwesome;
-	content: "\f0cc";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-superscript-button:after {
-	font-family: FontAwesome;
-	content: "\f12b";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-subscript-button:after {
-	font-family: FontAwesome;
-	content: "\f12c";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-link-button:before {
-	font-family: FontAwesome;
-	content: "\f0c1";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-insertImage-button:after {
-	font-family: FontAwesome;
-	content: "\f03e";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-justifyLeft-button:after {
-	font-family: FontAwesome;
-	content: "\f036";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-justifyCenter-button:after {
-	font-family: FontAwesome;
-	content: "\f037";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-justifyRight-button:after {
-	font-family: FontAwesome;
-	content: "\f038";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-justifyFull-button:after {
-	font-family: FontAwesome;
-	content: "\f039";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-unorderedList-button:after {
-	font-family: FontAwesome;
-	content: "\f03a";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-orderedList-button:after {
-	font-family: FontAwesome;
-	content: "\f0cb";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-horizontalRule-button:after {
-	font-family: FontAwesome;
-	content: "\f068";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-removeformat-button:after {
-	font-family: FontAwesome;
-	content: "\f12d";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-fullscreen-button:after {
-	font-family: FontAwesome;
-	content: "\f0b2";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-bold-button:after {
-	font-family: FontAwesome;
-	content: "\f032";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-italic-button:after {
-	font-family: FontAwesome;
-	content: "\f033";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-underline-button:after {
-	font-family: FontAwesome;
-	content: "\f0cd";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-strikethrough-button:after {
-	font-family: FontAwesome;
-	content: "\f0cc";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-foreColor-button:before {
-	font-family: FontAwesome;
-	content: "\f031";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-backColor-button:before {
-	font-family: FontAwesome;
-	content: "\f031";
+	font-family: IcoFont;
+	content: "";
 	color: #ecf0f1;
 	background-color: #555555;
 	padding: 1px;
@@ -137,14 +137,14 @@
 /*===== DROPDOWN BUTTONS =====*/
 
 .trumbowyg-p-dropdown-button:before {
-	font-family: FontAwesome;
-	content: "\f1dd";
+	font-family: IcoFont;
+	content: "";
 	margin-right: 10px;
 }
 
 .trumbowyg-blockquote-dropdown-button:before {
-	font-family: FontAwesome;
-	content: "\f10d";
+	font-family: IcoFont;
+	content: "";
 	margin-right: 10px;
 }
 
@@ -152,93 +152,51 @@
 .trumbowyg-h2-dropdown-button:before,
 .trumbowyg-h3-dropdown-button:before,
 .trumbowyg-h4-dropdown-button:before {
-	font-family: FontAwesome;
-	content: "\f1dc";
+	font-family: IcoFont;
+	content: "";
 	margin-right: 10px;
 }
 
 .trumbowyg-createLink-dropdown-button:before {
-	font-family: FontAwesome;
-	content: "\f0c1";
+	font-family: IcoFont;
+	content: "";
 	margin-right: 10px;
 }
 
 .trumbowyg-unlink-dropdown-button:before {
-	font-family: FontAwesome;
-	content: "\f127";
+	font-family: IcoFont;
+	content: "";
 	margin-right: 10px;
 }
 
 .trumbowyg-bold-button:after {
-	font-family: FontAwesome;
-	content: "\f032";
+	font-family: IcoFont;
+	content: "";
 }
 
 
 .trumbowyg-base64-button:before {
-	font-family: FontAwesome;
-	content: "\f083";
+	font-family: IcoFont;
+	content: "";
 }
 .trumbowyg-emoji-button:before {
-	font-family: FontAwesome;
-	content: "\f004";
-}
-
-.trumbowyg-foreColor-button:before {
-	font-family: FontAwesome;
-	content: "\f043";
-}.trumbowyg-backColor-button:before {
-	font-family: FontAwesome;
-	content: "\f5aa";
+	font-family: IcoFont;
+	content: "";
 }
 
 
 
-.trumbowyg-table-button:before {
-	font-family: FontAwesome;
-	content: "\f0ce";
-}
 
 .trumbowyg-fontsize-button:before {
-	font-family: FontAwesome;
-	content: "\f035";
+	font-family: IcoFont;
+	content: "";
 }
 .trumbowyg-fontfamily-button:before {
-	font-family: FontAwesome;
-	content: "\f031";
+	font-family: IcoFont;
+	content: "";
 }
 
 .trumbowyg-specialChars-button:before {
-	font-family: FontAwesome;
-	content: "\f698";
-}
-
-.trumbowyg-italic-button:after {
-	font-family: FontAwesome;
-	content: "\f033";
-}
-
-.trumbowyg-underline-button:after {
-	font-family: FontAwesome;
-	content: "\f0cd";
-}
-
-.trumbowyg-strikethrough-button:after {
-	font-family: FontAwesome;
-	content: "\f0cc";
-}
-
-.trumbowyg-foreColor-button:before {
-	font-family: FontAwesome;
-	content: "\f031";
-}
-
-.trumbowyg-backColor-button:before {
-	font-family: FontAwesome;
-	content: "\f031";
-	color: #ecf0f1;
-	background-color: #555555;
-	padding: 1px;
-	font-size: 85%;
-	line-height: 200%;
+	font-family: IcoFont;
+	content: "";
 }
