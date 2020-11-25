@@ -298,10 +298,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	this.version = 0;
 	this.isEditing = ko.observable(false);
 	this.currentPageName = ko.observable("default");
+	this.pagesDataObservable = ko.observable({});
 
 	//Where we store all loadable panes, not just the active one.
 	this.pagesData= {}
-
+	self.pagesDataObservable(self.pagesData)
 	this.allow_edit = ko.observable(false);
 	this.allow_edit.subscribe(function(newValue)
 	{
@@ -440,6 +441,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		var n =self.currentPageName()
 		//Time to update the panes data, it could have changed while it was the active pane
 		self.pagesData[n]={'contents':panes,name:n}
+		self.pagesDataObservable(self.pagesData)
 	}
 
 
@@ -551,6 +553,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			if(object.panes)
 			{
 				await self.setPage({'contents':object.panes, name: 'default'})
+				self.pagesData = {'default':{'contents':object.panes, name: 'default'}}
 			}
 			else
 			{
@@ -558,7 +561,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 				await self.setPage(object.pages['default'])
 
 			}
-
+			self.pagesDataObservable(self.pagesData)
 
 			if(self.allow_edit() && self.panes().length == 0)
 			{
@@ -607,6 +610,23 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			return
 		}
+
+		if(!_.isString(pageName))
+		{
+			//Support jumping to an entire page object
+			if(pageName.name)
+			{
+				pageName=pageName.name
+				if(!self.pagesData[pageName])
+				{
+					throw new Error("Can't currently jump to unregistered page")
+				}
+			}
+			else{
+				return
+			}
+		}
+
 		if(self.pagesData[pageName])
 		{
 			await self.setPage(self.pagesData[pageName])
@@ -630,6 +650,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		delete self.pagesData[self.currentPageName()]
 		self.pagesData[pageName]=p
+		self.pagesDataObservable(self.pagesData)
 		self.currentPageName(pageName)
 
 		await self.setPage(p)
@@ -646,6 +667,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 
 		delete self.pagesData[pageName]
+		self.pagesDataObservable(self.pagesData)
 	}
 
 	this.duplicatePage = async function(pageName){
@@ -662,13 +684,23 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		p =_.clone(p)
 		p.name=pageName
 		self.pagesData[pageName] = p
+		self.pagesDataObservable(self.pagesData)
 		await self.setPage(p)
 	}
 
 	this.setPage = async function(page){
 
-		//Save any changes now that we are going to a new page
-		self.serializecurrentPage()
+		//If the page data could have changed, we must serialize.
+		if(self.hasBeenEditingSincePageFlush)
+		{
+			//Save any changes now that we are going to a new page
+			self.serializecurrentPage()
+			self.hasBeenEditingSincePageFlush=false
+		}
+		if(self.isEditing())
+		{
+			self.hasBeenEditingSincePageFlush = true
+		}
 
 		var contents = page.contents || []
 		self.currentPageName(page.name||String(freeboard.genUUID()))
@@ -696,6 +728,8 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		//Do after render and all, but wait for it
 		await async function(){freeboardUI.processResize(true)}()
+		const event = new CustomEvent('fbPageLoaded',{detail:{name:page.name}})
+		document.dispatchEvent(event)
 	}
 
 	this.clearDashboard = function()
@@ -704,7 +738,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		for (var member in self.pagesData) {delete self.pagesData[member]};
 
-		
+		self.pagesDataObservable(self.pagesData)
 		_.each(self.datasources(), function(datasource)
 		{
 			datasource.dispose();
@@ -875,6 +909,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			return;
 		}
+		self.hasBeenEditingSincePageFlush = true
 
 		self.isEditing(editing);
 
@@ -2385,6 +2420,27 @@ ValueEditor = function(theFreeboardModel)
 					var dataValue = datasource.getDataRepresentation(dataPath);
 					currentValue = dataValue;
 
+					function safeShowObject(o){
+						if(_.isString(o))
+						{
+							if(o.length<256)
+							{
+								return o
+							}
+							else
+							{
+								return('[Very long string]')
+							}
+						}
+						else if(_.isNumber(o)||_.isBoolean(o))
+						{
+							return(String(o))
+						}
+						else{
+							return "[Object]"
+						}
+					}
+
 					// For arrays, list out the indices
 					if(_.isArray(dataValue))
 					{
@@ -3420,6 +3476,7 @@ var freeboard = (function () {
 		globalSettings = theFreeboardModel.globalSettings,
 		showTemplatesPage=showTemplatesPage,
 		templates=freeboardTemplates,
+		pagesData=theFreeboardModel.pagesDataObservable,
 		ui=freeboardUI,
 		defaultSounds={
 			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
@@ -3446,6 +3503,16 @@ var freeboard = (function () {
 				if (h.onClick) {
 					element.on('click', h.onClick)
 				}
+				if (h.onChange) {
+					element.on('change', h.onChange)
+				}
+				if (h.onInput) {
+					element.on('input', h.onInput)
+				}
+			}
+
+			if (h.onPageLoaded) {
+				document.addEventListener('fbPageLoaded', h.onPageLoaded)
 			}
 
 			if (h.onSecond) {
@@ -3464,6 +3531,17 @@ var freeboard = (function () {
 				if (h.onClick) {
 					element.off('click', h.onClick)
 				}
+				if (h.onChange) {
+					element.off('change', h.onChange)
+				}
+				if (h.onInput) {
+					element.off('input', h.onInput)
+				}
+			}
+			
+
+			if (h.onPageLoaded) {
+				document.removeEventListener('fbPageLoaded', h.onPageLoaded)
 			}
 
 			if (h.onSecond) {
@@ -3472,6 +3550,11 @@ var freeboard = (function () {
 
 			if (h.onTick) {
 				clearInterval(h.onTick.fb_interval_id)
+			}
+
+			if(h.onUnbind)
+			{
+				h.onUnbind()
 			}
 
 		},
@@ -3527,6 +3610,8 @@ var freeboard = (function () {
 				(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 			)
 		},
+
+		currentPage: theFreeboardModel.currentPageName,
 
 		playSound: function (s, volume) {
 			if (!s) {
@@ -3613,7 +3698,7 @@ var freeboard = (function () {
 				if (_.isFunction(finishedCallback)) {
 					finishedCallback();
 				}
-
+				freeboard.gotoPage('default')
 				freeboard.emit("initialized");
 				freeboardUI.processResize()
 			}
@@ -7910,6 +7995,14 @@ function uuidv4() {
 				"type": "target",
 				"default_value": ""
 			},
+
+			{
+				"name": "allowEdit",
+				"display_name": "Allow Editing",
+				'description': "",
+				"type": "boolean",
+				"default_value": true
+			},
 			{
 				name: 'columns',
 				type: 'json',
@@ -8157,8 +8250,13 @@ function uuidv4() {
 				var c = {}
 				Object.assign(c, i)
 
-				if (c.type == "SelectButton") {
+				if (c.type == "control") {
+					if(!self.currentSettings.allowEdit)
+					{
+						continue;
+					}
 				}
+
 				columns.push(c)
 			}
 
@@ -8166,8 +8264,8 @@ function uuidv4() {
 				width: "95%",
 				height: "250px",
 
-				inserting: true,
-				editing: true,
+				inserting: self.currentSettings.allowEdit,
+				editing: self.currentSettings.allowEdit,
 				sorting: true,
 				paging: true,
 				pageLoading: true,
@@ -8313,7 +8411,7 @@ function uuidv4() {
 
         var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
         var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background-color:var(--widget-bg-color);width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
-        var fsButton = $('<button></button>').on('click', function(){
+        var fsButton = $('<button></button>').on('click', function(){
 
             if(!self.fs){
                 self.fs=1;
@@ -8338,7 +8436,7 @@ function uuidv4() {
                 containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
         })
-        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
+        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
 
 
         toolbarElement.append(printButton)
@@ -8507,6 +8605,152 @@ function uuidv4() {
         }
     });
 
+
+// # Building a Freeboard Plugin
+//
+// A freeboard plugin is simply a javascript file that is loaded into a web page after the main freeboard.js file is loaded.
+//
+// Let's get started with an example of a datasource plugin and a widget plugin.
+//
+// -------------------
+
+// Best to encapsulate your plugin in a closure, although not required.
+(function()
+{
+	// ## A Datasource Plugin
+	//
+	// -------------------
+	// ### Datasource Definition
+	//
+	// -------------------
+	// **freeboard.loadDatasourcePlugin(definition)** tells freeboard that we are giving it a datasource plugin. It expects an object with the following:
+	freeboard.loadDatasourcePlugin({
+		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
+		"type_name"   : "core_board_plugin",
+		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
+		"display_name": "Basic Info",
+        // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
+        "description" : "Provides access to basic things like the currentPage",
+		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
+	
+		// **settings** : An array of settings that will be displayed for this plugin when the user adds it.
+		"settings"    : [
+  
+			
+		],
+		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
+		// * **settings** : A javascript object with the initial settings set by the user. The names of the properties in the object will correspond to the setting names defined above.
+		// * **newInstanceCallback** : A callback function that you'll call when the new instance of the plugin is ready. This function expects a single argument, which is the new instance of your plugin object.
+		// * **updateCallback** : A callback function that you'll call if and when your datasource has an update for freeboard to recalculate. This function expects a single parameter which is a javascript object with the new, updated data. You should hold on to this reference and call it when needed.
+		newInstance   : function(settings, newInstanceCallback, updateCallback)
+		{
+			// myDatasourcePlugin is defined below.
+			newInstanceCallback(new myDatasourcePlugin(settings, updateCallback));
+		}
+	});
+
+
+	// ### Datasource Implementation
+	//
+	// -------------------
+	// Here we implement the actual datasource plugin. We pass in the settings and updateCallback.
+	var myDatasourcePlugin = function(settings, updateCallback)
+	{
+		// Always a good idea...
+		var self = this;
+
+		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
+		var currentSettings = settings;
+
+        self.handler={
+			set: function(obj,prop,val)
+			{
+            
+                    if (prop =='currentPage')
+                    {
+                            freeboard.gotoPage(val);
+                            return
+                    }
+					throw new Error("Cannot change this property. It is readonly.")
+            }
+        }
+        self.data={}
+        self.proxy = new Proxy(self.data, self.handler)
+        
+
+        function makePDView(p)
+        {
+            var x = []
+            for (var i in p){
+                x.push({name: p[i].name })
+            }
+            var handler={
+                    set: function(obj,prop,val)
+                    {
+                        throw new Error("Page view data is read only")
+                    }
+                }
+            return new Proxy(x,handler)
+        }
+
+        self.cpUnsub = freeboard.currentPage.subscribe(function(v){
+            self.data.currentPage=v
+            updateCallback(self.proxy)
+        })
+
+        self.pdUnsub = freeboard.pagesData.subscribe(function(v){
+            self.data.allPages=makePDView(v)
+            updateCallback(self.proxy)
+        })
+
+        self.data.currentPage = freeboard.currentPage()
+        self.data.allPages = makePDView(freeboard.pagesData())
+
+
+		/* This is some function where I'll get my data from somewhere */
+		function getData()
+		{
+			var newData= self.proxy ; // Just putting some sample data in for fun.
+
+			/* Get my data from somewhere and populate newData with it... Probably a JSON API or something. */
+			/* ... */
+
+			// I'm calling updateCallback to tell it I've got new data for it to munch on.
+			updateCallback(newData);
+		}
+
+
+
+		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
+		self.onSettingsChanged = function(newSettings)
+		{
+			// Here we update our current settings with the variable that is passed in.
+			currentSettings = newSettings;
+
+            updateCallback(self.proxy)
+		}
+		self.onCalculatedSettingChanged=function(k,v)
+		{
+
+		}
+
+		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
+		self.updateNow = function()
+		{
+			// Most likely I'll just call getData() here.
+			getData();
+		}
+
+		// **onDispose()** (required) : A public function we must implement that will be called when this instance of this plugin is no longer needed. Do anything you need to cleanup after yourself here.
+		self.onDispose = function()
+		{
+            self.cpUnsub.unsubscribe()
+		
+		}
+
+	}
+
+}());
 
 // ┌────────────────────────────────────────────────────────────────────┐ \\
 // │ derived from freeboard-button-plugin                                            │ \\

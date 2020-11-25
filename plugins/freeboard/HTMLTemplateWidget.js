@@ -7,7 +7,7 @@
 
         var containerElement = $('<div style="overflow:auto;height:100%;width:auto;padding:0px;display:flex;flex-direction:column;"></div>')
         var toolbarElement = $('<div class="freeboard-hover-unhide" style="border-radius:4px; overflow:hidden;background-color:var(--widget-bg-color);width:100%;padding:3px;margin:0px;position:absolute;user-select: none;opacity:0;"></div>');
-        var fsButton = $('<button></button>').on('click', function(){
+        var fsButton = $('<button></button>').on('click', function(){
 
             if(!self.fs){
                 self.fs=1;
@@ -32,7 +32,7 @@
                 containerElement.css({'background-size':currentSettings.backgroundSize||''})
             }
         })
-        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
+        var printButton = $('<button></button>').on('click',function(){printJS(self.id, 'html')})
 
 
         toolbarElement.append(printButton)

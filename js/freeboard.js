@@ -298,10 +298,11 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	this.version = 0;
 	this.isEditing = ko.observable(false);
 	this.currentPageName = ko.observable("default");
+	this.pagesDataObservable = ko.observable({});
 
 	//Where we store all loadable panes, not just the active one.
 	this.pagesData= {}
-
+	self.pagesDataObservable(self.pagesData)
 	this.allow_edit = ko.observable(false);
 	this.allow_edit.subscribe(function(newValue)
 	{
@@ -440,6 +441,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		var n =self.currentPageName()
 		//Time to update the panes data, it could have changed while it was the active pane
 		self.pagesData[n]={'contents':panes,name:n}
+		self.pagesDataObservable(self.pagesData)
 	}
 
 
@@ -551,6 +553,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			if(object.panes)
 			{
 				await self.setPage({'contents':object.panes, name: 'default'})
+				self.pagesData = {'default':{'contents':object.panes, name: 'default'}}
 			}
 			else
 			{
@@ -558,7 +561,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 				await self.setPage(object.pages['default'])
 
 			}
-
+			self.pagesDataObservable(self.pagesData)
 
 			if(self.allow_edit() && self.panes().length == 0)
 			{
@@ -607,6 +610,23 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			return
 		}
+
+		if(!_.isString(pageName))
+		{
+			//Support jumping to an entire page object
+			if(pageName.name)
+			{
+				pageName=pageName.name
+				if(!self.pagesData[pageName])
+				{
+					throw new Error("Can't currently jump to unregistered page")
+				}
+			}
+			else{
+				return
+			}
+		}
+
 		if(self.pagesData[pageName])
 		{
 			await self.setPage(self.pagesData[pageName])
@@ -630,6 +650,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		delete self.pagesData[self.currentPageName()]
 		self.pagesData[pageName]=p
+		self.pagesDataObservable(self.pagesData)
 		self.currentPageName(pageName)
 
 		await self.setPage(p)
@@ -646,6 +667,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 
 		delete self.pagesData[pageName]
+		self.pagesDataObservable(self.pagesData)
 	}
 
 	this.duplicatePage = async function(pageName){
@@ -662,13 +684,23 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		p =_.clone(p)
 		p.name=pageName
 		self.pagesData[pageName] = p
+		self.pagesDataObservable(self.pagesData)
 		await self.setPage(p)
 	}
 
 	this.setPage = async function(page){
 
-		//Save any changes now that we are going to a new page
-		self.serializecurrentPage()
+		//If the page data could have changed, we must serialize.
+		if(self.hasBeenEditingSincePageFlush)
+		{
+			//Save any changes now that we are going to a new page
+			self.serializecurrentPage()
+			self.hasBeenEditingSincePageFlush=false
+		}
+		if(self.isEditing())
+		{
+			self.hasBeenEditingSincePageFlush = true
+		}
 
 		var contents = page.contents || []
 		self.currentPageName(page.name||String(freeboard.genUUID()))
@@ -696,6 +728,8 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		//Do after render and all, but wait for it
 		await async function(){freeboardUI.processResize(true)}()
+		const event = new CustomEvent('fbPageLoaded',{detail:{name:page.name}})
+		document.dispatchEvent(event)
 	}
 
 	this.clearDashboard = function()
@@ -704,7 +738,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		for (var member in self.pagesData) {delete self.pagesData[member]};
 
-		
+		self.pagesDataObservable(self.pagesData)
 		_.each(self.datasources(), function(datasource)
 		{
 			datasource.dispose();
@@ -875,6 +909,7 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		{
 			return;
 		}
+		self.hasBeenEditingSincePageFlush = true
 
 		self.isEditing(editing);
 
@@ -2385,6 +2420,27 @@ ValueEditor = function(theFreeboardModel)
 					var dataValue = datasource.getDataRepresentation(dataPath);
 					currentValue = dataValue;
 
+					function safeShowObject(o){
+						if(_.isString(o))
+						{
+							if(o.length<256)
+							{
+								return o
+							}
+							else
+							{
+								return('[Very long string]')
+							}
+						}
+						else if(_.isNumber(o)||_.isBoolean(o))
+						{
+							return(String(o))
+						}
+						else{
+							return "[Object]"
+						}
+					}
+
 					// For arrays, list out the indices
 					if(_.isArray(dataValue))
 					{
@@ -3420,6 +3476,7 @@ var freeboard = (function () {
 		globalSettings = theFreeboardModel.globalSettings,
 		showTemplatesPage=showTemplatesPage,
 		templates=freeboardTemplates,
+		pagesData=theFreeboardModel.pagesDataObservable,
 		ui=freeboardUI,
 		defaultSounds={
 			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
@@ -3446,6 +3503,16 @@ var freeboard = (function () {
 				if (h.onClick) {
 					element.on('click', h.onClick)
 				}
+				if (h.onChange) {
+					element.on('change', h.onChange)
+				}
+				if (h.onInput) {
+					element.on('input', h.onInput)
+				}
+			}
+
+			if (h.onPageLoaded) {
+				document.addEventListener('fbPageLoaded', h.onPageLoaded)
 			}
 
 			if (h.onSecond) {
@@ -3464,6 +3531,17 @@ var freeboard = (function () {
 				if (h.onClick) {
 					element.off('click', h.onClick)
 				}
+				if (h.onChange) {
+					element.off('change', h.onChange)
+				}
+				if (h.onInput) {
+					element.off('input', h.onInput)
+				}
+			}
+			
+
+			if (h.onPageLoaded) {
+				document.removeEventListener('fbPageLoaded', h.onPageLoaded)
 			}
 
 			if (h.onSecond) {
@@ -3472,6 +3550,11 @@ var freeboard = (function () {
 
 			if (h.onTick) {
 				clearInterval(h.onTick.fb_interval_id)
+			}
+
+			if(h.onUnbind)
+			{
+				h.onUnbind()
 			}
 
 		},
@@ -3527,6 +3610,8 @@ var freeboard = (function () {
 				(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 			)
 		},
+
+		currentPage: theFreeboardModel.currentPageName,
 
 		playSound: function (s, volume) {
 			if (!s) {
@@ -3613,7 +3698,7 @@ var freeboard = (function () {
 				if (_.isFunction(finishedCallback)) {
 					finishedCallback();
 				}
-
+				freeboard.gotoPage('default')
 				freeboard.emit("initialized");
 				freeboardUI.processResize()
 			}

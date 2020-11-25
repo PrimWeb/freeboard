@@ -101,6 +101,14 @@ function uuidv4() {
 				"type": "target",
 				"default_value": ""
 			},
+
+			{
+				"name": "allowEdit",
+				"display_name": "Allow Editing",
+				'description': "",
+				"type": "boolean",
+				"default_value": true
+			},
 			{
 				name: 'columns',
 				type: 'json',
@@ -348,8 +356,13 @@ function uuidv4() {
 				var c = {}
 				Object.assign(c, i)
 
-				if (c.type == "SelectButton") {
+				if (c.type == "control") {
+					if(!self.currentSettings.allowEdit)
+					{
+						continue;
+					}
 				}
+
 				columns.push(c)
 			}
 
@@ -357,8 +370,8 @@ function uuidv4() {
 				width: "95%",
 				height: "250px",
 
-				inserting: true,
-				editing: true,
+				inserting: self.currentSettings.allowEdit,
+				editing: self.currentSettings.allowEdit,
 				sorting: true,
 				paging: true,
 				pageLoading: true,

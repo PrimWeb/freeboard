@@ -65,7 +65,23 @@ Freeboard can be run entirely from a local hard drive. Simply download/clone the
 3. npm install
 4. grunt
 
-Then run a index.html or index-dev.html through a webserver.
+Then run a index.html or index-dev.html through a webserver(Or just open in a browser)
+
+### Moving between pages
+
+This fork allows a board to have more than one page. There are three ways to move between pages.
+
+One is to add a "Basic Info" datasource. Setting the "curentPage" property by using a data target will move to the new page, and create it if it does
+not exist. 
+
+The second is the API call freeboard.gotoPage("pageName"), and finally, you can just click "goto" in the page manager, accessible from the top bar.
+
+Both of these methods also accept page info objects, of the type found in the allPages property of the Basic Info datasource.
+
+This means you can make a very simple automatic table of contents by using allPages as the data source for a Grid View widget, and setting it's selection
+target to pageName.  Then you can click any row in the table to go to that page.
+
+Another possibility is to set a button widget's value to the page name you want, and set it's target to the pageName.  When the button is clicked, the page changes.
 
 ### API
 
@@ -178,7 +194,14 @@ Updates settings on a datasource.
 > **settings** (object) - An object of key-value pairs for the settings of the datasource. The values specified here will be combined with the current settings, so you do not need specify every setting if you only want to update one. To get a list of possible settings for a datasource, consult the datasource documentation or code, or call the freeboard.getDatasourceSettings function.
 
 -------
+**freeboard.gotoPage(pageName)**
 
+Transitions to a new page. If the page doesn't exist, creates it. Names are the same as those in the page manager.
+
+**freeboard.currentPage()**
+
+Return the currently active page
+-------
 **freeboard.on(eventName, callback)**
 
 Attach to a global freeboard event.
@@ -198,7 +221,9 @@ Attach to a global freeboard event.
 Binds supported handler functions on obj to event handlers. Element specific ones are skipped if no element is provided.
 
 The reason for this is to allow your plugins to expose a scripting api, when combined with the constructor datatype,
-in a consistent way.   The calculated setting result for these settings in widgets will be suitable for use as a handler.
+in a consistent way, so that any event can be used anywhere.
+
+The calculated setting result for these settings in widgets will be suitable for use as a handler.
 
 Since datasources do not support calculated settings, you must compile the raw data given, manually, to make it a handler.
 ```
@@ -209,8 +234,14 @@ var handler = new constructor(datasources)
 Current support:
 
 * onClick() (element specific, the same as JQ's .on() API)
+* onChange() (element specific, the same as JQ's .on() API)
+* onInput() (element specific, the same as JQ's .on() API)
+
 * onSecond() (Calls function every second)
 * onTick() (Calls every "tick" which is 1/48 seconds currently, may become adjustable)
+
+* onPageLoaded(e) (Calls function when a new page is loaded. e.detail.name will be the  name of the new page)
+* onUnbind(e) (Called when unbindHandlers is used, use this for destructors)
 
 -------
 
