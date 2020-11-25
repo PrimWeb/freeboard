@@ -43,8 +43,9 @@ freeboard(fork!)
 3. a damn-sexy, open source real-time dashboard builder/viewer for IOT and other web mashups.
 
 ### Demo
-http://freeboard.github.io/freeboard
+http://eternityforest.github.io/freeboard
 
+Original Devs:
 https://freeboard.io
 
 ### Screenshots(Forest.json theme)
