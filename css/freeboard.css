@@ -1022,7 +1022,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 .trumbowyg-formatting-button:before {
 	font-family: IcoFont;
-	content: "";
+	content: "";
 }
 
 .trumbowyg-strong-button:after {
@@ -1037,7 +1037,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 .trumbowyg-del-button:after {
 	font-family: IcoFont;
-	content: "";
+	content: "";
 }
 
 .trumbowyg-superscript-button:after {
@@ -1422,6 +1422,11 @@ Note use of generic font names
 @font-face {
 	font-family: Stencil;
 	src: url(fonts/QTMilitary.otf);
+}
+
+@font-face {
+	font-family: Cinzel;
+	src: url(fonts/Cinzel-Regular.woff2);
 }
 
 @font-face {
@@ -3013,7 +3018,6 @@ ul.datasource-input-suffix {
 .styled-select select {
 	width: 16em;
 	height: 30px;
-	-webkit-appearance: none;
 	border: 2px inset var(--widget-border-color);
 	background: url(../img/dropdown-arrow.png) no-repeat right var(--widget-bg-image);
 	background-color:var(--widget-bg-color);

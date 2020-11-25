@@ -212,6 +212,11 @@ Note use of generic font names
 }
 
 @font-face {
+	font-family: Cinzel;
+	src: url(fonts/Cinzel-Regular.woff2);
+}
+
+@font-face {
 	font-family: Chancery;
 	src: url(fonts/QTChanceryType-Italic.otf);
 }
@@ -1800,7 +1805,6 @@ ul.datasource-input-suffix {
 .styled-select select {
 	width: 16em;
 	height: 30px;
-	-webkit-appearance: none;
 	border: 2px inset var(--widget-border-color);
 	background: url(../../../img/dropdown-arrow.png) no-repeat right var(--widget-bg-image);
 	background-color:var(--widget-bg-color);

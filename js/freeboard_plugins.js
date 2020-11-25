@@ -1917,6 +1917,7 @@ PluginEditor = function (jsEditor, valueEditor) {
 											{ name: 'Chancery', family: 'Chancery' },
 											{ name: 'Comic', family: 'FBComic' },
 											{ name: 'Blackletter', family: 'Blackletter' },
+											{ name: 'Cinzel', family: 'Cinzel' },
 											{ name: 'Stencil', family: 'Stencil' },
 											{ name: 'Pixel', family: 'Pixel' },
 											{ name: 'B612', family: 'B612' },
@@ -3478,19 +3479,22 @@ var freeboard = (function () {
 		templates=freeboardTemplates,
 		pagesData=theFreeboardModel.pagesDataObservable,
 		ui=freeboardUI,
+		builtinSoundsFolder = "sounds",
 		defaultSounds={
-			'low-click': "sounds/333429__brandondelehoy__ui-series-another-basic-click.opus",
-			'scifi-beep': 'sounds/220176__gameaudio__confirm-click-spacey.opus',
-			'error': 'sounds/423166__plasterbrain__minimalist-sci-fi-ui-error.opus',
-			'soft-chime': 'sounds/419493__plasterbrain__bell-chime-alert.opus',
-			'drop': 'sounds/DM-CGS-32.opus',
-			'bamboo': 'sounds/DM-CGS-50.opus',
-			'snap': 'sounds/333431__brandondelehoy__ui-series-miscellaneous-01.opus',
-			'click': 'sounds/333427__brandondelehoy__ui-series-gravel-y-click.opus',
-			'typewriter': 'sounds/380137__yottasounds__typewriter-single-key-type-2.opus',
-			'scifi-descending': 'sounds/422515__nightflame__menu-fx-03-descending.opus',
-			'scifi-ascending': 'sounds/422516__nightflame__menu-fx-03-ascending.opus',
-			'scifi-flat': 'sounds/422514__nightflame__menu-fx-03-normal.opus'
+			'hint': "320181__dland__hint.opus",
+			'boing': "331381__qubodup__public-domain-jump-sound.opus",
+			'low-click': "333429__brandondelehoy__ui-series-another-basic-click.opus",
+			'scifi-beep': '220176__gameaudio__confirm-click-spacey.opus',
+			'error': '423166__plasterbrain__minimalist-sci-fi-ui-error.opus',
+			'soft-chime': '419493__plasterbrain__bell-chime-alert.opus',
+			'drop': 'DM-CGS-32.opus',
+			'bamboo': 'DM-CGS-50.opus',
+			'snap': '333431__brandondelehoy__ui-series-miscellaneous-01.opus',
+			'click': '333427__brandondelehoy__ui-series-gravel-y-click.opus',
+			'typewriter': '380137__yottasounds__typewriter-single-key-type-2.opus',
+			'scifi-descending': '422515__nightflame__menu-fx-03-descending.opus',
+			'scifi-ascending': '422516__nightflame__menu-fx-03-ascending.opus',
+			'scifi-flat': '422514__nightflame__menu-fx-03-normal.opus'
 
 		},
 
@@ -3635,7 +3639,7 @@ var freeboard = (function () {
 
 			else {
 				if (freeboard.defaultSounds[s]) {
-					s = freeboard.defaultSounds[s]
+					s = freeboard.builtinSoundsFolder+"/"+freeboard.defaultSounds[s]
 				}
 			}
 
@@ -3908,7 +3912,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 
 
 
-var fontlist = ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
+var fontlist = ['FBSans', 'FBSerif', 'Chalkboard', 'Chancery', 'Pandora', 'RoughScript', 'Handwriting', "B612", "FBMono", "Blackletter", "FBComic", "Pixel", "Cinzel", "QTBlackForest", "Pixel", "FBCursive", "DIN", "PenguinAttack", "DSEG7", "DSEG14"]
 
 var freeboardFontsList = fontlist
 
@@ -11776,6 +11780,7 @@ freeboard.loadDatasourcePlugin({
 							{ name: 'Handwriting', family: 'Handwriting' },
 							{ name: 'Rough Script', family: 'RoughScript' },
 							{ name: 'Chancery', family: 'Chancery' },
+							{ name: 'Cinzel', family: 'Cinzel' },
 							{ name: 'Comic', family: 'FBComic' },
 							{ name: 'Blackletter', family: 'Blackletter' },
 							{ name: 'Stencil', family: 'Stencil' },

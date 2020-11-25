@@ -176,6 +176,7 @@
 							{ name: 'Handwriting', family: 'Handwriting' },
 							{ name: 'Rough Script', family: 'RoughScript' },
 							{ name: 'Chancery', family: 'Chancery' },
+							{ name: 'Cinzel', family: 'Cinzel' },
 							{ name: 'Comic', family: 'FBComic' },
 							{ name: 'Blackletter', family: 'Blackletter' },
 							{ name: 'Stencil', family: 'Stencil' },

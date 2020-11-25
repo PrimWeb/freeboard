@@ -30,7 +30,7 @@ freeboard(fork!)
 
 * Clock widget has custom strftime string capability
 
-* Always-available libraries are now part of the core: Luxon, Math, Keyboard, Strftime
+* Always-available libraries are now part of the core: Keyboard, Strftime
 * The UI tries to render emoji with the Noto Color font(included) and supports FontAwesome glyphs wherever you want to paste them.
 
 * freeboard.playSound function plays sounds either from a URL, or defined in the soundData global settings namespace.   There's a UI in settings to upload files.
