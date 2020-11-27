@@ -1074,7 +1074,6 @@ h1, h2, h3, h4, h5, h6 {
 	text-rendering: optimizelegibility;
 	text-shadow: 2px 2px 8px var(--header-shadow);
 	font-family: var(--header-font), 'IcoFont', 'NotoColorEmoji','FontAwesome';
-
 }
 
 h1 {
@@ -1287,6 +1286,8 @@ header h1 {
 	right: 0px;
 	position: absolute;
 	display: none;
+	color: var(--header-fg-color);
+	text-shadow: 2px 2px 8px var(--header-shadow);
 }
 
 .datasource-edit-btn {
