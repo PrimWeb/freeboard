@@ -196,6 +196,8 @@ function uuidv4() {
 
 		//When we use a backend, it is expected that the backend object will provide the listeners.
 		self.makeExternalEditRow = function (d) {
+			var row = _.clone(d)
+
 			var m = {
 				set: function (o, k, v) {
 
@@ -203,20 +205,28 @@ function uuidv4() {
 					//Saving a record is done by putting a listener on the arrival time.
 					//The value we set is irrelevant, it is always set to the current time.
 					if (k == 'arrival') {
-						o.arrival = Date.now() * 1000
-						o.time = Date.now() * 1000
-						self.upsert(o)
+						row.arrival = Date.now() * 1000
+						row.time = Date.now() * 1000
+						self.upsert(row)
 						$(theGridbox).jsGrid('refresh');
 					}
 					else {
+						//Ignore non changes
+						if(row[k]==v)
+						{
+							return;
+						}
 						//If we make a local change, update the timestamp to tell about it.
-						o.time = Date.now() * 1000
-						o[k] = v;
+						row.time = Date.now() * 1000
+						row[k] = v;
 					}
+
+					self.dataTargets.selection(proxy)
 				}
 			}
 
-			return new Proxy(d, m)
+			var proxy= new Proxy(row, m)
+			return proxy
 		}
 
 		//Cleans up the data, so it has all the Freeboard DB spec required keys.
@@ -440,7 +450,7 @@ function uuidv4() {
 		//
 		// Blocks of different sizes may be supported in the future.
 		self.getHeight = function () {
-			return 6;
+			return 5;
 		}
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.

@@ -201,7 +201,7 @@
 			$('#' + thisWidgetId + '-trumbo').closest(".trumbowyg-box").css('height',Math.max( parseInt(self.currentSettings.size)*60 - 80, 30))
 			$('#' + thisWidgetId + '-trumbo').prev(".trumbowyg-editor").css('height',Math.max( parseInt(self.currentSettings.size)*60 - 80, 30))
 
-			$('#' + thisWidgetId + '-trumbo').on('change',
+			$('#' + thisWidgetId + '-trumbo').on('tbwchange',
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
@@ -209,23 +209,7 @@
 						}
 				});
             
-			$('#' + thisWidgetId + '-trumbo').on('input',
-				function (e) {
-					self.value = e.target.value;
 
-					if (self.currentSettings.mode == 'change') {
-						//This mode does not affect anything till the user releases the mouse
-						return;
-					}
-					if (_.isUndefined(self.currentSettings.target)) { }
-					else {
-						//todo Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(e.target.value);
-						}
-					}
-				}
-			);
 			$(theTextbox).removeClass("ui-widget-content");
 		}
 

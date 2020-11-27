@@ -225,7 +225,7 @@ function uuidv4() {
 
 		self.handler = {
 			set: function (obj, prop, val) {
-				throw new Error("You can't set anything here. Use getMatching({}) to get all matching records, and set() to set a record.");
+				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertRecord(r) to set a record.");
 			}
 
 		}

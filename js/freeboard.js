@@ -2671,27 +2671,24 @@ ValueEditor = function(theFreeboardModel)
 
 function WidgetModel(theFreeboardModel, widgetPlugins) {
 
-	var targetFunctionFromScript = function(script)
-	{
+	var targetFunctionFromScript = function (script) {
 		// First we compile the user's code, appending to make it into an assignment to the target
-		if(!script)
-		{
-			return new Function("datasources",'value', "");
+		if (!script) {
+			return new Function("datasources", 'value', "");
 		}
-		var append =''
+		var append = ''
 
 		//Assignments or function calls let you ado something other than what you expect with the value.
-		if (!(script.includes('=') || script.includes('(')))
-		{
+		if (!(script.includes('=') || script.includes('('))) {
 			append = '=value'
 		}
-		var targetFunction = new Function("datasources",'value', script+append);
-		
+		var targetFunction = new Function("datasources", 'value', script + append);
+
 		//Next we wrap this into another function that supplies the neccesary context.
 		var f = function (val) {
 			return targetFunction(theFreeboardModel.protectedDataSourceData, val);
 		}
-		
+
 		return f
 	}
 
@@ -2711,23 +2708,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 	this.calculatedSettingScripts = {};
 
 	//When you have a setting of type 'target', that setting gets an entry here, and it's a function you call to set the target with new data.
-	this.dataTargets={}
+	this.dataTargets = {}
 
 	this.title = ko.observable();
 	this.fillSize = ko.observable(false);
 
 	this.type = ''
-	
+
 	//Sync function.  We are sure t always call this after calculating settings.
 	//Note that we don't have any way to wait on the newinstance function
 	//because i don't know how to use head.js with async.  Nonetheless, the api semi-spec already
 	//clearly doesn't care about waiting
-	this.setType = async function (newValue,settings) {
-		if(self.type==newValue)
-		{
+	this.setType = async function (newValue, settings) {
+		if (self.type == newValue) {
 			return;
 		}
-		self.type=newValue
+		self.type = newValue
 
 		disposeWidgetInstance();
 		await self.updateCalculatedSettings();
@@ -2736,14 +2732,14 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 			var widgetType = widgetPlugins[newValue];
 
 			async function finishLoad() {
-				    await widgetType.newInstance(self.calculatedSettings, function (widgetInstance) {
+				await widgetType.newInstance(self.calculatedSettings, function (widgetInstance) {
 
 					self.fillSize((widgetType.fill_size === true));
 					self.widgetInstance = widgetInstance;
 
-				
-					self.widgetInstance.dataTargets= self.dataTargets;
-                    self.widgetInstance.processCalculatedSetting= self.processCalculatedSetting;
+
+					self.widgetInstance.dataTargets = self.dataTargets;
+					self.widgetInstance.processCalculatedSetting = self.processCalculatedSetting;
 
 					self.shouldRender(true);
 					self._heightUpdate.valueHasMutated();
@@ -2765,23 +2761,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 	//After processing
 	this.calculatedSettings = {}
-	
+
 	this.setSettings = async function (newValue) {
-		this.settings=newValue
+		this.settings = newValue
 
 		//Make the processed copy
-		Object.assign(this.calculatedSettings,this.settings);
+		Object.assign(this.calculatedSettings, this.settings);
 
 		//Now we are gonna calc the real values
 		await self.updateCalculatedSettings();
 
 		if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onSettingsChanged)) {
-			try{
+			try {
 				await self.widgetInstance.onSettingsChanged(this.settings);
 			}
-			catch(e)
-			{
-				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings","OK")
+			catch (e) {
+				freeboard.showDialog($("<pre>").text(String(e)), "Error changing settings", "OK")
 				throw e;
 			}
 		}
@@ -2810,10 +2805,10 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 		}
 	}
 
-	
+
 	//This function is now a public API function.
 	//Will not complete till the effect is resolved, but the function itself is async
-	this.processCalculatedSetting = async function (settingName,showError) {
+	this.processCalculatedSetting = async function (settingName, showError) {
 		if (_.isFunction(self.calculatedSettingScripts[settingName])) {
 			var returnValue = undefined;
 
@@ -2827,15 +2822,13 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
 					returnValue = rawValue;
 				}
-				if(showError)
-				{
-					freeboard.showDialog(e, "Error with: "+settingName, "OK")
+				if (showError) {
+					freeboard.showDialog(e, "Error with: " + settingName, "OK")
 					freeboard.playSound('error')
-				}				
+				}
 			}
 
-			var f = async function(returnValue)
-			{
+			var f = async function (returnValue) {
 				if (!_.isUndefined(self.widgetInstance) && _.isFunction(self.widgetInstance.onCalculatedValueChanged) && !_.isUndefined(returnValue)) {
 					try {
 						//Maybe async, maybe not
@@ -2843,15 +2836,25 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 					catch (e) {
 						console.log(e.toString());
-						
+
 					}
 				}
 			}
 
-	        //We might get a Promise as a return value. If that happens, we need to resolve it.
-			var x =await returnValue;
-			self.calculatedSettings[settingName]=x;
-			await f(x)
+			try {
+				//We might get a Promise as a return value. If that happens, we need to resolve it.
+				var x = await returnValue;
+				self.calculatedSettings[settingName] = x;
+				await f(x)
+			}
+			catch (e) {
+				console.log(e.toString());
+				if (showError) {
+					freeboard.showDialog(e, "Error with: " + settingName, "OK")
+					freeboard.playSound('error')
+				}
+			}
+
 		}
 	}
 
@@ -2866,36 +2869,31 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 		// Check for any calculated settings
 		var settingsDefs = widgetPlugins[self.type].settings;
-		var datasourceRegex = new RegExp("=\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
 		var currentSettings = self.settings;
 
-		for(var settingDefIndex in settingsDefs) {
-			var settingDef=settingsDefs[settingDefIndex]
+		for (var settingDefIndex in settingsDefs) {
+			var settingDef = settingsDefs[settingDefIndex]
 			if (settingDef.type == "calculated" || settingDef.type == "target" || settingDef.type == "constructor") {
 				var script = currentSettings[settingDef.name];
 
 				if (!_.isUndefined(script)) {
-                    var isLiteralText=0
-					
-					var wasArray =0;
+					var isLiteralText = 0
+
+					var wasArray = 0;
 
 					//For arrays, we have to go down the line, check them, and convert to expressions as needed.
-					if(_.isArray(script)) {
-						wasArray=1;
+					if (_.isArray(script)) {
+						wasArray = 1;
 
-						var s =[]
-						for(i in script)
-						{
-							if(i[0]=='=')
-							{
+						var s = []
+						for (i in script) {
+							if (i[0] == '=') {
 								s.push(i.substring(1))
 							}
-							else if(settingDef.type == "target" || settingDef.type == "constructor")
-                            {
-                                s.push(i)
-                            }
-							else
-							{
+							else if (settingDef.type == "target" || settingDef.type == "constructor") {
+								s.push(i)
+							}
+							else {
 								//String escaping
 								s.push(JSON.stringify(i))
 							}
@@ -2904,98 +2902,91 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 					}
 
 
-					if(!script)
-					{
-						valueFunction = new Function("datasources", "return undefined;");   
+					if (!script) {
+						valueFunction = new Function("datasources", "return undefined;");
 					}
-                    else if ((script[0]=='=' || settingDef.type == "target" || settingDef.type == "constructor"   || wasArray)){
-                        
-                        //We use the spreadsheet convention here. 
-                        if (script[0]=='=')
-                        {
-                            script = script.substring(1)
-                        }
+					else if ((script[0] == '=' || settingDef.type == "target" || settingDef.type == "constructor" || wasArray)) {
+
+						//We use the spreadsheet convention here. 
+						if (script[0] == '=') {
+							script = script.substring(1)
+						}
 
 
-						var getter=script;                        
-						
+						var getter = script;
+
 						// If there is no return, add one
 						//Only th the getter though, not the setter if it's a target.
 						//But constructors have the implicit return.
-						if(!(settingDef.type == "constructor")){
+						if (!(settingDef.type == "constructor")) {
 							if ((script.match(/;/g) || []).length <= 1 && script.indexOf("return") == -1) {
 								getter = "return " + script;
 							}
 						}
 
-                        var valueFunction;
-						
+						var valueFunction;
+
 						//Turns a constructor into just a regular function returning the thing you want.
-						var wrapConstructerFunction = function(f1)
-						{
-							var f2 = function(datasources){
+						var wrapConstructerFunction = function (f1) {
+							var f2 = function (datasources) {
 								return new f1(datasources)
 							}
 							return f2
 						}
 
-                        try {
+						try {
 							var valueFunction = new Function("datasources", getter);
 
 							//If it is a constructor, wrap it so we can return the constructed object.
-							if (settingDef.type == "constructor")
-							{
+							if (settingDef.type == "constructor") {
 								valueFunction = wrapConstructerFunction(valueFunction)
 							}
-                        }
-                        catch (e) {
-							if(settingDef.type == "constructor")
-							{
+						}
+						catch (e) {
+							if (settingDef.type == "constructor") {
 								throw e;
 							}
-                            console.log(" arg "+getter+"\nlooks like a function but won't compile, treating as text")
-                            isLiteralText=1
-                        }
-                    }
-                    else
-                    {
-                        isLiteralText = 1;
-                    }
-					
-					if (isLiteralText)
-                    {
-                        var literalText = currentSettings[settingDef.name].replace(/"/g, '\\"').replace(/[\r\n]/g, ' \\\n');
+							console.log(" arg " + getter + "\nlooks like a function but won't compile, treating as text")
+							isLiteralText = 1
+						}
+					}
+					else {
+						isLiteralText = 1;
+					}
+
+					if (isLiteralText) {
+						var literalText = currentSettings[settingDef.name].replace(/"/g, '\\"').replace(/[\r\n]/g, ' \\\n');
 						// If the value function cannot be created, then go ahead and treat it as literal text
-						valueFunction = new Function("datasources", "return \"" + literalText + "\";");   
-                    }
+						valueFunction = new Function("datasources", "return \"" + literalText + "\";");
+					}
 
 					self.calculatedSettingScripts[settingDef.name] = valueFunction;
-                    
-                    //The settting is asking the uesr for a data target. So we create a function
-                    //to set that value.
-                    
-                    //The datasource is then expected to handle this with a set function.
-                    if (settingDef.type == "target")
-                    {
-                        try {
-                           
-                            self.dataTargets[settingDef.name] = targetFunctionFromScript(script);
-                        }
-                        catch (e) {
-							console.log("Bad data target: "+ script)
+
+					//The settting is asking the uesr for a data target. So we create a function
+					//to set that value.
+
+					//The datasource is then expected to handle this with a set function.
+					if (settingDef.type == "target") {
+						try {
+
+							self.dataTargets[settingDef.name] = targetFunctionFromScript(script);
+						}
+						catch (e) {
+							console.log("Bad data target: " + script)
 							console.log(e)
 							//The do nothing function
-							self.dataTargets[settingDef.name]=function(v){}
-                        }
+							self.dataTargets[settingDef.name] = function (v) { }
+						}
 					}
-					
+
 					//No error dialog for targets, they are created on-demand
-					await self.processCalculatedSetting(settingDef.name,(settingDef.type == "calculated"|| settingDef.type == "constructor"));
-					
+					await self.processCalculatedSetting(settingDef.name, (settingDef.type == "calculated" || settingDef.type == "constructor"));
+
 					//Constructors do not auto-update like everything else.
-					if(!(settingDef.type == "constructor")){
+					if (!(settingDef.type == "constructor")) {
 						// Are there any datasources we need to be subscribed to?
 						var matches;
+						var datasourceRegex = new RegExp("\\s*datasources.([\\w_-]+)|datasources\\[['\"]([^'\"]+)", "g");
 
 						while (matches = datasourceRegex.exec(script)) {
 							var dsName = (matches[1] || matches[2]);
@@ -3006,23 +2997,22 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 								self.datasourceRefreshNotifications[dsName] = refreshSettingNames;
 							}
 
-							if(_.indexOf(refreshSettingNames, settingDef.name) == -1) // Only subscribe to this notification once.
+							if (_.indexOf(refreshSettingNames, settingDef.name) == -1) // Only subscribe to this notification once.
 							{
 								refreshSettingNames.push(settingDef.name);
 							}
 						}
 					}
 				}
-				else
-				{
+				else {
 					//Dummy target setting
-					self.dataTargets[settingDef.name]=function(v){};
+					self.dataTargets[settingDef.name] = function (v) { };
 				}
 			}
 		};
 
-    };
-	
+	};
+
 
 	this._heightUpdate = ko.observable();
 	this.height = ko.computed({

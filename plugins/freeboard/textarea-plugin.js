@@ -163,8 +163,13 @@
 					if (_.isUndefined(self.currentSettings.target)) { }
 					else {
 						//todo Avoid loops, only real user input triggers this
-						if (true) {
+						try  {
 							self.dataTargets.target(e.target.value);
+						}
+						catch(e)
+						{
+							freeboard.showDialog(e, "Bad data target", "OK")
+							freeboard.playSound('error');						
 						}
 					}
 				}
@@ -207,9 +212,8 @@
 			if (settingName == "target") {
 				self.value = newValue;
 
-				var value = newValue;
-
-
+				//Fix undefined errors
+				var value = newValue || '';
 
 				//Attempt to break l00ps
 				if (value != $(theTextbox).val()) {

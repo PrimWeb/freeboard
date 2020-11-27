@@ -1972,7 +1972,7 @@ html {
 .jsgrid-table{
 	color: var(--widget-fg-color);
 	border-radius: var(--widget-border-radius);
-	font-family: var(--widget-font), 'IcoFont', 'NotoColorEmoji','FontAwesome';
+	font-family: var(--widget-font), ;
 	font-size: var(--widget-font-size);
 	border-color: var(--widget-fg-color);
 	border-width: 1px;
@@ -1991,7 +1991,7 @@ html {
 }
 
 .jsgrid-header-row, .jsgrid-header-row>.jsgrid-header-cell {
-	font-family: 'NotoColorEmoji', var(--header-font);
+	font-family:  var(--header-font),'IcoFont', 'NotoColorEmoji','FontAwesome';
 	font-size: var(--header-font-size);
 	border-bottom: var(--border-color) 1px solid;
 	border-color: var(--border-color);
@@ -2793,6 +2793,7 @@ ul.value-dropdown {
 	position: absolute;
 	padding: 0px;
 	margin: 0px;
+	color: var(--widget-fg-color);
 	background-color: var(--widget-bg-color);
 	border: 2px inset var(--highlight-color);
 	overflow-x: auto;
@@ -2894,7 +2895,7 @@ ul.board-toolbar.vertical {
 	margin-bottom: -10px;
 }
 
-.text-button,.jsgrid-pager-nav-button,.jsgrid-pager-page {
+.text-button,.jsgrid-pager-nav-button,.jsgrid-pager-page{
 	color: var(--widget-fg-color);
 	background-color: var(--widget-bg-color);
 	border-radius: var(--widget-border-radius);
@@ -2907,6 +2908,14 @@ ul.board-toolbar.vertical {
 	background-image: var(--widget-bg-image);
 
 }
+
+/*Kida hacky special case here*/
+#board-actions * label, #datasources * label{
+	font-family: var(--widget-font), 'IcoFont', 'NotoColorEmoji','FontAwesome';
+	font-size: var(--widget-font-size);
+	cursor: pointer;
+}
+
 
 .jsgrid-pager-nav-button{
 	float: left;

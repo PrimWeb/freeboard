@@ -196,6 +196,8 @@ function uuidv4() {
 
 		//When we use a backend, it is expected that the backend object will provide the listeners.
 		self.makeExternalEditRow = function (d) {
+			var row = _.clone(d)
+
 			var m = {
 				set: function (o, k, v) {
 
@@ -203,20 +205,28 @@ function uuidv4() {
 					//Saving a record is done by putting a listener on the arrival time.
 					//The value we set is irrelevant, it is always set to the current time.
 					if (k == 'arrival') {
-						o.arrival = Date.now() * 1000
-						o.time = Date.now() * 1000
-						self.upsert(o)
+						row.arrival = Date.now() * 1000
+						row.time = Date.now() * 1000
+						self.upsert(row)
 						$(theGridbox).jsGrid('refresh');
 					}
 					else {
+						//Ignore non changes
+						if(row[k]==v)
+						{
+							return;
+						}
 						//If we make a local change, update the timestamp to tell about it.
-						o.time = Date.now() * 1000
-						o[k] = v;
+						row.time = Date.now() * 1000
+						row[k] = v;
 					}
+
+					self.dataTargets.selection(proxy)
 				}
 			}
 
-			return new Proxy(d, m)
+			var proxy= new Proxy(row, m)
+			return proxy
 		}
 
 		//Cleans up the data, so it has all the Freeboard DB spec required keys.
@@ -440,7 +450,7 @@ function uuidv4() {
 		//
 		// Blocks of different sizes may be supported in the future.
 		self.getHeight = function () {
-			return 6;
+			return 5;
 		}
 
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
@@ -1558,7 +1568,7 @@ function uuidv4() {
 
 		self.handler = {
 			set: function (obj, prop, val) {
-				throw new Error("You can't set anything here. Use getMatching({}) to get all matching records, and set() to set a record.");
+				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertRecord(r) to set a record.");
 			}
 
 		}
@@ -3907,7 +3917,7 @@ freeboard.loadDatasourcePlugin({
 			$('#' + thisWidgetId + '-trumbo').closest(".trumbowyg-box").css('height',Math.max( parseInt(self.currentSettings.size)*60 - 80, 30))
 			$('#' + thisWidgetId + '-trumbo').prev(".trumbowyg-editor").css('height',Math.max( parseInt(self.currentSettings.size)*60 - 80, 30))
 
-			$('#' + thisWidgetId + '-trumbo').on('change',
+			$('#' + thisWidgetId + '-trumbo').on('tbwchange',
 				function (e) {
 						//Avoid loops, only real user input triggers this
 						if (true) {
@@ -3915,23 +3925,7 @@ freeboard.loadDatasourcePlugin({
 						}
 				});
             
-			$('#' + thisWidgetId + '-trumbo').on('input',
-				function (e) {
-					self.value = e.target.value;
 
-					if (self.currentSettings.mode == 'change') {
-						//This mode does not affect anything till the user releases the mouse
-						return;
-					}
-					if (_.isUndefined(self.currentSettings.target)) { }
-					else {
-						//todo Avoid loops, only real user input triggers this
-						if (true) {
-							self.dataTargets.target(e.target.value);
-						}
-					}
-				}
-			);
 			$(theTextbox).removeClass("ui-widget-content");
 		}
 
@@ -4849,8 +4843,13 @@ freeboard.loadDatasourcePlugin({
 					if (_.isUndefined(self.currentSettings.target)) { }
 					else {
 						//todo Avoid loops, only real user input triggers this
-						if (true) {
+						try  {
 							self.dataTargets.target(e.target.value);
+						}
+						catch(e)
+						{
+							freeboard.showDialog(e, "Bad data target", "OK")
+							freeboard.playSound('error');						
 						}
 					}
 				}
@@ -4893,9 +4892,8 @@ freeboard.loadDatasourcePlugin({
 			if (settingName == "target") {
 				self.value = newValue;
 
-				var value = newValue;
-
-
+				//Fix undefined errors
+				var value = newValue || '';
 
 				//Attempt to break l00ps
 				if (value != $(theTextbox).val()) {
