@@ -3964,12 +3964,11 @@ freeboard.loadDatasourcePlugin({
 				
 				var value= newValue;
 				
-			
-
+		
 				//Attempt to break l00ps
-				if(value!=$(theTextbox).val())
+				if(value!=$('#' + thisWidgetId + '-trumbo').trumbowyg("html"))
 				{
-					$(theTextbox).val(value);
+					$('#' + thisWidgetId + '-trumbo').trumbowyg("html", value)
 				}
 			}
 

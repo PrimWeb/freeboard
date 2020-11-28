@@ -10,6 +10,8 @@ freeboard(fork!)
 * Data targets can just be a writable data source that uses proxies to detect when you set it's keys
 * But if they include an assignment or a function call, they are interpreted as literal javascript, so alert(value) works.
 * Your widget instance can just call datatargets['settingName'](theValue) to set whatever target the user gave
+* Data targets can use JS ?. optional chaining to handle things that might not exist. This only works for reading, the optional chaining
+  is automatically converted to standard chaining for writing.
 
 * Input widgets just get or set exactly the raw data you enter(Previous versions of my fork used val, timestamp pairs, this caused trouple for future DB addons)
 

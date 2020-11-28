@@ -27,7 +27,7 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/strftime.js',
                         'lib/js/thirdparty/js-yaml.js',
                         'lib/js/thirdparty/jsgrid.min.js',
-                        'lib/js/thirdparty/trumbowyg.min.js',
+                        'lib/js/thirdparty/trumbowyg.js',
                         'lib/js/thirdparty/trumbowyg.fontsize.min.js',
                         'lib/js/thirdparty/trumbowyg.fontfamily.min.js',
                         'lib/js/thirdparty/trumbowyg.base64.min.js',

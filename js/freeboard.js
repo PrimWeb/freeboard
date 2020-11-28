@@ -2672,10 +2672,62 @@ ValueEditor = function(theFreeboardModel)
 function WidgetModel(theFreeboardModel, widgetPlugins) {
 
 	var targetFunctionFromScript = function (script) {
+
+		var insideSingle = false
+		var insideDouble = false
+		var lastWasSlash=false
+
+		var r=''
 		// First we compile the user's code, appending to make it into an assignment to the target
 		if (!script) {
 			return new Function("datasources", 'value', "");
 		}
+	
+		//Remove ? from script if unquoted.
+		//The user may want to use ?. in a data target, but you can't assign to those.  So we convert to just plain .
+		//expressions when we use them for setting.  Which is fine, because when setting we usually want to see any nonexistant errors.
+		//But when getting, we let the user tell us that they should be ignored.
+		for(var idx in script)
+		{
+			var i = script[idx]
+			if(lastWasSlash)
+			{
+				r+=i;
+				lastWasSlash=false
+			}
+			else if(i=="\\")
+			{
+				lastWasSlash=1
+			}
+			else{
+				if(i=="?")
+				{
+					if((!insideDouble) && (!insideSingle))
+					{
+						continue
+					}
+				}
+				r+=i
+				if(i=='"')
+				{
+					if(!insideSingle)
+					{
+						insideDouble = !insideDouble;
+					}
+				}
+				if(i=="'")
+				{
+					if(!insideDouble)
+					{
+						insideSingle = !insideSingle;
+					}
+				}
+			}
+		}
+		script=r
+		
+
+		
 		var append = ''
 
 		//Assignments or function calls let you ado something other than what you expect with the value.
