@@ -157,14 +157,14 @@ def jsonEncode(d):
 
 # # Using challenge response, nodes can identify
 
-# import shutil
-# if not os.path.exists(os.path.expandhome("~/.drayerdb/config/nodeid-secret")):
-#     os.makedirs(os.path.expandhome("~/.drayerdb/config/"), 0o700, exist_ok=True)
-#     with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
-#         f.write(str(uuid.uuid4()))
+import shutil
+if not os.path.exists(os.path.expandhome("~/.drayerdb/config/nodeid-secret")):
+    os.makedirs(os.path.expandhome("~/.drayerdb/config/"), 0o700, exist_ok=True)
+    with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
+        f.write(str(uuid.uuid4()))
 
-# with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
-#     nodeID = f.read().strip()
+with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
+    nodeID = f.read().strip()
 
 
 class DocumentDatabase():
@@ -172,7 +172,7 @@ class DocumentDatabase():
 
         self.filename = os.path.abspath(filename)
 
-        # self.localNodeID = self.filename+socket.gethostname()+nodeID
+        self.localNodeID = libnacl.crypto_generichash((os.path.basename(filename)+nodeID).encode("utf8"))
 
         #Websockets that are subscribing to us.
         self.subscribers = weakref.WeakValueDictionary()

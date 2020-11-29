@@ -1692,7 +1692,7 @@ PluginEditor = function (jsEditor, valueEditor) {
 			_.each(settingsDefs, function (settingDef) {
 				// Set a default value if one doesn't exist
 				if (!_.isUndefined(settingDef.default_value) && _.isUndefined(currentSettingsValues[settingDef.name])) {
-					currentSettingsValues[settingDef.name] = settingDef.default_value;
+					currentSettingsValues[settingDef.name] = _.clone(settingDef.default_value);
 				}
 
 				var displayName = settingDef.name;

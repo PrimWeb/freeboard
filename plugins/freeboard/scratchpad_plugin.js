@@ -33,16 +33,15 @@
                     // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
                     "display_name" : "Default Data(as JSON or JS expression)",
                     // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
-                    "type"         : "calculated",
+                    "type"         : "json",
                     // **default_value** : A default value for this setting.
-                    "default_value": "={}",
-                    "options" : function(){
-                        return {"={key: 'value'}":""}
-                    },
+                    "default_value": {},
+            
                     // **description** : Text that will be displayed below the setting to give the user any extra information.
-                    "description"  : "Must be a valid JS =expression that returns an object. Whatever it returns will be the default data.",
+                    "description"  : "Default data when the object is created",
                     // **required** : If set to true, the field will be required to be filled in by the user. Defaults to false if not specified.
-                    "required" : true
+					"required" : true,
+					schema:{}
 				},
 
 				 {
@@ -134,9 +133,7 @@
 						});
 						x.push(Editor);
 						Editor.setValue(i.data)
-					
-	
-
+				
 					}
 				}
 			
@@ -178,14 +175,23 @@
 				//Update the default settings field
 				if (currentSettings.persist=='board')
 				{
-					currentSettings.data = "="+JSON.stringify(obj)
+					currentSettings.data = obj
 					freeboard.setDatasourceSettings(currentSettings.name, obj)
 				}
 				return true;
 			}
 
-        }
-        self.data={}
+		}
+	
+		if(_.isObject(currentSettings.data))
+		{
+		self.data=currentSettings.data || {}
+		}
+		else
+		{
+			self.data={}
+		}
+		
         self.proxy = new Proxy(self.data, self.handler)
         
 
@@ -213,13 +219,6 @@
 		}
 		self.onCalculatedSettingChanged=function(k,v)
 		{
-			if(k=='data')
-			{
-				self.data = v;
-				self.proxy = new Proxy(self.data, self.handler)
-				updateCallback(self.proxy);
-
-			}
 		}
 
 		// **updateNow()** (required) : A public function we must implement that will be called when the user wants to manually refresh the datasource
