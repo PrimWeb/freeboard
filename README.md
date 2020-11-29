@@ -24,7 +24,7 @@ freeboard(fork!)
 * Async compatibility: your newInstance data source function can be async, widgets will still load after sources
 * Async compatibility: if a calculated value expression returns a promise, we resolve it and use the result.
 
-* We use FontAwesome.  Everything just works if you run directly, but if you embed, you may have to override the path to  @font-face FontAwesome with the right file.
+* We use IcoFont.  Everything just works if you run directly, but if you embed, you may have to override the path to  @font-face IcoFont with the right file.
 * Datasources have a new setting type: button.  It takes an 'html' content param and an 'onclick' function that gets passed the (settungs,instanceobj)
 
 * New widget setting type: trumbowyg-html, which works like the text widget, except you get a WYSYWIG editor wiht drag and drop image support(cpnverts to data URI)
@@ -42,7 +42,7 @@ freeboard(fork!)
 
 1. the distance between the waterline and the main deck or weather deck of a ship or between the level of the water and the upper edge of the side of a small boat.
 2. the act of freeing data from below the "waterline" and exposing it to the world.
-3. a damn-sexy, open source real-time dashboard builder/viewer for IOT and other web mashups.
+3. A fully themeable, old-school HyperCard/VB/Excel inspired RAD in your browser, upgraded for the modern age.
 
 ### Demo
 http://eternityforest.github.io/freeboard
@@ -55,7 +55,7 @@ https://freeboard.io
 
 ### What is It?
 
-Freeboard is a turn-key HTML-based "engine" for dashboards. Besides a nice looking layout engine, it provides a plugin architecture for creating datasources (which fetch data) and widgets (which display data)— freeboard then does all the work to connect the two together. Another feature of freeboard is its ability to run entirely in the browser as a single-page static web app without the need for a server. The feature makes it extremely attractive as a front-end for embedded devices which may have limited ability to serve complex and dynamic web pages.
+Freeboard is a turn-key HTML-based "engine" for dashboards and web apps. Besides a nice looking layout engine, it provides a plugin architecture for creating datasources (which fetch and handle data) and widgets (which display data and allow input)— freeboard then does all the work to connect the two together. Another feature of freeboard is its ability to run entirely in the browser as a single-page static web app without the need for a server. The feature makes it extremely attractive as a front-end for embedded devices which may have limited ability to serve complex and dynamic web pages.
 
 The code here is the client-side portion of what you see when you visit a freeboard at http://freeboard.io. It does not include any of the server-side code for user management, saving to a database or public/private functionality— this is left up to you to implement should you want to use freeboard as an online service.
 
