@@ -57,13 +57,14 @@ import asyncio
 import websockets
 
 async def DBAPI(websocket, path):
+    session = Session
     a = await websocket.recv()
-    await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a))
+    await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a,session))
     databaseBySyncKey[a[8:40]].subscribers[time.time()] = websocket
 
     while not websocket.closed:
         a = await websocket.recv()
-        await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a))
+        await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a,session))
 
 
 def startServer(port):
@@ -158,13 +159,17 @@ def jsonEncode(d):
 # # Using challenge response, nodes can identify
 
 import shutil
-if not os.path.exists(os.path.expandhome("~/.drayerdb/config/nodeid-secret")):
-    os.makedirs(os.path.expandhome("~/.drayerdb/config/"), 0o700, exist_ok=True)
-    with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
-        f.write(str(uuid.uuid4()))
+if not os.path.exists(os.path.expanduser("~/.drayerdb/config/nodeid-secret")):
+    os.makedirs(os.path.expanduser("~/.drayerdb/config/"), 0o700, exist_ok=True)
+    with open(os.path.expanduser("~/.drayerdb/config/nodeid-secret"),'w') as f:
+        f.write(base64.b64encode(os.urandom(32)).decode("utf8"))
 
-with open(os.path.expandhome("~/.drayerdb/config/nodeid-secret")) as f:
-    nodeID = f.read().strip()
+with open(os.path.expanduser("~/.drayerdb/config/nodeid-secret")) as f:
+    nodeID = base64.b64decode(f.read().strip())
+
+class Session():
+    def __init__(self):
+        self.alreadyDidInitialSync = False
 
 
 class DocumentDatabase():
@@ -172,7 +177,8 @@ class DocumentDatabase():
 
         self.filename = os.path.abspath(filename)
 
-        self.localNodeID = libnacl.crypto_generichash((os.path.basename(filename)+nodeID).encode("utf8"))
+        #Deterministically generate a keypair that we will use to sign all correspondance
+        self.localNodeVK, self.localNodeSK = libnacl.crypto_sign_seed_keypair(libnacl.crypto_generichash(os.path.basename(filename).encode("utf8"),nodeID))
 
         #Websockets that are subscribing to us.
         self.subscribers = weakref.WeakValueDictionary()
@@ -298,10 +304,16 @@ class DocumentDatabase():
 
 
 
-    def handleBinaryAPICall(self, a):
-        # Process one incoming binary API message
+    def handleBinaryAPICall(self, a, sessionObject=None):
+        # Process one incoming binary API message.  If part of a sesson, using a sesson objert enables certain features.
 
         # Get timestamp which is also the nonce
+        remoteNodeID = a[:32]
+        a=a[32:]
+
+        #Verify that it is from who we think
+        a=libnacl.crypto_sign_open(a,remoteNodeID)
+
         tbytes = a[:8]
         t = struct.unpack("<Q", tbytes)[0]
         # reject very old stuff
@@ -338,20 +350,52 @@ class DocumentDatabase():
 
 
         r = {'records': []}
-        if "getNewArrivals" in d:
+
+
+        if sessionObject and not sessionObject.alreadyDidInitialSync:
             cur = self.conn.cursor()
             cur.execute(
-                "SELECT json,signature FROM document WHERE json_extract(json,'$._time')>?", (d['getNewArrivals'],))
+                "SELECT lastArrival FROM peers WHERE peerID=?", (d[remoteNodeID],))
+
+            c = cur.fetchone()
+            if c:
+                c=c[0]
+            else:
+                c=0
+            
+            r['getNewArrivals'] = c
+            sessionObject.alreadyDidInitialSync= True
+
+        #We got a message, but we don't know who they are, so we have to ask
+        if sessionObject and not sessionObject.peerID:
+            #Fixed salt prob not needed, blake is already immune to length extension
+            r['idChallenge']= base64.b64encode(libnacl.crypto_generichash(self.localNodeID+b'SALT')).decode("UTF8")
+            
+
+
+        if "getNewArrivals" in d:
+            cur = self.conn.cursor()
+            #Avoid dumping way too much at once
+            cur.execute(
+                "SELECT json,signature FROM document WHERE json_extract(json,'$._time')>? LIMIT 100", (d['getNewArrivals'],))
 
             for i in cur:
+                if not 'records' in r:
+                    r['records']=[]
                 r['records'].append([i])
 
-        if "insertDocuments" in d:
-            for i in 'insertDocuments':
-                if writePassword:
-                    #No need rsig verify, we are using PW verification.
-                    self.setDocument(i[0], None)
+        if "records" in d:
+            for i in 'records':
+                #No need sig verify, if we are using PW verification.
+                #Set a flag to request that the server send us any records that came after the last one, 
+                r['getNewArrivals']=self.setDocument(i[0], None if writePassword else i[1])
+            #Set a flag saying that
+            cur = self.conn.cursor()
+            cur.execute("UPDATE peers SET lastArrival=? WHERE peerID=? AND lastArrival !=?", ( r['getNewArrivals'], remoteNodeID, r['getNewArrivals']))
+
+            
         
+            
 
         return self.encodeMessage(r)
 
@@ -384,7 +428,8 @@ class DocumentDatabase():
         r=jsonEncode(d).encode('utf8')
         t= struct.pack("<Q",int(time.time()*1000000))
         r = libnacl.crypto_secretbox(r,t+b'\0'*16, pw)
-        return t+libnacl.crypto_generichash(pw,t)+r
+
+        return self.localNodeVK+ libnacl.crypto_sign(t+libnacl.crypto_generichash(pw,t)+r, self.localNodeSK)
 
     def createBinaryWriteCall(self, r,sig=None):
         "Creates a binary command representing arequest to insert a record."

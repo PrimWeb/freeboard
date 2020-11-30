@@ -252,7 +252,7 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cance
 
 	if(okTitle)
 	{
-		$('<span id="dialog-ok" class="text-button">' + okTitle + '</span>').appendTo(footer).click(function()
+		$('<span id="dialog-ok" class="text-button"> ' + okTitle + '</span>').appendTo(footer).click(function()
 		{
 			var hold = false;
 
@@ -270,7 +270,7 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cance
 
 	if(cancelTitle)
 	{
-		$('<span id="dialog-cancel" class="text-button">' + cancelTitle + '</span>').appendTo(footer).click(function()
+		$('<span id="dialog-cancel" class="text-button"> ' + cancelTitle + '</span>').appendTo(footer).click(function()
 		{
 			if(_.isFunction(cancelCallback))
 			{

@@ -36,7 +36,7 @@
                 // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
                 "name": "",
                 // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
-                "display_name": "",
+                "display_name": "",
                 'html': "Show current internal state of object in JSON editor",
 
                 // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
@@ -1588,7 +1588,7 @@ function uuidv4() {
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
 		"type_name": "document_database_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "In-browser DrayerDB database",
+		"display_name": " In-browser DrayerDB database",
 		// **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
 		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view. Choose permanent or temp when creating. If you choose wrong, you may need to refresh the page to switch.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
@@ -4227,7 +4227,7 @@ freeboard.loadDatasourcePlugin({
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
 		"type_name"   : "core_scratchpad_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "Scratchpad Variables",
+		"display_name": " Scratchpad Variables",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
         "description" : "The data is just an empty space.  To set some data, use datasources['scratchpad']['SomeName'] as a data target.  It will be available to read in other widgets.  You can also set the default data using JSON.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
