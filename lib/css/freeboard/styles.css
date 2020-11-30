@@ -59,7 +59,6 @@
 
 	/*This value MUST be in pixels*/
 	--pane-header-line-height: 20px;
-	--logo-text: freeboard;
 	--logo-image: "";
 	--logo-border-radius: 1em;
 	--box-backdrop: blur(4px);

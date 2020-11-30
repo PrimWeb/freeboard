@@ -29,7 +29,7 @@
 	freeboard.loadWidgetPlugin({
 		// Same stuff here as with datasource plugin.
 		"type_name": "richtextbox_plugin",
-		"display_name": "Rich Text Box",
+		"display_name": " Rich Text Box",
 		"description": "Interactive Textbox Plugin with 2-way data binding.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 

@@ -110,7 +110,7 @@
 
     freeboard.loadWidgetPlugin({
         "type_name": "html-template",
-        "display_name": "Rich Text Content",
+        "display_name": " Rich Text Content",
         "fill_size": true,
         "settings": [
             {

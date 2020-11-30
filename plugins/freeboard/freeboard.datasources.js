@@ -408,7 +408,7 @@
 
 	freeboard.loadDatasourcePlugin({
 		"type_name": "playback",
-		"display_name": "Playback",
+		"display_name": " Playback",
 		"settings": [
 			{
 				"name": "datafile",
@@ -493,7 +493,7 @@
 
 	freeboard.loadDatasourcePlugin({
 		"type_name": "clock",
-		"display_name": "Clock",
+		"display_name": " Clock",
 		"settings": [
 			{
 				"name": "refresh",

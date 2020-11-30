@@ -19,7 +19,7 @@
         // **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
         "type_name": "core_customobj_plugin",
         // **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-        "display_name": "Custom JS Object",
+        "display_name": " Custom JS Object",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
         "description": "Create a custom object using JS code used as a constructor.  Standard freeboard event handlers work. Call notifyChange() to update dependant widgets.  Define a this.proxyHandler object to use all features of JS proxies.  Put your init code in onLoad()",
         // **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
@@ -36,7 +36,7 @@
                 // **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
                 "name": "",
                 // **display_name** : The pretty name that will be shown to the user when they adjust this setting.
-                "display_name": "",
+                "display_name": "",
                 'html': "Show current internal state of object in JSON editor",
 
                 // **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
@@ -847,7 +847,7 @@ function uuidv4() {
 
     freeboard.loadWidgetPlugin({
         "type_name": "html-template",
-        "display_name": "Rich Text Content",
+        "display_name": " Rich Text Content",
         "fill_size": true,
         "settings": [
             {
@@ -961,7 +961,7 @@ function uuidv4() {
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
 		"type_name"   : "core_board_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": "Basic Info",
+		"display_name": " Basic Info",
         // **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
         "description" : "Provides access to basic things like the currentPage",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
@@ -2359,7 +2359,7 @@ function uuidv4() {
 
 	freeboard.loadDatasourcePlugin({
 		"type_name": "playback",
-		"display_name": "Playback",
+		"display_name": " Playback",
 		"settings": [
 			{
 				"name": "datafile",
@@ -2444,7 +2444,7 @@ function uuidv4() {
 
 	freeboard.loadDatasourcePlugin({
 		"type_name": "clock",
-		"display_name": "Clock",
+		"display_name": " Clock",
 		"settings": [
 			{
 				"name": "refresh",
@@ -3962,7 +3962,7 @@ freeboard.loadDatasourcePlugin({
 	freeboard.loadWidgetPlugin({
 		// Same stuff here as with datasource plugin.
 		"type_name": "richtextbox_plugin",
-		"display_name": "Rich Text Box",
+		"display_name": " Rich Text Box",
 		"description": "Interactive Textbox Plugin with 2-way data binding.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
 

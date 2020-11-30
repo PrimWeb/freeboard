@@ -69,12 +69,12 @@
 
     <div id="globalSettingsDialog"
         style="position: absolute; z-index: 100; background-color: var(--box-bg-color); display: none; height: 100%; width: 45%;">
-        <h2>Global Settings</h2>
-        <p>Tip: Click object properties to see more setting</p>
-        <button onclick="$('#globalSettingsDialog').css({display:'none'})">Close</button>
+        <h2> Global Settings</h2>
+        <p> Click object properties to see more settings</p>
+        <button onclick="$('#globalSettingsDialog').css({display:'none'})"> Close</button>
         <div id="fb-global-settings-editor"></div>
 
-        <button id="gs-submit">Update</button>
+        <button id="gs-submit"> Update</button>
     </div>
 
     <div id="board-content">
@@ -92,7 +92,7 @@
         <div id="admin-bar">
             <div id="admin-menu">
                 <div id="board-tools">
-                    <div id="board-logo" class="title freeboard-branding">freeboard</div>
+                    <div id="board-logo" class="title freeboard-branding"> freeboard </div>
                     <div id="board-actions">
                         <ul class="board-toolbar vertical">
                             <li data-bind="click: showFreeboadTemplatesMenu"><label> Load Example</label></li>
@@ -110,14 +110,14 @@
                             </li>
                             <li id="add-pane" data-bind="click: createPane"><label> Add Pane to Page</label></li>
                             <li data-bind="click: showPages"><label> Show Page Manager</label></li>
-                            <li onclick="$('#globalSettingsDialog').css({display:'block'})"> Board Settings</li>
+                            <li onclick="$('#globalSettingsDialog').css({display:'block'})"><label> Board Settings</label></li>
                         </ul>
                      
 
                     </div>
                 </div>
                 <div id="datasources">
-                    <h2 class="title">Data Sources</h2>
+                    <h2 class="title"> Data Sources</h2>
 
                     <div class="datasource-list-container">
                         <table class="table table-condensed sub-table" id="datasources-list"
