@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+   <script src="../lib/js/thirdparty/nacl-fast.js"></script>
+
+   <script src="../lib/js/thirdparty/nano-sql.min.js"></script>
+   <script src="../lib/js/thirdparty/nanosql.fuzzy.min.js"></script>
+   <script src="../lib/js/thirdparty/blake2b.js"></script>
+   <script src="../lib/js/thirdparty/structjsfork.js"></script>
+   <script src="../lib/js/thirdparty/stable-stringify.js"></script>
+
+   <script type="text/javascript">
+   json = JSON
+
+      function DrayerDatabaseConnection(dbname, settings) {
+         self = this
+
+         self.settings = settings
+
+         self.connections = {}
+
+         self.concatTypedArrays = function (a, b) { // a, b TypedArray of same type
+            var c = new (a.constructor)(a.length + b.length);
+            c.set(a, 0);
+            c.set(b, a.length);
+            return c;
+         }
+
+
+
+         self.makeDB = async function () {
+
+            if (self.settings.perm) {
+               pt = "PERM"
+            }
+            else {
+               pt = "TEMP"
+            }
+
+            self.db = await nSQL().createDatabase({
+               id: dbname,
+               mode: pt, // pass in "PERM" to switch to persistent storage mode!
+               tables: [
+                  {
+                     name: "records",
+                     model:
+                     {
+                        "id:uuid": { pk: true },
+                        "parent:uuid": {},
+                        "time:int": {},
+                        "arrival:int": {},
+                        "type:string": {},
+                        "name:string": {},
+                        "title:string": {},
+                        "body:string": {},
+                        "description:string": {}
+                     },
+                     indexes:
+                     {
+                        "arrival:int": {},
+                        "parent:uuid": {},
+                        "time:int": {},
+                        "name:string": { search: true },
+                        "type:string": {},
+                        "body:string": { search: true },
+                        "title:string": { search: true },
+                     }
+                  },
+                  {
+                     name: "localNodeInfo",
+                     model:
+                     {
+                        "key:string": { pk: true },
+                        "value:string": {},
+                     },
+                     indexes:
+                     {
+
+                     }
+                  },
+
+                  {
+                     name: "syncNodes",
+                     model:
+                     {
+                        "id:uuid": { pk: true },
+                        "type:string": {},
+                        "syncTime:int": {}
+                     }
+                  }
+               ],
+               plugins: [
+                  FuzzySearch()
+               ]
+            })
+
+
+            function arrayToBase64(buffer) {
+               var binary = '';
+               var bytes = [].slice.call(buffer);
+               bytes.forEach((b) => binary += String.fromCharCode(b));
+               return window.btoa(binary);
+            };
+
+            function base64ToArray(base64) {
+               var binary_string = window.atob(base64);
+               var len = binary_string.length;
+               var bytes = new Uint8Array(len);
+               for (var i = 0; i < len; i++) {
+                  bytes[i] = binary_string.charCodeAt(i);
+               }
+               return bytes
+            }
+
+
+            //Make sure we have a local keypair
+            var localNode = await nSQL('localNodeInfo').query("select").where(['key', '=', "keypair"]).exec()
+            if (localNode.length) {
+               self.localPubkey = base64ToArray( localNode[0].public)
+               self.localSecretKey = base64ToArray( localNode[0].public)
+            }
+            else {
+               nSQL().useDatabase(dbname)
+
+               var k = nacl.sign.keyPair()
+               self.localPubkey= k.publicKey
+               self.localSecretKey =k.secretKey
+
+               k = {
+                  "public":arrayToBase64(self.localPubkey),
+                  "secret":arrayToBase64(self.localSecretKey)
+               }
+
+               await nSQL('localNodeInfo').query("upsert", [{ 'key': 'keypair', value: k }]).exec()
+            }
+
+         }
+
+
+         self.dbSucess = self.makeDB()
+
+
+         self.alreadySentSyncRequest = false
+
+         //Encode a JSON into the compressed 
+         self.encodeMessage = function (m) {
+
+            m = stableStringify(m)
+            m = new TextEncoder("utf-8").encode(m)
+
+            var pw = self.settings.writePassword || self.settings.syncKey
+            pw = new TextEncoder("utf-8").encode(pw)
+
+            var keyhint = blake2b(pw, undefined, 16)
+
+            var t = BigInt(Date.now() * 1000)
+            var time = new Uint8Array(struct("<QQQ").pack(t, 0, 0,))
+
+            m = nacl.secretbox(m, time, pw)
+
+            //Don't send the padding
+            var time = new Uint8Array(struct("<Q").pack(t))
+
+            var b= self.concatTypedArrays(self.concatTypedArrays(time, keyhint), m)
+
+            b = nacl.sign(b,self.localSecretKey)
+            b = self.concatTypedArrays(self.localPubkey, b)
+            return b
+         }
+
+         self.decodeMessage = function (m) {
+
+            //Server to client messages never use the write password.
+
+            var publicKey = m.slice(0,32)
+            m= m.slice(32,m.length)
+            m=nacl.sign.open(m,publicKey)
+
+
+            var time = m.slice(0, 8)
+            var timeint = struct("<Q").unpack(time.buffer)[0]
+            var nonce = new Uint8Array(struct("<QQQ").pack(timeint, 0, 0,))
+
+            var key = m.slice(8, 8 + 16)
+
+            m = nacl.secretbox.open(m.slice(8 + 16), nonce, new TextEncoder("utf-8").encode(self.settings.syncKey))
+            m= new TextDecoder("utf-8").decode(m)
+            m=json.parse(m)
+            return [m,publicKey]
+         }
+
+         self.handleIncoming = function (m, socket) {
+
+            var nodeID = m[1];
+            var d = m[0];
+
+            if (!self.alreadySentSyncRequest) {
+               ///socket.send(self.)
+            }
+         }
+
+         self.connect = function (url) {
+
+            alert("WebSocket is supported by your Browser!");
+
+            // Let us open a web socket
+            var ws = new WebSocket(url || "ws://localhost:7001");
+            self.connections[url] = ws
+
+            ws.onopen = function () {
+
+               // Web Socket is connected, send data using send()
+               ws.send("Message to send");
+               alert("Message is sent...");
+            };
+
+            ws.onmessage = function (evt) {
+               var received_msg = evt.data;
+
+               e.data.arrayBuffer().then(function (buffer) {
+                  var buffer2 = new Uint8Array(buffer);
+                  self.connection.handleIncoming(self.decodeMessage(buffer2), ws);
+               })
+            };
+
+            ws.onclose = function () {
+               if (self.connections[url]) {
+                  self.connect(url)
+               }
+            }
+            ws.onerror = function () {
+               setTimeout(10000,
+                  function () {
+                     if (self.connections[url]) {
+                        self.connect(url)
+                     }
+                  })
+            }
+         };
+      }
+
+
+
+      db = new DrayerDatabaseConnection("poupe", { writePassword: "pppppppppppppppppppppppppppppppp", syncKey: "pppppppppppppppppppppppppppppppp", perm: false })
+      db.dbSucess.then(function()
+      {
+         console.log("DB open")
+         console.log(db.decodeMessage(db.encodeMessage({})))
+      }
+      )
+
+   </script>
+
+</head>
+
+<body>
+   <div id="sse">
+      <a href="javascript:WebSocketTest()">Run WebSocket</a>
+   </div>
+
+</body>
+
+</html>
