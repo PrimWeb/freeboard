@@ -213,11 +213,9 @@
 			}
 
 			if (settingName == 'code') {
-
 				freeboard.unbindHandlers(self.oldUserCode,inputElement)
 				freeboard.bindHandlers(newValue,inputElement)
 				self.oldUserCode = newValue;
-				
 			}
 
 		

@@ -12,7 +12,25 @@
    <script src="../lib/js/thirdparty/stable-stringify.js"></script>
 
    <script type="text/javascript">
-   json = JSON
+
+
+      function arrayToBase64(buffer) {
+         var binary = '';
+         var bytes = [].slice.call(buffer);
+         bytes.forEach((b) => binary += String.fromCharCode(b));
+         return window.btoa(binary);
+      };
+
+      function base64ToArray(base64) {
+         var binary_string = window.atob(base64);
+         var len = binary_string.length;
+         var bytes = new Uint8Array(len);
+         for (var i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+         }
+         return bytes
+      }
+      json = JSON
 
       function DrayerDatabaseConnection(dbname, settings) {
          self = this
@@ -85,8 +103,7 @@
                      name: "syncNodes",
                      model:
                      {
-                        "id:uuid": { pk: true },
-                        "type:string": {},
+                        "id:string": { pk: true },
                         "syncTime:int": {}
                      }
                   }
@@ -97,40 +114,24 @@
             })
 
 
-            function arrayToBase64(buffer) {
-               var binary = '';
-               var bytes = [].slice.call(buffer);
-               bytes.forEach((b) => binary += String.fromCharCode(b));
-               return window.btoa(binary);
-            };
-
-            function base64ToArray(base64) {
-               var binary_string = window.atob(base64);
-               var len = binary_string.length;
-               var bytes = new Uint8Array(len);
-               for (var i = 0; i < len; i++) {
-                  bytes[i] = binary_string.charCodeAt(i);
-               }
-               return bytes
-            }
 
 
             //Make sure we have a local keypair
             var localNode = await nSQL('localNodeInfo').query("select").where(['key', '=', "keypair"]).exec()
             if (localNode.length) {
-               self.localPubkey = base64ToArray( localNode[0].public)
-               self.localSecretKey = base64ToArray( localNode[0].public)
+               self.localPubkey = base64ToArray(localNode[0].public)
+               self.localSecretKey = base64ToArray(localNode[0].public)
             }
             else {
                nSQL().useDatabase(dbname)
 
                var k = nacl.sign.keyPair()
-               self.localPubkey= k.publicKey
-               self.localSecretKey =k.secretKey
+               self.localPubkey = k.publicKey
+               self.localSecretKey = k.secretKey
 
                k = {
-                  "public":arrayToBase64(self.localPubkey),
-                  "secret":arrayToBase64(self.localSecretKey)
+                  "public": arrayToBase64(self.localPubkey),
+                  "secret": arrayToBase64(self.localSecretKey)
                }
 
                await nSQL('localNodeInfo').query("upsert", [{ 'key': 'keypair', value: k }]).exec()
@@ -153,7 +154,8 @@
             var pw = self.settings.writePassword || self.settings.syncKey
             pw = new TextEncoder("utf-8").encode(pw)
 
-            var keyhint = blake2b(pw, undefined, 16)
+            //No you cannot just use the tweetnacl hash. Tried that! It's not actually libsodium compatble.
+            var keyhint = blake2b(pw,false,32).slice(0,16)
 
             var t = BigInt(Date.now() * 1000)
             var time = new Uint8Array(struct("<QQQ").pack(t, 0, 0,))
@@ -163,45 +165,67 @@
             //Don't send the padding
             var time = new Uint8Array(struct("<Q").pack(t))
 
-            var b= self.concatTypedArrays(self.concatTypedArrays(time, keyhint), m)
+            var b = self.concatTypedArrays(time, m)
 
-            b = nacl.sign(b,self.localSecretKey)
+            b = nacl.sign(b, self.localSecretKey)
             b = self.concatTypedArrays(self.localPubkey, b)
+            b=self.concatTypedArrays(keyhint,b)
             return b
          }
 
          self.decodeMessage = function (m) {
 
             //Server to client messages never use the write password.
+            var key = m.slice(0, 16)
 
-            var publicKey = m.slice(0,32)
-            m= m.slice(32,m.length)
-            m=nacl.sign.open(m,publicKey)
+            var publicKey = m.slice(16, 16+32)
+            m = m.slice(16+32, m.length)
+            m = nacl.sign.open(m, publicKey)
 
 
             var time = m.slice(0, 8)
             var timeint = struct("<Q").unpack(time.buffer)[0]
             var nonce = new Uint8Array(struct("<QQQ").pack(timeint, 0, 0,))
 
-            var key = m.slice(8, 8 + 16)
 
-            m = nacl.secretbox.open(m.slice(8 + 16), nonce, new TextEncoder("utf-8").encode(self.settings.syncKey))
-            m= new TextDecoder("utf-8").decode(m)
-            m=json.parse(m)
-            return [m,publicKey]
+            //Not worth it to have a whole check beforehand, we are not going to be getting many messages with a write password,
+            //it's just there for self test
+            var m2 = nacl.secretbox.open(m.slice(8), nonce, new TextEncoder("utf-8").encode(self.settings.syncKey))
+            if(m2==null)
+            {
+               m2 = nacl.secretbox.open(m.slice(8), nonce, new TextEncoder("utf-8").encode(self.settings.writePassword))
+            }
+
+            m = new TextDecoder("utf-8").decode(m2)
+            m = json.parse(m)
+            console.log(m)
+            return [m, publicKey]
          }
 
-         self.handleIncoming = function (m, socket) {
+         self.handleIncoming = async function (m, socket) {
 
             var nodeID = m[1];
             var d = m[0];
 
-            if (!self.alreadySentSyncRequest) {
-               ///socket.send(self.)
+            //On reconnect, we are going to send our sync request
+            if (!socket.alreadySentSyncRequest) {
+               socket.alreadySentSyncRequest = true
+
+               var node = await nSQL('syncNodes').query("select").where(['id', '=', arrayToBase64(nodeID)]).exec()
+               var syncTime = 0;
+               if(node)
+               {
+                  syncTime=nodeID.syncTime;
+               }
+               
+               socket.send(encodeMessage({"getNewArrivals": syncTime}))
+
             }
          }
 
-         self.connect = function (url) {
+         self.connect = async function (url) {
+
+            await self.dbSucess
 
             alert("WebSocket is supported by your Browser!");
 
@@ -212,8 +236,7 @@
             ws.onopen = function () {
 
                // Web Socket is connected, send data using send()
-               ws.send("Message to send");
-               alert("Message is sent...");
+               ws.send(db.encodeMessage({}));
             };
 
             ws.onmessage = function (evt) {
@@ -226,9 +249,12 @@
             };
 
             ws.onclose = function () {
-               if (self.connections[url]) {
-                  self.connect(url)
-               }
+               setTimeout(10000,
+                  function () {
+                     if (self.connections[url]) {
+                        self.connect(url)
+                     }
+                  })
             }
             ws.onerror = function () {
                setTimeout(10000,
@@ -243,13 +269,14 @@
 
 
 
-      db = new DrayerDatabaseConnection("poupe", { writePassword: "pppppppppppppppppppppppppppppppp", syncKey: "pppppppppppppppppppppppppppppppp", perm: false })
-      db.dbSucess.then(function()
-      {
+      db = new DrayerDatabaseConnection("poupe", { writePassword: "/ROaMEXIiZ7ehbj4usrmBhsMgoQjmusV", syncKey: "9+ArW5GIqcJUaaCkh8sA3i1GQhOQWofE", perm: false })
+      db.dbSucess.then(function () {
          console.log("DB open")
          console.log(db.decodeMessage(db.encodeMessage({})))
-      }
-      )
+      })
+
+      db.connect()
+      
 
    </script>
 

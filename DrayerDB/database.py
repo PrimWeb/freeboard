@@ -51,7 +51,7 @@ import struct
 
 
 
-databaseBySyncKey = weakref.WeakValueDictionary()
+databaseBySyncKeyHash = weakref.WeakValueDictionary()
 
 import asyncio
 import websockets
@@ -59,12 +59,12 @@ import websockets
 async def DBAPI(websocket, path):
     session = Session
     a = await websocket.recv()
-    await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a,session))
-    databaseBySyncKey[a[8:40]].subscribers[time.time()] = websocket
+    await websocket.send(databaseBySyncKeyHash[a[:16]].apiCall(a,session))
+    databaseBySyncKeyHash[a[:16]].subscribers[time.time()] = websocket
 
     while not websocket.closed:
         a = await websocket.recv()
-        await websocket.send(databaseBySyncKey[a[8:40]].apiCall(a,session))
+        await websocket.send(databaseBySyncKeyHash[a[:16]].apiCall(a,session))
 
 
 def startServer(port):
@@ -279,8 +279,11 @@ class DocumentDatabase():
 
 
         if self.syncKey:
-            databaseBySyncKey[libnacl.crypto_generichash(self.syncKey)] = self
+            databaseBySyncKeyHash[libnacl.crypto_generichash(self.syncKey.encode("utf8"))[:16]] = self
+        if self.writePassword:
+            databaseBySyncKeyHash[libnacl.crypto_generichash(self.writePassword.encode("utf8"))[:16]] = self
 
+        print(list(databaseBySyncKeyHash.keys()))
         self.approvedPublicKeys = {}
 
         if 'approved' in self.config:
@@ -308,6 +311,11 @@ class DocumentDatabase():
     def handleBinaryAPICall(self, a, sessionObject=None):
         # Process one incoming binary API message.  If part of a sesson, using a sesson objert enables certain features.
 
+        #Get the key hint
+        k = a[:16]
+        a=a[16:]
+
+
         # Get timestamp which is also the nonce
         remoteNodeID = a[:32]
         a=a[32:]
@@ -321,11 +329,8 @@ class DocumentDatabase():
         if t < (time.time()-3600)*1000000:
             return {}
 
-        # Get the key ID, which is just the hash of the key.
-        k = a[8:8+16]
-
         # Get the data
-        d = a[8+16:]
+        d = a[8:]
 
 
 
@@ -423,7 +428,7 @@ class DocumentDatabase():
         r=jsonEncode(d).encode('utf8')
         t= struct.pack("<Q",int(time.time()*1000000))
         r = libnacl.crypto_secretbox(r,t+b'\0'*16, pw)
-        return self.localNodeVK+ libnacl.crypto_sign(t+libnacl.crypto_generichash(pw)[:16]+r, self.localNodeSK)
+        return libnacl.crypto_generichash(pw)[:16] + self.localNodeVK+ libnacl.crypto_sign(t+r, self.localNodeSK)
 
     def createBinaryWriteCall(self, r,sig=None):
         "Creates a binary command representing arequest to insert a record."
