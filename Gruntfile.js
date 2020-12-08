@@ -58,9 +58,8 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/nacl-fast.js',
                         'lib/js/thirdparty/filesaver.js',
                         'lib/js/thirdparty/blake2b.js',
-                        'lib/js/thirdparty/structjsfork.js'
-
-
+                        'lib/js/thirdparty/structjsfork.js',
+                        'lib/js/thirdparty/stable-stringify.js'
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'

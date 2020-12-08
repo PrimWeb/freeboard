@@ -73,7 +73,9 @@
                         "name:string": {},
                         "title:string": {},
                         "body:string": {},
-                        "description:string": {}
+                        "description:string": {},
+                        "signature:string": {}
+
                      },
                      indexes:
                      {
@@ -206,23 +208,82 @@
 
             var nodeID = m[1];
             var d = m[0];
-
+            var node = await nSQL('syncNodes').query("select").where(['id', '=', arrayToBase64(nodeID)]).exec()
+               var syncTime = 0;
+               if(node.length)
+               {
+                  syncTime=node[0].syncTime;
+               }
+               
             //On reconnect, we are going to send our sync request
             if (!socket.alreadySentSyncRequest) {
                socket.alreadySentSyncRequest = true
 
-               var node = await nSQL('syncNodes').query("select").where(['id', '=', arrayToBase64(nodeID)]).exec()
-               var syncTime = 0;
-               if(node)
-               {
-                  syncTime=nodeID.syncTime;
-               }
-               
-               socket.send(encodeMessage({"getNewArrivals": syncTime}))
+               socket.send(self.encodeMessage({"getNewArrivals": syncTime}))
+            }
 
+            //Keep track of the highest remote arrival time in our record set.
+            //That is what we will later use to ask if there are any newer records.
+            if(d.records && d.records.length)
+            {
+               for(i in d.records)
+               {
+                  self.insertDocument(d.records[i[0]])
+                  if(d.records[i[0]].arrival>syncTime)
+                  {
+                     syncTime = d.records[i[0]].arrival;
+                  }
+               }
+            
+            await nSQL('syncNodes').query("upsert",[{id: arrayToBase64(nodeID),  x}])
+            }
+
+            //We don't currently deal with record signing here, and can only push  records if we have the password
+            if(self.writePassword)
+            {
+               if(d.getNewArrivals)
+               {
+                  var rv = {}
+                  rv.records = []
+                  var r = await nSQL('records').query('select').where(['arrival','>',d.getNewArrivals])
+                  for(i in r)
+                  {
+                     rv.records.append([r[i]])
+                  }
+                  socket.send(self.encodeMessage(rv))
+               }
             }
          }
 
+
+         self.insertDocument = async function(document)
+         {
+
+            await nSQL('records').query('delete').where(['id','=', document.id])
+
+            //We can delete all child records for real, because if we see them again, we will know they aren't valid due to
+            //the null parent
+            if(document.type=='null')
+            {
+               await nSQL('records').query('delete').where(['parent','=',document.id])
+            }
+
+            //just 
+            if(document.parent)
+            {
+               var x = await nSQL('records').query('select').where(['id','=',document.parent])
+               if(x)
+               {
+                  if(x.type=='null')
+                  {
+                     return document.id
+                  }
+               }
+            }
+            document.arrival=Date.now()*1000
+            await nSQL('records').query('insert',[document])
+            return document.id
+         }
          self.connect = async function (url) {
 
             await self.dbSucess
@@ -236,16 +297,18 @@
             ws.onopen = function () {
 
                // Web Socket is connected, send data using send()
-               ws.send(db.encodeMessage({}));
+               ws.send(self.encodeMessage({}));
             };
 
             ws.onmessage = function (evt) {
                var received_msg = evt.data;
 
-               e.data.arrayBuffer().then(function (buffer) {
+               evt.data.arrayBuffer().then(function (buffer) {
                   var buffer2 = new Uint8Array(buffer);
-                  self.connection.handleIncoming(self.decodeMessage(buffer2), ws);
-               })
+                  self.handleIncoming(self.decodeMessage(buffer2), ws);
+               }).catch(
+                  console.log
+               )
             };
 
             ws.onclose = function () {

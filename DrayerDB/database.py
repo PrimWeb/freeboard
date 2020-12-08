@@ -56,15 +56,27 @@ databaseBySyncKeyHash = weakref.WeakValueDictionary()
 import asyncio
 import websockets
 
-async def DBAPI(websocket, path):
-    session = Session
-    a = await websocket.recv()
-    await websocket.send(databaseBySyncKeyHash[a[:16]].apiCall(a,session))
-    databaseBySyncKeyHash[a[:16]].subscribers[time.time()] = websocket
+class Session():
+    def __init__(self):
+        self.alreadyDidInitialSync = False
 
-    while not websocket.closed:
+
+async def DBAPI(websocket, path):
+    session = Session()
+    try:
         a = await websocket.recv()
-        await websocket.send(databaseBySyncKeyHash[a[:16]].apiCall(a,session))
+
+        databaseBySyncKeyHash[a[:16]].dbConnect()
+
+        await websocket.send(databaseBySyncKeyHash[a[:16]].handleBinaryAPICall(a,session))
+        databaseBySyncKeyHash[a[:16]].subscribers[time.time()] = websocket
+
+        while not websocket.closed:
+            a = await websocket.recv()
+            await websocket.send(databaseBySyncKeyHash[a[:16]].handleBinaryAPICall(a,session))
+    except websockets.exceptions.ConnectionClosedOK:
+        pass
+    
 
 
 def startServer(port):
@@ -167,15 +179,14 @@ if not os.path.exists(os.path.expanduser("~/.drayerdb/config/nodeid-secret")):
 with open(os.path.expanduser("~/.drayerdb/config/nodeid-secret")) as f:
     nodeID = base64.b64decode(f.read().strip())
 
-class Session():
-    def __init__(self):
-        self.alreadyDidInitialSync = False
 
 
 class DocumentDatabase():
     def __init__(self, filename):
 
         self.filename = os.path.abspath(filename)
+        self.threadLocal = threading.local()
+
 
         #Deterministically generate a keypair that we will use to sign all correspondance
         self.localNodeVK, self.localNodeSK = libnacl.crypto_sign_seed_keypair(libnacl.crypto_generichash(os.path.basename(filename).encode("utf8"),nodeID))
@@ -184,58 +195,59 @@ class DocumentDatabase():
         #Websockets that are subscribing to us.
         self.subscribers = weakref.WeakValueDictionary()
 
-        self.conn = sqlite3.connect(filename)
+        self.dbConnect()
+
         self.config = configparser.ConfigParser()
 
         if os.path.exists(filename+".conf"):
             self.config.read(filename+".conf")
 
-        self.conn.row_factory = sqlite3.Row
-        # Self.conn.execute("PRAGMA wal_checkpoint=FULL")
-        self.conn.execute("PRAGMA secure_delete = off")
+        self.threadLocal.conn.row_factory = sqlite3.Row
+        # self.threadLocal.conn.execute("PRAGMA wal_checkpoint=FULL")
+        self.threadLocal.conn.execute("PRAGMA secure_delete = off")
 
         # Yep, we're really just gonna use it as a document store like this.
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             '''CREATE TABLE IF NOT EXISTS document (rowid integer primary key, json text, signature text, localinfo text)''')
 
-        self.conn.execute('''CREATE TABLE IF NOT EXISTS meta
+        self.threadLocal.conn.execute('''CREATE TABLE IF NOT EXISTS meta
              (key text primary key, value  text)''')
 
-        self.conn.execute('''CREATE TABLE IF NOT EXISTS peers
+        self.threadLocal.conn.execute('''CREATE TABLE IF NOT EXISTS peers
              (peerID text primary key, lastArrival integer, info text)''')
 
         # To keep indexing simple and universal, it only works on three properties.  _tags, _description and _body.
-        self.conn.execute('''
+        self.threadLocal.conn.execute('''
              CREATE VIRTUAL TABLE IF NOT EXISTS search USING fts5(tags, description, body, content='')''')
 
-        self.conn.execute(
-            '''CREATE INDEX IF NOT EXISTS document_parent ON document(json_extract(json,"$._parent")) WHERE json_extract(json,"$._parent") IS NOT null ''')
-        self.conn.execute(
-            '''CREATE INDEX IF NOT EXISTS document_link ON document(json_extract(json,"$._link")) WHERE json_extract(json,"$._link") IS NOT null''')
-        self.conn.execute(
-            '''CREATE INDEX IF NOT EXISTS document_name ON document(json_extract(json,"$._name"))''')
-        self.conn.execute(
-            '''CREATE INDEX IF NOT EXISTS document_id ON document(json_extract(json,"$._id"))''')
-        self.conn.execute(
-            '''CREATE INDEX IF NOT EXISTS document_type ON document(json_extract(json,"$._type"))''')
+        self.threadLocal.conn.execute(
+            '''CREATE INDEX IF NOT EXISTS document_parent ON document(json_extract(json,"$.parent")) WHERE json_extract(json,"$.parent") IS NOT null ''')
+        self.threadLocal.conn.execute(
+            '''CREATE INDEX IF NOT EXISTS document_link ON document(json_extract(json,"$.link")) WHERE json_extract(json,"$.link") IS NOT null''')
+        self.threadLocal.conn.execute(
+            '''CREATE INDEX IF NOT EXISTS document_name ON document(json_extract(json,"$.name"))''')
+        self.threadLocal.conn.execute(
+            '''CREATE INDEX IF NOT EXISTS document_id ON document(json_extract(json,"$.id"))''')
+        self.threadLocal.conn.execute(
+            '''CREATE INDEX IF NOT EXISTS document_type ON document(json_extract(json,"$.type"))''')
 
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             """
             CREATE TRIGGER IF NOT EXISTS search_index AFTER INSERT ON document BEGIN
-            INSERT INTO search(rowid, tags, description, body) VALUES (new.rowid, IFNULL(json_extract(new.json,"$._tags"), ""), IFNULL(json_extract(new.json,"$._description"), ""), IFNULL(json_extract(new.json,"$._body"), ""));
+            INSERT INTO search(rowid, tags, description, body) VALUES (new.rowid, IFNULL(json_extract(new.json,"$.tags"), ""), IFNULL(json_extract(new.json,"$.description"), ""), IFNULL(json_extract(new.json,"$.body"), ""));
             END;
             """)
 
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             """   CREATE TRIGGER IF NOT EXISTS search_delete AFTER DELETE ON document BEGIN
-            INSERT INTO search(search, rowid, tags, description, body) VALUES ('delete', old.rowid, IFNULL(json_extract(old.json,"$._tags"), ""), IFNULL(json_extract(old.json,"$._description"), ""), IFNULL(json_extract(old.json,"$._body"), ""));
+            INSERT INTO search(search, rowid, tags, description, body) VALUES ('delete', old.rowid, IFNULL(json_extract(old.json,"$.tags"), ""), IFNULL(json_extract(old.json,"$.description"), ""), IFNULL(json_extract(old.json,"$.body"), ""));
             END;""")
 
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             """
             CREATE TRIGGER IF NOT EXISTS search_update AFTER UPDATE ON document BEGIN
-            INSERT INTO search(search, rowid, tags, description, body) VALUES ('delete', old.rowid, IFNULL(json_extract(old.json,"$._tags"), ""), IFNULL(json_extract(old.json,"$._description"), ""), IFNULL(json_extract(old.json,"$._body"), ""));
-            INSERT INTO search(rowid, tags, description, body) VALUES (new.rowid, IFNULL(json_extract(new.json,"$._tags"), ""), IFNULL(json_extract(new.json,"$._description"), ""), IFNULL(json_extract(new.json,"$._body"), ""));
+            INSERT INTO search(search, rowid, tags, description, body) VALUES ('delete', old.rowid, IFNULL(json_extract(old.json,"$.tags"), ""), IFNULL(json_extract(old.json,"$.description"), ""), IFNULL(json_extract(old.json,"$.body"), ""));
+            INSERT INTO search(rowid, tags, description, body) VALUES (new.rowid, IFNULL(json_extract(new.json,"$.tags"), ""), IFNULL(json_extract(new.json,"$.description"), ""), IFNULL(json_extract(new.json,"$.body"), ""));
             END;
             """
         )
@@ -290,6 +302,10 @@ class DocumentDatabase():
             for i in self.config['approved']:
                 # Reverse lookup
                 self.approvedPublicKeys[self.config['approved'][i]] = i
+
+    def dbConnect(self):
+        if not hasattr(self.threadLocal,'conn'):
+            self.threadLocal.conn = sqlite3.connect(self.filename)
 
 
     def connectToServer(self,uri):
@@ -359,9 +375,9 @@ class DocumentDatabase():
 
 
         if sessionObject and not sessionObject.alreadyDidInitialSync:
-            cur = self.conn.cursor()
+            cur = self.threadLocal.conn.cursor()
             cur.execute(
-                "SELECT lastArrival FROM peers WHERE peerID=?", (d[remoteNodeID],))
+                "SELECT lastArrival FROM peers WHERE peerID=?", (remoteNodeID,))
 
             c = cur.fetchone()
             if c:
@@ -375,23 +391,25 @@ class DocumentDatabase():
       
 
         if "getNewArrivals" in d:
-            cur = self.conn.cursor()
+            cur = self.threadLocal.conn.cursor()
             #Avoid dumping way too much at once
             cur.execute(
-                "SELECT json,signature FROM document WHERE json_extract(json,'$._time')>? LIMIT 100", (d['getNewArrivals'],))
+                "SELECT json,signature FROM document WHERE json_extract(json,'$.arrival')>? LIMIT 100", (d['getNewArrivals'],))
 
             for i in cur:
                 if not 'records' in r:
                     r['records']=[]
-                r['records'].append([i])
+                r['records'].append([i[0], base64.b64encode(i[1]).decode()])
 
         if "records" in d:
             for i in 'records':
                 #No need sig verify, if we are using PW verification.
                 #Set a flag to request that the server send us any records that came after the last one, 
-                r['getNewArrivals']=self.setDocument(i[0], None if writePassword else i[1])
+                self.setDocument(i[0], None if writePassword else i[1])
+                r['getNewArrivals'] = i[0]['arrival']
+
             #Set a flag saying that
-            cur = self.conn.cursor()
+            cur = self.threadLocal.conn.cursor()
             cur.execute("UPDATE peers SET lastArrival=? WHERE peerID=? AND lastArrival !=?", ( r['getNewArrivals'], remoteNodeID, r['getNewArrivals']))
 
             
@@ -449,7 +467,7 @@ class DocumentDatabase():
 
 
     def getMeta(self, key):
-        cur = self.conn.cursor()
+        cur = self.threadLocal.conn.cursor()
         cur.execute(
             "SELECT value FROM meta WHERE key=?", (key,))
         x = cur.fetchone()
@@ -457,7 +475,7 @@ class DocumentDatabase():
             return x[0]
 
     def setMeta(self, key, value):
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             "INSERT INTO meta VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?", (key, value, value))
 
     def setConfig(self, section, key, value):
@@ -467,6 +485,10 @@ class DocumentDatabase():
             pass
         self.config.set(section, key, value)
 
+    def commit(self):
+        self.dbConnect()
+        self.threadLocal.conn.commit()
+
     def saveConfig(self):
         with open(self.filename+".conf", 'w') as configfile:
             self.config.write(configfile)
@@ -474,11 +496,11 @@ class DocumentDatabase():
             self.keys.write(configfile)
 
     def __enter__(self):
-        self.conn.__enter__
+        self.threadLocal.conn.__enter__
         return self
 
     def __exit__(self, *a):
-        self.conn.__exit__
+        self.threadLocal.conn.__exit__
 
         ts = int((time.time())*10**6)
 
@@ -500,34 +522,34 @@ class DocumentDatabase():
 
             doc = json.loads(doc)
 
-        doc['_time'] = doc.get('_time', time.time()*1000000)
-        doc['_arrival'] = doc.get('_arrival', time.time()*1000000)
-        doc['_id'] = doc.get('_id', str(uuid.uuid4()))
-        doc['_name'] = doc.get('_name', doc['_id'])
-        doc['_type'] = doc.get('_type', '')
+        doc['time'] = doc.get('time', time.time()*1000000)
+        doc['arrival'] = doc.get('arrival', time.time()*1000000)
+        doc['id'] = doc.get('id', str(uuid.uuid4()))
+        doc['name'] = doc.get('name', doc['id'])
+        doc['type'] = doc.get('type', '')
 
         # If a UUID has been supplied, we want to erase any old record bearing that name.
-        cur = self.conn.cursor()
+        cur = self.threadLocal.conn.cursor()
         cur.execute(
-            'SELECT json_extract(json,"$._time") FROM document WHERE  json_extract(json,"$._id")=?', (doc['_id'],))
+            'SELECT json_extract(json,"$.time") FROM document WHERE  json_extract(json,"$.id")=?', (doc['id'],))
         x = cur.fetchone()
 
         if x:
             # Check that record we are trying to insert is newer, else ignore
             if x[0] < ts:
-                self.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$._id')=?", (jsonEncode(
-                    doc), signature,  doc['_id']))
+                self.threadLocal.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$.id')=?", (jsonEncode(
+                    doc), signature,  doc['id']))
 
                 # If we are marking this as deleted, we can ditch everything that depends on it.
                 # We don't even have to just set them as deleted, we can relly delete them, the deleted parent record
                 # is enough for other nodes to know this shouldn't exist anymore.
-                if doc['_type'] == "_null":
-                    self.conn.execute(
-                        "DELETE FROM document WHERE json_extract(json,'$._id')=?", (doc['_id'],))
+                if doc['type'] == "null":
+                    self.threadLocal.conn.execute(
+                        "DELETE FROM document WHERE json_extract(json,'$.id')=?", (doc['id'],))
 
-                return doc['_id']
+                return doc['id']
             else:
-                return doc['_id']
+                return doc['id']
 
 
         d = jsonEncode(doc)
@@ -535,15 +557,15 @@ class DocumentDatabase():
         if not signature:
             signature = libnacl.crypto_sign(libnacl.crypto_generichash(d.encode('utf8')), self.secretKey)
 
-        self.conn.execute(
+        self.threadLocal.conn.execute(
             "INSERT INTO document VALUES (null,?,?,?)", (d, signature, ''))
 
-        return doc['_id']
+        return doc['id']
 
     def getDocumentByID(self, key):
-        cur = self.conn.cursor()
+        cur = self.threadLocal.conn.cursor()
         cur.execute(
-            "SELECT json from document WHERE json_extract(json,'$._id')=?", (key,))
+            "SELECT json from document WHERE json_extract(json,'$.id')=?", (key,))
         x = cur.fetchone()
         if x:
             return x[0]
@@ -566,13 +588,13 @@ if __name__=="__main__":
 
             # Child document
             d.setDocument({
-                '_parent': id
+                'parent': id
             })
 
             print(d.getDocumentByID(id))
 
 
-    d.conn.commit()
+    d.commit()
 
     d.handleBinaryAPICall(d.encodeMessage({}))
 
