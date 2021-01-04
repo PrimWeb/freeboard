@@ -10,6 +10,20 @@ module.exports = function(grunt) {
                 ],
                 dest: 'css/freeboard.css'
             },
+            drayerdb : {
+                src : [
+                    [
+                        'lib/js/thirdparty/nano-sql.min.js',
+                        'lib/js/thirdparty/nanosql.fuzzy.min.js',
+                        'lib/js/thirdparty/nacl-fast.js',
+                        'lib/js/thirdparty/blake2b.js',
+                        'lib/js/thirdparty/structjsfork.js',
+                        'lib/js/thirdparty/stable-stringify.js'
+                    ]
+                ],
+                dest : 'js/drayerdb.standalone.js'
+            },
+            
             thirdparty : {
                 src : [
                     [
@@ -109,6 +123,11 @@ module.exports = function(grunt) {
             fb: {
                 files: {
                     'js/freeboard.min.js' : [ 'js/freeboard.js' ]
+                }
+            },
+            drayerdb: {
+                files: {
+                    'js/drayerdb.standalone.min.js' : [ 'js/drayerdb.standalone.js' ]
                 }
             },
             plugins: {

@@ -1300,11 +1300,9 @@ function uuidv4() {
 			}
 
 			if (settingName == 'code') {
-
 				freeboard.unbindHandlers(self.oldUserCode,inputElement)
 				freeboard.bindHandlers(newValue,inputElement)
 				self.oldUserCode = newValue;
-				
 			}
 
 		
@@ -1408,7 +1406,8 @@ function uuidv4() {
                         "name": "RGB Object",
                         "value": "rgb"
                     }
-                ]
+                ],
+              'default_value': 'hex'
             },
             {
                 name: "target",

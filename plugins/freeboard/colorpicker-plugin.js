@@ -86,7 +86,8 @@
                         "name": "RGB Object",
                         "value": "rgb"
                     }
-                ]
+                ],
+              'default_value': 'hex'
             },
             {
                 name: "target",

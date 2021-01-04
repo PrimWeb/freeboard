@@ -435,7 +435,7 @@ class DocumentDatabase():
         return encodeMessage(d,True)
 
     def encodeMessage(self, d, useWritePassword=False):
-
+        "Given a JSON message, encode it so as to be suitable to send to another node"
         if useWritePassword and not self.writePassword:
             raise RuntimeError("You don't have a write password")
         
