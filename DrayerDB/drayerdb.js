@@ -50,6 +50,24 @@ DrayerDatabaseConnection = function () {
       }
 
 
+      self.close= async function()
+      {
+         if(self.settings.perm)
+         {
+
+         }
+         else
+         {
+            nSQL().dropDatabase(self.settings.dbname)
+         }
+      }
+
+
+      self.onChangeset= async function()
+      {
+      }
+
+
 
       self.makeDB = async function () {
 
@@ -211,11 +229,10 @@ DrayerDatabaseConnection = function () {
          var nodeID = m[1];
          var d = m[0];
          nSQL().useDatabase(self.settings.dbname);
-
          var node = await nSQL('syncNodes').query("select").where(['id', '=', arrayToBase64(nodeID)]).exec()
          var syncTime = 0;
          if (node.length) {
-            syncTime = node[0].syncTime;
+            syncTime = node[0].mostRecent || 0;
          }
 
          //On reconnect, we are going to send our sync request
@@ -229,29 +246,43 @@ DrayerDatabaseConnection = function () {
          //That is what we will later use to ask if there are any newer records.
          if (d.records && d.records.length) {
             for (i in d.records) {
-               self.insertDocument(d.records[i[0]])
-               if (d.records[i[0]].arrival > syncTime) {
-                  syncTime = d.records[i[0]].arrival;
+                var record =d.records[i][0]
+                if (typeof(record)=='string')
+                {
+                    record=JSON.parse(record)
+                }
+               self.insertDocument(record)
+               if(!record.arrival)
+               {
+                   throw new Error("Bad record arrival time")
+               }
+               if (record.arrival > syncTime) {
+                  syncTime = record.arrival;
                }
             }
             nSQL().useDatabase(self.settings.dbname);
-
-            await nSQL('syncNodes').query("upsert", [{ id: arrayToBase64(nodeID), x }]).exec()
+            //Insert all records, then request the next page of records.
+            socket.send(self.encodeMessage({ "getNewArrivals": syncTime }))
+            // Track the remote arrival time
+            await nSQL('syncNodes').query("upsert", [{ id: arrayToBase64(nodeID), "mostRecent":syncTime }]).exec()
          }
 
          //We don't currently deal with record signing here, and can only push  records if we have the password
-         if (self.writePassword) {
+         if (self.settings.writePassword) {
             if (d.getNewArrivals) {
                var rv = {}
                rv.records = []
                nSQL().useDatabase(self.settings.dbname);
-
                var r = await nSQL('records').query('select').where(['arrival', '>', d.getNewArrivals]).exec()
                for (i in r) {
-                  rv.records.append([r[i]])
+                  rv.records.push([r[i]])
                }
                socket.send(self.encodeMessage(rv))
             }
+         }
+         if (syncTime)
+         {
+            self.onChangeset(self)
          }
       }
 
@@ -290,7 +321,7 @@ DrayerDatabaseConnection = function () {
          return new Proxy(d, m)
       }
 
-      self.insertDocument = async function (document) {
+      self.insertDocument = async function (document,noCallback) {
          var d2 = {}
          for (var i in document) {
             d2[i] = document[i]
@@ -306,21 +337,27 @@ DrayerDatabaseConnection = function () {
          }
          document.type = document.type || ''
 
+         // Do nothing if there is already a newer one
+         var x = await nSQL('records').query('select').where([["id", '=', document.id],'AND', ['time', '>=', document.time]]).exec()
+
+         if(x.length)
+         {
+            return
+         }
+
          //We can delete all child records for real, because if we see them again, we will know they aren't valid due to
          //the null parent.
          //This is safe because a UUID, once truly deleted, is forever and it is not intended that anuone ever reuse that ID.
          if (document.type == '__null__') {
             nSQL().useDatabase(self.settings.dbname);
-
             await nSQL('records').query('delete').where(['parent', '=', document.id]).exec()
          }
 
          if (document.parent) {
             nSQL().useDatabase(self.settings.dbname);
-
             var x = await nSQL('records').query('select').where(['id', '=', document.parent]).exec()
             {
-               if (x) {
+               if (x.length) {
                   if (x[0].type == '__null__') {
                      return document.id
                   }
@@ -329,8 +366,11 @@ DrayerDatabaseConnection = function () {
          }
          document.arrival = Date.now() * 1000
          nSQL().useDatabase(self.settings.dbname);
-
          var x = await nSQL('records').query('upsert', document).exec()
+         if(!noCallback)
+         {
+            self.onChangeset(self)
+         }
          return document.id
       }
 

@@ -384,8 +384,8 @@ class DocumentDatabase():
                 c=c[0]
             else:
                 c=0
-            
-            r['getNewArrivals'] = c
+            #No falsy value allowed, that would mean don't get new arrivals
+            r['getNewArrivals'] = c or 1
             sessionObject.alreadyDidInitialSync= True
 
       
@@ -399,10 +399,11 @@ class DocumentDatabase():
             for i in cur:
                 if not 'records' in r:
                     r['records']=[]
+                print(i)
                 r['records'].append([i[0], base64.b64encode(i[1]).decode()])
 
-        if "records" in d:
-            for i in 'records':
+        if "records" in d and d['records']:
+            for i in d['records']:
                 #No need sig verify, if we are using PW verification.
                 #Set a flag to request that the server send us any records that came after the last one, 
                 self.setDocument(i[0], None if writePassword else i[1])
@@ -411,10 +412,6 @@ class DocumentDatabase():
             #Set a flag saying that
             cur = self.threadLocal.conn.cursor()
             cur.execute("UPDATE peers SET lastArrival=? WHERE peerID=? AND lastArrival !=?", ( r['getNewArrivals'], remoteNodeID, r['getNewArrivals']))
-
-            
-        
-            
 
         return self.encodeMessage(r)
 
@@ -533,12 +530,16 @@ class DocumentDatabase():
         cur.execute(
             'SELECT json_extract(json,"$.time") FROM document WHERE  json_extract(json,"$.id")=?', (doc['id'],))
         x = cur.fetchone()
+        
+        d = jsonEncode(doc)
+        # If we are generating a new message, sign it automatically.
+        if not signature:
+            signature = libnacl.crypto_sign(libnacl.crypto_generichash(d.encode('utf8')), self.secretKey)
 
         if x:
             # Check that record we are trying to insert is newer, else ignore
-            if x[0] < ts:
-                self.threadLocal.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$.id')=?", (jsonEncode(
-                    doc), signature,  doc['id']))
+            if x[0] < doc['time']:
+                self.threadLocal.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$.id')=?", (d), signature,  doc['id']))
 
                 # If we are marking this as deleted, we can ditch everything that depends on it.
                 # We don't even have to just set them as deleted, we can relly delete them, the deleted parent record
@@ -552,11 +553,7 @@ class DocumentDatabase():
                 return doc['id']
 
 
-        d = jsonEncode(doc)
-        # If we are generating a new message, sign it automatically.
-        if not signature:
-            signature = libnacl.crypto_sign(libnacl.crypto_generichash(d.encode('utf8')), self.secretKey)
-
+      
         self.threadLocal.conn.execute(
             "INSERT INTO document VALUES (null,?,?,?)", (d, signature, ''))
 
