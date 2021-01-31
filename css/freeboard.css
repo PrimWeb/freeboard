@@ -1319,6 +1319,7 @@ h3.je-header button{
 {
 	min-height: 2em;
 	width: auto;
+	border: none;
 }
 #freeboard-extra-tools div {
 	flex-grow: 0.05;

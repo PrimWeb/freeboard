@@ -18,7 +18,8 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/nacl-fast.js',
                         'lib/js/thirdparty/blake2b.js',
                         'lib/js/thirdparty/structjsfork.js',
-                        'lib/js/thirdparty/stable-stringify.js'
+                        'lib/js/thirdparty/stable-stringify.js',
+                        'DrayerDB/drayerdb.js'
                     ]
                 ],
                 dest : 'js/drayerdb.standalone.js'
@@ -73,7 +74,11 @@ module.exports = function(grunt) {
                         'lib/js/thirdparty/filesaver.js',
                         'lib/js/thirdparty/blake2b.js',
                         'lib/js/thirdparty/structjsfork.js',
-                        'lib/js/thirdparty/stable-stringify.js'
+                        'lib/js/thirdparty/stable-stringify.js',
+                        'lib/js/thirdparty/sparticles.js',
+                        'DrayerDB/drayerdb.js'
+
+                        
                     ]
                 ],
                 dest : 'js/freeboard.thirdparty.js'
@@ -93,7 +98,7 @@ module.exports = function(grunt) {
 					'lib/js/freeboard/WidgetModel.js',
 					'lib/js/freeboard/freeboard.js',
                     'lib/js/freeboard/globalSettingsSchema.js',                  
-                    'lib/js/freeboard/help.js',
+                    'lib/js/freeboard/help.js'
 
 
 				],

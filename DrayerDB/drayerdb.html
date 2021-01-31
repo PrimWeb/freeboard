@@ -13,13 +13,13 @@
 
    <script type="text/javascript">
 
-      db = new DrayerDatabaseConnection("poupe", { writePassword: "/ROaMEXIiZ7ehbj4usrmBhsMgoQjmusV", syncKey: "9+ArW5GIqcJUaaCkh8sA3i1GQhOQWofE", perm: false })
+      db = new DrayerDatabaseConnection({ dbname:'poupe',writePassword: "/ROaMEXIiZ7ehbj4usrmBhsMgoQjmusV", syncKey: "9+ArW5GIqcJUaaCkh8sA3i1GQhOQWofE", perm: false })
       db.dbSucess.then(async function () {
          console.log("DB open")
          console.log("Test enc/dec"+db.decodeMessage(db.encodeMessage({})))
          await db.insertDocument({"someTestKey": "someRandomData", "parent":"","body":"","title":"",'description':''})
          
-         d=await db.loadDataPage()
+         d=await db.loadData()
          d.data[0].parent="foo"
          d.data[0].arrival = 78
          console.log(await db.loadDataPage())

@@ -289,8 +289,7 @@ function DialogBox(contentElement, title, okTitle, cancelTitle, okCallback,cance
 	overlay.fadeIn(200);
 }
 
-function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
-{
+function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI) {
 	var self = this;
 
 	var SERIALIZATION_VERSION = 1;
@@ -300,57 +299,54 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 	this.currentPageName = ko.observable("default");
 	this.pagesDataObservable = ko.observable({});
 
+	//Tracks any unsaved items that might prevent leaving the page.
+	this.unsaved = {}
+
 	//Where we store all loadable panes, not just the active one.
-	this.pagesData= {}
+	this.pagesData = {}
 	self.pagesDataObservable(self.pagesData)
 	this.allow_edit = ko.observable(false);
-	this.allow_edit.subscribe(function(newValue)
-	{
-		if(newValue)
-		{
+	this.allow_edit.subscribe(function (newValue) {
+		if (newValue) {
 			$("#main-header").show();
 		}
-		else
-		{
+		else {
 			$("#main-header").hide();
 		}
 	});
-    
-   this.sleep = function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-  }
-  
+
+	this.sleep = function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+
 
 	this.header_image = ko.observable();
 	this.plugins = ko.observableArray();
 	this.datasources = ko.observableArray();
-    
-         
+
+
 	this.panes = ko.observableArray();
 	this.datasourceData = {};
-    
-    //We want to let widgets assign to properties of data sources.
-    //However, we can't let them directly overwrite the reactive object that the plugin
-    //provides,that would mess everything up.  So we give a read only view of datasourcedata
-    var dataSourceProtectionHandler = {
-        set: function(obj, prop, value) {
-            throw new Error("You cannot directly overwrite a datasource here. Try assigning to one of the properties of the source instead")
-        }
-    };
-    
-    self.protectedDataSourceData =  new Proxy(self.datasourceData, dataSourceProtectionHandler)
-   
-	this.processDatasourceUpdate = function(datasourceModel, newData)
-	{
+
+	//We want to let widgets assign to properties of data sources.
+	//However, we can't let them directly overwrite the reactive object that the plugin
+	//provides,that would mess everything up.  So we give a read only view of datasourcedata
+	var dataSourceProtectionHandler = {
+		set: function (obj, prop, value) {
+			throw new Error("You cannot directly overwrite a datasource here. Try assigning to one of the properties of the source instead")
+		}
+	};
+
+	self.protectedDataSourceData = new Proxy(self.datasourceData, dataSourceProtectionHandler)
+
+	this.processDatasourceUpdate = function (datasourceModel, newData) {
 		//TODO should we actually iterate everything on every change?
 		var datasourceName = datasourceModel.name();
 
 		self.datasourceData[datasourceName] = newData;
 
-		_.each(self.panes(), function(pane)
-		{
-			_.each(pane.widgets(), function(widget)
-			{
+		_.each(self.panes(), function (pane) {
+			_.each(pane.widgets(), function (widget) {
 				widget.processDatasourceUpdate(datasourceName);
 			});
 		});
@@ -358,24 +354,21 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	this._datasourceTypes = ko.observable();
 	this.datasourceTypes = ko.computed({
-		read: function()
-		{
+		read: function () {
 			self._datasourceTypes();
 
 			var returnTypes = [];
 
-			_.each(datasourcePlugins, function(datasourcePluginType)
-			{
+			_.each(datasourcePlugins, function (datasourcePluginType) {
 				var typeName = datasourcePluginType.type_name;
 				var displayName = typeName;
 
-				if(!_.isUndefined(datasourcePluginType.display_name))
-				{
+				if (!_.isUndefined(datasourcePluginType.display_name)) {
 					displayName = datasourcePluginType.display_name;
 				}
 
 				returnTypes.push({
-					name        : typeName,
+					name: typeName,
 					display_name: displayName
 				});
 			});
@@ -386,24 +379,21 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	this._widgetTypes = ko.observable();
 	this.widgetTypes = ko.computed({
-		read: function()
-		{
+		read: function () {
 			self._widgetTypes();
 
 			var returnTypes = [];
 
-			_.each(widgetPlugins, function(widgetPluginType)
-			{
+			_.each(widgetPlugins, function (widgetPluginType) {
 				var typeName = widgetPluginType.type_name;
 				var displayName = typeName;
 
-				if(!_.isUndefined(widgetPluginType.display_name))
-				{
+				if (!_.isUndefined(widgetPluginType.display_name)) {
 					displayName = widgetPluginType.display_name;
 				}
 
 				returnTypes.push({
-					name        : typeName,
+					name: typeName,
 					display_name: displayName
 				});
 			});
@@ -412,48 +402,42 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		}
 	});
 
-	this.addPluginSource = function(pluginSource)
-	{
-		if(pluginSource && self.plugins.indexOf(pluginSource) == -1)
-		{
+	this.addPluginSource = function (pluginSource) {
+		if (pluginSource && self.plugins.indexOf(pluginSource) == -1) {
 			self.plugins.push(pluginSource);
 		}
 	}
 
 	this.globalSettings = {}
-	this.globalSettingsDefaults={theme:{}}
+	this.globalSettingsDefaults = { theme: {} }
 	Object.assign(this.globalSettings, this.globalSettingsDefaults)
 
 
-	this.globalSettingsHandlers={}
+	this.globalSettingsHandlers = {}
 
 
 	//Swap out in the sense of push the data into the cold storage.
 	//We need ot do this before we can load a new pane
-	this.serializecurrentPage = function()
-	{
+	this.serializecurrentPage = function () {
 		var panes = [];
 
-		_.each(self.panes(), function(pane)
-		{
+		_.each(self.panes(), function (pane) {
 			panes.push(pane.serialize());
 		});
-		var n =self.currentPageName()
+		var n = self.currentPageName()
 		//Time to update the panes data, it could have changed while it was the active pane
-		self.pagesData[n]={'contents':panes,name:n}
+		self.pagesData[n] = { 'contents': panes, name: n }
 		self.pagesDataObservable(self.pagesData)
 	}
 
 
-	this.serialize = function()
-	{
-		
+	this.serialize = function () {
+
 
 		var datasources = [];
 
 
-		_.each(self.datasources(), function(datasource)
-		{
+		_.each(self.datasources(), function (datasource) {
 			datasources.push(datasource.serialize());
 		});
 
@@ -461,90 +445,103 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 
 		return {
-			version     : SERIALIZATION_VERSION,
+			version: SERIALIZATION_VERSION,
 			header_image: self.header_image(),
-			allow_edit  : self.allow_edit(),
-			plugins     : self.plugins(),
-			pages       : self.pagesData,
-			datasources : datasources,
-			columns     : freeboardUI.getUserColumns(),
-			globalSettings : self.globalSettings
+			allow_edit: self.allow_edit(),
+			plugins: self.plugins(),
+			pages: self.pagesData,
+			datasources: datasources,
+			columns: freeboardUI.getUserColumns(),
+			globalSettings: self.globalSettings
 		};
 	}
 
-	this.setGlobalSettings=function(d)
-	{
+	this.setGlobalSettings = function (d) {
 		Object.assign(self.globalSettings, d)
-		for(var i in self.globalSettingsHandlers)
-		{
+		for (var i in self.globalSettingsHandlers) {
 			self.globalSettingsHandlers[i](self.globalSettings)
 		}
 	}
 
 
 
-	this.globalSettingsHandlers['css'] = function(d)
-	{
-		for(i in d.theme)
-		{
+	this.globalSettingsHandlers['css'] = function (d) {
+		for (i in d.theme) {
 			var x = d.theme[i]
 
 			//Wrap URLs in the URL tag
-			if(i.includes('-image'))
-			{
-				if(x)
-				{
-					x = 'url('+x+')'
+			if (i.includes('-image')) {
+				if (x) {
+					x = 'url(' + x + ')'
 				}
 
 			}
 			document.body.style.setProperty(i, x)
 		}
 
-		d.imageData = d.imageData||{}
+		d.imageData = d.imageData || {}
 
-		for(i in d.imageData)
-		{
+		for (i in d.imageData) {
 			var x = d.imageData[i]
-	
-			if(x)
-			{
-				x = 'url('+x+')'
+
+			if (x) {
+				x = 'url(' + x + ')'
 			}
 
 			document.body.style.setProperty(i, x)
 		}
-		if(d.theme['--logo-text'])
-		{
+
+		if (d.theme['--logo-text']) {
 			$("#board-logo").html(d.theme['--logo-text'])
 		}
-		setTimeout(function(){freeboardUI.processResize(true)},30);
 
-		
+		if (this.sparticles) {
+			try {
+				this.sparticles.destroy()
+			}
+			catch (e) {
+
+				console.error(e)
+			}
+			this.sparticles = null
+		}
+
+		if (d.theme['background-particles']) {
+			var particles = _.clone(d.theme['background-particles'])
+			particles.count = particles.count || 0
+			particles.count
+			if (particles.count) {
+				let myElement = document.getElementById("bg_particle_fx")
+				try{
+					this.sparticles = new Sparticles(myElement, particles);
+				}
+				catch(e){
+					this.sparticles=null
+					console.error(e)
+					freeboard.showDialog(outer, "Bad particle FX settings", "OK")
+				}
+			}
+		}
+		setTimeout(function () { freeboardUI.processResize(true) }, 30);
 	}
 
-	this.deserialize = async function(object, finishedCallback)
-	{
+	this.deserialize = async function (object, finishedCallback) {
 		self.clearDashboard();
 
-		async function finishLoad()
-		{
+		async function finishLoad() {
 			freeboardUI.setUserColumns(object.columns);
 
-			if(!_.isUndefined(object.allow_edit))
-			{
+			if (!_.isUndefined(object.allow_edit)) {
 				self.allow_edit(object.allow_edit);
 			}
-			else
-			{
+			else {
 				self.allow_edit(true);
 			}
 			self.version = object.version || 0;
 			self.header_image(object.header_image);
 
-	
-			_.each(object.datasources, async function(datasourceConfig)
-			{
+
+			_.each(object.datasources, async function (datasourceConfig) {
 				var datasource = new DatasourceModel(self, datasourcePlugins);
 				//Deserialize can be an async function if it wants to be.
 				await Promise.resolve(datasource.deserialize(datasourceConfig));
@@ -553,119 +550,103 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 
 			//Legacy single page model
-			if(object.panes)
-			{
-				await self.setPage({'contents':object.panes, name: 'default'})
-				self.pagesData = {'default':{'contents':object.panes, name: 'default'}}
+			if (object.panes) {
+				await self.setPage({ 'contents': object.panes, name: 'default' })
+				self.pagesData = { 'default': { 'contents': object.panes, name: 'default' } }
 			}
-			else
-			{
-				Object.assign(self.pagesData,object.pages)
+			else {
+				Object.assign(self.pagesData, object.pages)
 				await self.setPage(object.pages['default'])
 
 			}
 			self.pagesDataObservable(self.pagesData)
 
-			if(self.allow_edit() && self.panes().length == 0)
-			{
+			if (self.allow_edit() && self.panes().length == 0) {
 				self.setEditing(true);
 			}
 
-			if(_.isFunction(finishedCallback))
-			{
+			if (_.isFunction(finishedCallback)) {
 				await Promise.resolve(finishedCallback());
 			}
 
 			for (var prop in self.globalSettings) {
-					delete self.globalSettings[prop];
+				delete self.globalSettings[prop];
 			}
 			Object.assign(self.globalSettings, self.globalSettingsDefaults)
-			
-		
-			self.setGlobalSettings(object.globalSettings||{})
 
 
-			
+			self.setGlobalSettings(object.globalSettings || {})
+
+
+
 		}
 
 		// This could have been self.plugins(object.plugins), but for some weird reason head.js was causing a function to be added to the list of plugins.
-		_.each(object.plugins, function(plugin)
-		{
+		_.each(object.plugins, function (plugin) {
 			self.addPluginSource(plugin);
 		});
 
 		// Load any plugins referenced in this definition
-		if(_.isArray(object.plugins) && object.plugins.length > 0)
-		{
-			head.js(object.plugins, async function()
-			{
+		if (_.isArray(object.plugins) && object.plugins.length > 0) {
+			head.js(object.plugins, async function () {
 				await finishLoad();
 			});
 		}
-		else
-		{
+		else {
 			await finishLoad();
 		}
 	}
 
-	this.gotoPage = async function(pageName){
-		if(!pageName)
-		{
+	this.gotoPage = async function (pageName) {
+		if (!pageName) {
 			return
 		}
 
-		if(!_.isString(pageName))
-		{
+		if (!_.isString(pageName)) {
 			//Support jumping to an entire page object
-			if(pageName.name)
-			{
-				pageName=pageName.name
-				if(!self.pagesData[pageName])
-				{
+			if (pageName.name) {
+				pageName = pageName.name
+				if (!self.pagesData[pageName]) {
 					throw new Error("Can't currently jump to unregistered page")
 				}
 			}
-			else{
+			else {
 				return
 			}
 		}
 
-		if(self.pagesData[pageName])
-		{
+		if (self.pagesData[pageName]) {
 			await self.setPage(self.pagesData[pageName])
 		}
-		else{
+		else {
 			//Make a new empty page
-			await self.setPage({name:pageName,contents:[]})
+			await self.setPage({ name: pageName, contents: [] })
 			//Make it show in listings right away
 			self.serializecurrentPage()
 		}
 
 	}
 
-	this.renamePage = async function(pageName){
-		if(!pageName)
-		{
+	this.renamePage = async function (pageName) {
+		if (!pageName) {
 			return
 		}
-		var p =self.pagesData[self.currentPageName()]
-		p.name=pageName
+		var p = self.pagesData[self.currentPageName()]
+		p.name = pageName
 
 		delete self.pagesData[self.currentPageName()]
-		self.pagesData[pageName]=p
+		self.pagesData[pageName] = p
 		self.pagesDataObservable(self.pagesData)
 		self.currentPageName(pageName)
 
 		await self.setPage(p)
 	}
 
-	this.deletePage = async function(pageName){
-		if(!pageName)
-		{
+	this.deletePage = async function (pageName) {
+		if (!pageName) {
 			return
 		}
-		if(self.currentPageName()==pageName)
-		{
+		if (self.currentPageName() == pageName) {
 			await self.gotoPage("default")
 		}
 
@@ -673,82 +654,73 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 		self.pagesDataObservable(self.pagesData)
 	}
 
-	this.duplicatePage = async function(pageName){
-		if(!pageName)
-		{
+	this.duplicatePage = async function (pageName) {
+		if (!pageName) {
 			return
 		}
-		if(	self.pagesData[pageName])
-		{
+		if (self.pagesData[pageName]) {
 			throw Error("Page exists!")
 		}
 		//Handle nonexistant current page
-		var p =self.pagesData[self.currentPageName()] || {name:pageName}
-		p =_.clone(p)
-		p.name=pageName
+		var p = self.pagesData[self.currentPageName()] || { name: pageName }
+		p = _.clone(p)
+		p.name = pageName
 		self.pagesData[pageName] = p
 		self.pagesDataObservable(self.pagesData)
 		await self.setPage(p)
 	}
 
-	this.setPage = async function(page){
+	this.setPage = async function (page) {
 
 		//If the page data could have changed, we must serialize.
-		if(self.hasBeenEditingSincePageFlush)
-		{
+		if (self.hasBeenEditingSincePageFlush) {
 			//Save any changes now that we are going to a new page
 			self.serializecurrentPage()
-			self.hasBeenEditingSincePageFlush=false
+			self.hasBeenEditingSincePageFlush = false
 		}
-		if(self.isEditing())
-		{
+		if (self.isEditing()) {
 			self.hasBeenEditingSincePageFlush = true
 		}
 
 		var contents = page.contents || []
-		self.currentPageName(page.name||String(freeboard.genUUID()))
-		page.name=self.currentPageName()
+		self.currentPageName(page.name || String(freeboard.genUUID()))
+		page.name = self.currentPageName()
 
 
-		_.each(self.panes(), function(pane)
-		{
+		_.each(self.panes(), function (pane) {
 			pane.dispose();
 		});
-		
+
 		self.panes.removeAll()
 		$(freeboard._gridRootElement).html('').append("<ul></ul>");
 
-		var sortedPanes = _.sortBy(contents, function(pane){
+		var sortedPanes = _.sortBy(contents, function (pane) {
 			return freeboardUI.getPositionForScreenSize(pane).row;
 		});
 
-		_.each(sortedPanes, function(paneConfig)
-		{
+		_.each(sortedPanes, function (paneConfig) {
 			var pane = new PaneModel(self, widgetPlugins);
 			pane.deserialize(paneConfig);
 			self.panes.push(pane);
 		});
 
 		//Do after render and all, but wait for it
-		await async function(){freeboardUI.processResize(true)}()
-		const event = new CustomEvent('fbPageLoaded',{detail:{name:page.name}})
+		await async function () { freeboardUI.processResize(true) }()
+		const event = new CustomEvent('fbPageLoaded', { detail: { name: page.name } })
 		document.dispatchEvent(event)
 	}
 
-	this.clearDashboard = function()
-	{
+	this.clearDashboard = function () {
 		freeboardUI.removeAllPanes();
 
-		for (var member in self.pagesData) {delete self.pagesData[member]};
+		for (var member in self.pagesData) { delete self.pagesData[member] };
 
 		self.pagesDataObservable(self.pagesData)
-		_.each(self.datasources(), function(datasource)
-		{
+		_.each(self.datasources(), function (datasource) {
 			datasource.dispose();
 		});
 
-		_.each(self.panes(), function(pane)
-		{
+		_.each(self.panes(), function (pane) {
 			pane.dispose();
 		});
 
@@ -763,40 +735,32 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 	}
 
-	this.loadDashboard = function(dashboardData, callback)
-	{
+	this.loadDashboard = function (dashboardData, callback) {
 		freeboardUI.showLoadingIndicator(true);
-		self.deserialize(dashboardData, function()
-		{
+		self.deserialize(dashboardData, function () {
 			freeboardUI.showLoadingIndicator(false);
 
-			if(_.isFunction(callback))
-			{
+			if (_.isFunction(callback)) {
 				callback();
 			}
 
-        freeboard.emit("dashboard_loaded");
+			freeboard.emit("dashboard_loaded");
 		});
 	}
 
-	this.loadDashboardFromLocalFile = function()
-	{
+	this.loadDashboardFromLocalFile = function () {
 		// Check for the various File API support.
-		if(window.File && window.FileReader && window.FileList && window.Blob)
-		{
+		if (window.File && window.FileReader && window.FileList && window.Blob) {
 			var input = document.createElement('input');
 			input.type = "file";
-			$(input).on("change", function(event)
-			{
+			$(input).on("change", function (event) {
 				var files = event.target.files;
 
-				if(files && files.length > 0)
-				{
+				if (files && files.length > 0) {
 					var file = files[0];
 					var reader = new FileReader();
 
-					reader.addEventListener("load", function(fileReaderEvent)
-					{
+					reader.addEventListener("load", function (fileReaderEvent) {
 
 						var textFile = fileReaderEvent.target;
 						var jsonObject = JSON.parse(textFile.result);
@@ -812,134 +776,117 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 			});
 			$(input).trigger("click");
 		}
-		else
-		{
+		else {
 			alert('Unable to load a file in this browser.');
 		}
 	}
 
-	this.downloadDashboardClicked = function(){
+	this.downloadDashboardClicked = function () {
 		var target = $(event.currentTarget);
 		var siblingsShown = target.data('siblings-shown') || false;
-		if(!siblingsShown){
+		if (!siblingsShown) {
 			$(event.currentTarget).siblings('label').fadeIn('slow');
-		}else{
+		} else {
 			$(event.currentTarget).siblings('label').fadeOut('slow');
 		}
 		target.data('siblings-shown', !siblingsShown);
 	}
 
-	this.downloadDashboard = function(_thisref, event)
-	{
+	this.downloadDashboard = function (_thisref, event) {
 		var pretty = $(event.currentTarget).data('pretty');
 		var contentType = 'application/octet-stream';
 		var a = document.createElement('a');
-		if(pretty){
-			var blob = new Blob([JSON.stringify(self.serialize(), null, '\t')], {'type': contentType});
-		}else{
-			var blob = new Blob([JSON.stringify(self.serialize())], {'type': contentType});
+		if (pretty) {
+			var blob = new Blob([JSON.stringify(self.serialize(), null, '\t')], { 'type': contentType });
+		} else {
+			var blob = new Blob([JSON.stringify(self.serialize())], { 'type': contentType });
 		}
 		document.body.appendChild(a);
 		a.href = window.URL.createObjectURL(blob);
 		a.download = "dashboard.json";
-		a.target="_self";
+		a.target = "_self";
 		a.click();
+		freeboard.unsaved["Board Definition"] = false
 	}
 
-	this.addDatasource = function(datasource)
-	{
+	this.addDatasource = function (datasource) {
 		self.datasources.push(datasource);
 	}
 
-	this.deleteDatasource = function(datasource)
-	{
+	this.deleteDatasource = function (datasource) {
 		delete self.datasourceData[datasource.name()];
 		datasource.dispose();
 		self.datasources.remove(datasource);
 	}
 
-	this.createPane = function()
-	{
+	this.createPane = function () {
 		var newPane = new PaneModel(self, widgetPlugins);
 		self.addPane(newPane);
 	}
 
-	this.addGridColumnLeft = function()
-	{
+	this.addGridColumnLeft = function () {
 		freeboardUI.addGridColumnLeft();
 	}
 
-	this.addGridColumnRight = function()
-	{
+	this.addGridColumnRight = function () {
 		freeboardUI.addGridColumnRight();
 	}
 
-	this.subGridColumnLeft = function()
-	{
+	this.subGridColumnLeft = function () {
 		freeboardUI.subGridColumnLeft();
 	}
 
-	this.subGridColumnRight = function()
-	{
+	this.subGridColumnRight = function () {
 		freeboardUI.subGridColumnRight();
 	}
 
-	this.addPane = function(pane)
-	{
+	this.addPane = function (pane) {
 		self.panes.push(pane);
 	}
 
-	this.deletePane = function(pane)
-	{
+	this.deletePane = function (pane) {
 		pane.dispose();
 		self.panes.remove(pane);
 	}
 
-	this.deleteWidget = function(widget)
-	{
-		ko.utils.arrayForEach(self.panes(), function(pane)
-		{
+	this.deleteWidget = function (widget) {
+		ko.utils.arrayForEach(self.panes(), function (pane) {
 			pane.widgets.remove(widget);
 		});
 
 		widget.dispose();
 	}
 
-	this.setEditing = function(editing, animate)
-	{
+	this.setEditing = function (editing, animate) {
 		// Don't allow editing if it's not allowed
-		if(!self.allow_edit() && editing)
-		{
+		if (!self.allow_edit() && editing) {
 			return;
 		}
 		self.hasBeenEditingSincePageFlush = true
 
 		self.isEditing(editing);
 
-		if(_.isUndefined(animate))
-		{
+		if (_.isUndefined(animate)) {
 			animate = true;
 		}
 
 		var animateLength = (animate) ? 250 : 0;
 		var barHeight = $("#admin-bar").outerHeight();
 
-		if(!editing)
-		{
+		if (!editing) {
 			$("#toggle-header-icon").addClass("icon-wrench").removeClass("icon-chevron-up");
-			$(".gridster .gs_w").css({cursor: "default"});
-			$("#main-header").animate({"top": "-" + barHeight + "px"}, animateLength);
-			$("#board-content").animate({"top": "20"}, animateLength);
+			$(".gridster .gs_w").css({ cursor: "default" });
+			$("#main-header").animate({ "top": "-" + barHeight + "px" }, animateLength);
+			$("#board-content").animate({ "top": "20" }, animateLength);
 			$("#main-header").data().shown = false;
 			$(".sub-section").unbind();
 			freeboardUI.disableGrid();
 		}
-		else
-		{
+		else {
 			$("#toggle-header-icon").addClass("icon-chevron-up").removeClass("icon-wrench");
-			$(".gridster .gs_w").css({cursor: "pointer"});
-			$("#main-header").animate({"top": "0px"}, animateLength);
-			$("#board-content").animate({"top": (barHeight + 20) + "px"}, animateLength);
+			$(".gridster .gs_w").css({ cursor: "pointer" });
+			$("#main-header").animate({ "top": "0px" }, animateLength);
+			$("#board-content").animate({ "top": (barHeight + 20) + "px" }, animateLength);
 			$("#main-header").data().shown = true;
 			freeboardUI.attachWidgetEditIcons($(".sub-section"));
 			freeboardUI.enableGrid();
@@ -947,10 +894,9 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI)
 
 		freeboardUI.showPaneEditIcons(editing, animate);
 	}
-	
 
-	this.toggleEditing = function()
-	{
+
+	this.toggleEditing = function () {
 		var editing = !self.isEditing();
 		self.setEditing(editing);
 	}
@@ -2215,6 +2161,8 @@ new DialogBox(form, title, "Save", "Cancel", function () {
 		}
 	}
 
+	freeboard.unsaved["Board Definition"]=true
+	
 	if (_.isFunction(settingsSavedCallback)) {
 		settingsSavedCallback(newSettings);
 	}
@@ -3289,6 +3237,23 @@ var freeboard = (function () {
 	var freeboardUI = new FreeboardUI();
 	var theFreeboardModel = new FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI);
 
+	window.addEventListener("beforeunload", function (e) {
+
+		for(var i in theFreeboardModel.unsaved)
+		{
+			if(theFreeboardModel.unsaved[i])
+			{
+				var confirmationMessage = 'It looks like you have been editing something. '
+										+ 'If you leave before saving, your changes will be lost.';
+			
+				(e || window.event).returnValue = confirmationMessage; //Gecko + IE
+				return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+			}
+		}
+	});
+
+
+
 	var jsEditor = new JSEditor();
 	var valueEditor = new ValueEditor(theFreeboardModel);
 	var pluginEditor = new PluginEditor(jsEditor, valueEditor);
@@ -3516,7 +3481,7 @@ var freeboard = (function () {
 	return {
 		model: theFreeboardModel,
 
-
+		unsaved=theFreeboardModel.unsaved,
 		setGlobalSettings = theFreeboardModel.setGlobalSettings,
 		globalSettingsHandlers = theFreeboardModel.globalSettingsHandlers,
 		globalSettings = theFreeboardModel.globalSettings,
@@ -3998,6 +3963,146 @@ globalSettingsSchema = {
             type: "object",
             title: "Theme",
             properties: {
+
+                "background-particles": {
+                    type: "object",
+
+                    properties: {
+                        color: {
+                            type: "array",
+                            default:['#FFFFFF'],
+                            items: {
+                                type: "string",
+                                format: 'color',
+                                'options': {
+                                    'colorpicker': {
+                                        'editorFormat': 'rgb',
+                                        'alpha': true
+                                    }
+                                }
+                            }
+                        },
+                        //Have to use enum here, we really don't want anyone setting thousands of these
+                        "count":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 300,
+                            default:25
+                        },
+
+                        "shape":
+                        {
+                            type: "string",
+                            enum: ["circle", "square", "triangle", "line", "diamond", "star", "image",'colorimage']
+                        },
+                        "style":
+                        {
+                            type: "string",
+                            enum: ["stroke", "fill", "both"]
+                        },
+                        "minSize":
+                        {
+                            type: "number",
+                            minimum: 1,
+                            maximum: 60,
+                            default:1
+                        },
+                        "maxSize":
+                        {
+                            type: "number",
+                            minimum: 1,
+                            maximum: 60,
+                            default:25
+                        },
+                        "minAlpha":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 1
+                        },
+
+                        "maxAlpha":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 1,
+                            default:1
+                        },
+                        "direction":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 360,
+                            default: 180
+                        },
+                        "speed":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 120,
+                            default:10
+                        },
+                        "parallax":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 20,
+                            default:10
+                        },
+                        "xVariance":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 20,
+                            default:10
+                        },
+                        "yVariance":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 20,
+                            default: 3
+                        },
+                        "drift":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 20,
+                            default:5
+                        },
+                        "glow":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 50,
+                            default: 25
+                        },
+                        "rotation":
+                        {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 20,
+                            default:3
+                        },
+                        "bounce":
+                        {
+                            type: "boolean",
+                            minimum: 0,
+                            maximum: 20
+                        },
+                        "imageUrl":{
+                           type:"array",
+                           items:{
+                            type: "string",
+                            "media": {
+                                "binaryEncoding": "base64",
+                                "type": "img/png"
+                            },
+                        }}
+                    }
+                },
+
                 "--box-bg-color": {
                     type: "string",
                     format: 'color',
@@ -4057,7 +4162,7 @@ globalSettingsSchema = {
                 },
                 "--box-backdrop": {
                     type: "string",
-                    enum: ['', 'blur(1px)', 'blur(2px)', 'blur(4px)','blur(8px)','blur(16px)']
+                    enum: ['', 'blur(1px)', 'blur(2px)', 'blur(4px)', 'blur(8px)', 'blur(16px)']
                 },
                 "--main-font": {
                     type: "string",
@@ -4282,7 +4387,7 @@ globalSettingsSchema = {
                 "--widget-border-radius":
                 {
                     type: "string",
-                    enum: ['0em', '0.15em','0.3em', '0.6em', '1.2em', '2.4em', '4.8em']
+                    enum: ['0em', '0.15em', '0.3em', '0.6em', '1.2em', '2.4em', '4.8em']
                 },
 
                 "--main-bg-size":
@@ -9512,7 +9617,6 @@ function uuidv4() {
 // -------------------
 
 
-//This is a limited, easy-to-use nosql db build on alasql
 
 function uuidv4() {
 	return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
@@ -9533,7 +9637,7 @@ function uuidv4() {
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
 		"type_name": "document_database_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": " In-browser DrayerDB database",
+		"display_name": " In-browser DrayerDB database(alpha)",
 		// **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
 		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view. Choose permanent or temp when creating. If you choose wrong, you may need to refresh the page to switch.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
@@ -9563,13 +9667,47 @@ function uuidv4() {
 				"type": "boolean",
 				// **default_value** : A default value for this setting.
 				"default_value": false,
-
+				"default_value": "",
 				"description": "If true, data is saved to the user's browser",
 
 			},
 
+			{
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "syncURL",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "DrayerDB API Sync URL",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "text",
+				// **default_value** : A default value for this setting.
+				"description": "A database server is not required to use this in-browser. You can add one later of change it at any time without losing anything.",
 
+				
+			},
 
+			{
+					// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+					"name": "syncKey",
+					// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					"display_name": "API Sync Key",
+					// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+					"type": "text",
+					// **default_value** : A default value for this setting.
+					"default_value": "",
+					"description": "This key is required to read records from the sync database"
+			},
+	
+		    {
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "writePassword",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "API Write Password",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "text",
+				// **default_value** : A default value for this setting.
+				"default_value": "",
+				"description": "This separate key is required to write records to the database."
+			},
 
 			{
 				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
@@ -9617,7 +9755,6 @@ function uuidv4() {
 				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
 				"type": "button",
 
-
 				// **description** : Text that will be displayed below the setting to give the user any extra information.
 				"description": "",
 
@@ -9636,7 +9773,8 @@ function uuidv4() {
 									var x = JSON.parse(e.target.result)
 									{
 										for (r of x) {
-											i.upsert(r[0],true)
+                                            //Second param is true, don't fire callbacks till we are done with the full set.
+											i.db.insertDocument(r[0],true)
 										}
 									}
 									if (x){
@@ -9653,8 +9791,6 @@ function uuidv4() {
 
 					freeboard.showDialog(d, "Upload Data", "Finish")
 				},
-
-
 			}
 
 
@@ -9681,48 +9817,30 @@ function uuidv4() {
 		var self = this;
 		self.settings = settings
 
-		var pt = "TEMP"
-
-		if (settings.perm) {
-			pt = "PERM"
+	
+		
+		self.statusCallback = function(x)
+		{
+			self.data.connected=x
+			try{
+				updateCallback(self.proxy)
+			}
+			catch(e)
+			{
+				console.log(e)
+			}
 		}
 
-
 		self.makeDB = async function () {
-			self.db = await nSQL().createDatabase({
-				id: self.settings.dbname,
-				mode: pt, // pass in "PERM" to switch to persistent storage mode!
-				tables: [
-					{
-						name: "records",
-						model:
-						{
-							"id:uuid": { pk: true },
-							"parent:uuid": {},
-							"time:int": {},
-							"arrival:int": {},
-							"type:string": {},
-							"name:string": {},
-							"title:string": {},
-							"body:string": {},
-							"description:string": {}
-						},
-						indexes:
-						{
-							"arrival:int": {},
-							"parent:uuid": {},
-							"time:int": {},
-							"name:string": { search: true },
-							"type:string": {},
-							"body:string": { search: true },
-							"title:string": { search: true },
-						}
-					}
-				],
-				plugins: [
-					FuzzySearch()
-				]
-			})
+			self.db = new DrayerDatabaseConnection({perm:settings.perm, dbname:settings.dbname,syncKey:settings.syncKey, writePassword:settings.writePassword})
+			self.db.onChangeset=function(){updateCallback(self.proxy)}
+			self.db.statusCallback=self.statusCallback
+			if(settings.syncURL)
+			{
+			self.db.connect(settings.syncURL)
+			}
+			await self.db.dbSuccess
+
 		}
 
 		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
@@ -9730,129 +9848,32 @@ function uuidv4() {
 
 		self.handler = {
 			set: function (obj, prop, val) {
-				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertRecord(r) to set a record.");
+				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertDocument(r) to set a record.  Insert a record with type=__null__ to delete");
 			}
 
 		}
-		self.makeExternalEditRow = function (d) {
-			var m = {
-				set: function (o, k, v) {
 
-					//We use time-triggered updates.
-					//Saving a record is done by putting a listener on the arrival time.
-					//The value we set is irrelevant, it is always set to the current time.
-					if (k == 'id') {
-						if (v != o.id) {
-							throw new Error("You cannot change a record's ID")
-						}
-					}
-					if (k == 'arrival') {
-						o.arrival = Date.now() * 1000
-						self.upsert(o);
-						self.data.set(o);
-					}
-					else {
-						//If we make a local change, update the timestamp to tell about it.
-						o.time = Date.now() * 1000
-						o[k] = v;
-					}
-				}
-			}
-
-			return new Proxy(d, m)
-		}
 
 		self.data = {
+			connected: false,
+
 			loadData: async function (filter) {
-				"Returns a query object for getting the"
-				nSQL().useDatabase(self.settings.dbname);
-				var x = nSQL('records').query('select').where(['type', '!=', '__null__']);
-
-				//Everything in the DB must match
-				for (i in filter) {
-					if (filter[i]) {
-						if (((i != 'sortField') && (i != "sortOrder") && (i != "pageSize") && (i != "pageIndex") && (i != "pageLoading"))) {
-							if ((i == 'body') || (i == 'name') || (i == 'title') || (i == 'description')) {
-								x = x.where(["SEARCH(" + i.replace("'", '') + ",'" + filter[i].replace("'", '') + "')", "=", 0])
-							}
-							else {
-								x = x.where([i, '=', filter[i]]);
-							}
-						}
-					}
-				}
-
-
-				if (filter.sortOrder) {
-					x = x.orderBy([filter.sortField + ' ' + filter.sortOrder.toUpperCase()])
-				}
-
-				x = x.limit(filter.pageSize).offset((filter.pageIndex - 1) * filter.pageSize)
-
-				try {
-
-					var d = await x.exec()
-
-					//Someday this should show the right page count after filtering?
-					return { data: d, itemsCount: (filter.pageIndex + 1) * filter.pageSize }
-				}
-				catch (e) {
-
-					console.log(e)
-				}
-
+				return self.db.loadData(filter);
 			},
 
 			insertItem: async function (record) {
-				record.time = Date.now() * 1000
-				self.upsert(record)
+				await self.db.insertDocument(record)
+			},
+			updateItem: async function (record) {
+				await self.db.insertDocument(record)
 			},
 
 			deleteItem: async function (record) {
-				if (record.id) {
-					nSQL().useDatabase(self.settings.dbname);
-					var x = await nSQL('records').query('select').where(['id', '=', record.id]).exec()
-					if (x) {
-						self.upsert({ type: "__null__", id: record.id })
-					}
-				}
-
+				await self.db.insertDocument({id=record.id, type="__null__"})
 			}
 		}
 
-		self.data.updateItem = self.data.insertItem
 		self.proxy = new Proxy(self.data, self.handler)
-
-		self.upsert = async function (record, noRefresh) {
-			try {
-				var r = {}
-				Object.assign(r, record);
-				r['time'] = r['time'] || Date.now() * 1000;
-				r['arrival'] = r['arrival'] || r['time']
-				r['id'] = r['id'] || freeboard.genUUID();
-				r['name'] = r['name'] || r['id']
-
-				nSQL().useDatabase(self.settings.dbname);
-
-				//Newer version already exists, discard this one.
-				//Note that time, not arrival, determines conflic resolution
-				var x = await nSQL('records').query('delete').where(["id", '=', r.id]).where(['time', '>=', r.time]).exec()
-				if (x.length) {
-					return
-				}
-				await nSQL('records').query('delete').where(["id", '=', r.id]).exec()
-
-				var x = nSQL('records').query('upsert', [r]).exec()
-				await x
-				if (!noRefresh) {
-					updateCallback(self.proxy);
-				}
-			}
-			catch (e) {
-				console.log(e);
-				throw e;
-			}
-		}
 
 
 		/* This is some function where I'll get my data from somewhere */
@@ -9870,7 +9891,10 @@ function uuidv4() {
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
 
-			var oldDBName = newSettings.dbname;
+			if(currentSettings.dbname != newSettings.dbname)
+			{
+				throw error("Cannot change DB name. Delete and re-create this datasource to do so.")
+			}
 
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
@@ -12329,6 +12353,8 @@ freeboard.loadDatasourcePlugin({
 				{
 					currentSettings.data = obj
 					freeboard.setDatasourceSettings(currentSettings.name, obj)
+					freeboard.unsaved["Board Definition"]=true
+
 				}
 				return true;
 			}

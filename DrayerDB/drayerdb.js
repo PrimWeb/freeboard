@@ -7,24 +7,24 @@
   <script src="../lib/js/thirdparty/structjsfork.js"></script>
   <script src="../lib/js/thirdparty/stable-stringify.js"></script>
   
-  However you will probably want to use the js/drayerdb.standalone file if using outside of Freeboard.
+  However you will probably want to use the js/drayerdb.standalone.js file if using outside of Freeboard.
 */
 
 DrayerDatabaseConnection = function () {
-   function uuidv4() {
+    var uuidv4=function() {
       return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
       );
    }
 
-   function arrayToBase64(buffer) {
+   var arrayToBase64=function(buffer) {
       var binary = '';
       var bytes = [].slice.call(buffer);
       bytes.forEach((b) => binary += String.fromCharCode(b));
       return window.btoa(binary);
    };
 
-   function base64ToArray(base64) {
+   var  base64ToArray=function(base64) {
       var binary_string = window.atob(base64);
       var len = binary_string.length;
       var bytes = new Uint8Array(len);
@@ -34,11 +34,10 @@ DrayerDatabaseConnection = function () {
       return bytes
    }
 
-   function DrayerDatabaseConnection(dbname, settings) {
+   function DrayerDatabaseConnection(settings) {
       self = this
 
       self.settings = settings
-      self.settings.dbname = dbname
 
       self.connections = {}
 
@@ -67,11 +66,19 @@ DrayerDatabaseConnection = function () {
       {
       }
 
+      self.statusCallback=function()
+      {
+         
+      }
 
 
       self.makeDB = async function () {
-
-         if (self.settings.perm) {
+         
+         if(self.settings.perm=='TEMP')
+         {
+            pt = "TEMP"
+         }
+         else if (self.settings.perm) {
             pt = "PERM"
          }
          else {
@@ -79,7 +86,7 @@ DrayerDatabaseConnection = function () {
          }
 
          self.db = await nSQL().createDatabase({
-            id: dbname,
+            id: self.settings.dbname,
             mode: pt, // pass in "PERM" to switch to persistent storage mode!
             tables: [
                {
@@ -146,7 +153,7 @@ DrayerDatabaseConnection = function () {
             self.localSecretKey = base64ToArray(localNode[0].public)
          }
          else {
-            nSQL().useDatabase(dbname)
+            nSQL().useDatabase(self.settings.dbname)
 
             var k = nacl.sign.keyPair()
             self.localPubkey = k.publicKey
@@ -374,7 +381,7 @@ DrayerDatabaseConnection = function () {
          return document.id
       }
 
-      self.loadDataPage = async function (filter) {
+      self.loadData = async function (filter) {
          /*
               * Returns an promise resolving to an object with a data property, the data property will be a list of records.  Filter must be
               * an object with a list of keys that are used as fuzzy matchers for the database.
@@ -451,14 +458,12 @@ DrayerDatabaseConnection = function () {
 
          await self.dbSucess
 
-         alert("WebSocket is supported by your Browser!");
-
          // Let us open a web socket
          var ws = new WebSocket(url || "ws://localhost:7001");
          self.connections[url] = ws
 
          ws.onopen = function () {
-
+            self.statusCallback(true)
             // Web Socket is connected, send data using send()
             ws.send(self.encodeMessage({}));
          };
@@ -475,6 +480,7 @@ DrayerDatabaseConnection = function () {
          };
 
          ws.onclose = function () {
+            self.statusCallback(false)
             setTimeout(10000,
                function () {
                   if (self.connections[url]) {
@@ -483,6 +489,7 @@ DrayerDatabaseConnection = function () {
                })
          }
          ws.onerror = function () {
+            self.statusCallback(false)
             setTimeout(10000,
                function () {
                   if (self.connections[url]) {

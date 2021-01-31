@@ -177,6 +177,8 @@
 				{
 					currentSettings.data = obj
 					freeboard.setDatasourceSettings(currentSettings.name, obj)
+					freeboard.unsaved["Board Definition"]=true
+
 				}
 				return true;
 			}

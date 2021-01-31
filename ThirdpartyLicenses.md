@@ -1,5 +1,9 @@
 
 
+## Sparticles
+Mozilla Public License Version 2.0
+https://github.com/simeydotme/sparticles
+
 
 ## json-stable-stringify(modified)
 https://github.com/substack/json-stable-stringify

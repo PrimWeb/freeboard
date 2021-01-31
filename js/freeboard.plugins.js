@@ -1566,7 +1566,6 @@ function uuidv4() {
 // -------------------
 
 
-//This is a limited, easy-to-use nosql db build on alasql
 
 function uuidv4() {
 	return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
@@ -1587,7 +1586,7 @@ function uuidv4() {
 		// **type_name** (required) : A unique name for this plugin. This name should be as unique as possible to avoid collisions with other plugins, and should follow naming conventions for javascript variable and function declarations.
 		"type_name": "document_database_plugin",
 		// **display_name** : The pretty name that will be used for display purposes for this plugin. If the name is not defined, type_name will be used instead.
-		"display_name": " In-browser DrayerDB database",
+		"display_name": " In-browser DrayerDB database(alpha)",
 		// **description** : A description of the plugin. This description will be displayed when the plugin is selected or within search results (in the future). The description may contain HTML if needed.
 		"description": "DB for storing JSON records.  The entire datasource may be used as a controller for the table view. Choose permanent or temp when creating. If you choose wrong, you may need to refresh the page to switch.",
 		// **external_scripts** : Any external scripts that should be loaded before the plugin instance is created.
@@ -1617,13 +1616,47 @@ function uuidv4() {
 				"type": "boolean",
 				// **default_value** : A default value for this setting.
 				"default_value": false,
-
+				"default_value": "",
 				"description": "If true, data is saved to the user's browser",
 
 			},
 
+			{
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "syncURL",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "DrayerDB API Sync URL",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "text",
+				// **default_value** : A default value for this setting.
+				"description": "A database server is not required to use this in-browser. You can add one later of change it at any time without losing anything.",
 
+				
+			},
 
+			{
+					// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+					"name": "syncKey",
+					// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+					"display_name": "API Sync Key",
+					// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+					"type": "text",
+					// **default_value** : A default value for this setting.
+					"default_value": "",
+					"description": "This key is required to read records from the sync database"
+			},
+	
+		    {
+				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
+				"name": "writePassword",
+				// **display_name** : The pretty name that will be shown to the user when they adjust this setting.
+				"display_name": "API Write Password",
+				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
+				"type": "text",
+				// **default_value** : A default value for this setting.
+				"default_value": "",
+				"description": "This separate key is required to write records to the database."
+			},
 
 			{
 				// **name** (required) : The name of the setting. This value will be used in your code to retrieve the value specified by the user. This should follow naming conventions for javascript variable and function declarations.
@@ -1671,7 +1704,6 @@ function uuidv4() {
 				// **type** (required) : The type of input expected for this setting. "text" will display a single text box input. Examples of other types will follow in this documentation.
 				"type": "button",
 
-
 				// **description** : Text that will be displayed below the setting to give the user any extra information.
 				"description": "",
 
@@ -1690,7 +1722,8 @@ function uuidv4() {
 									var x = JSON.parse(e.target.result)
 									{
 										for (r of x) {
-											i.upsert(r[0],true)
+                                            //Second param is true, don't fire callbacks till we are done with the full set.
+											i.db.insertDocument(r[0],true)
 										}
 									}
 									if (x){
@@ -1707,8 +1740,6 @@ function uuidv4() {
 
 					freeboard.showDialog(d, "Upload Data", "Finish")
 				},
-
-
 			}
 
 
@@ -1735,48 +1766,30 @@ function uuidv4() {
 		var self = this;
 		self.settings = settings
 
-		var pt = "TEMP"
-
-		if (settings.perm) {
-			pt = "PERM"
+	
+		
+		self.statusCallback = function(x)
+		{
+			self.data.connected=x
+			try{
+				updateCallback(self.proxy)
+			}
+			catch(e)
+			{
+				console.log(e)
+			}
 		}
 
-
 		self.makeDB = async function () {
-			self.db = await nSQL().createDatabase({
-				id: self.settings.dbname,
-				mode: pt, // pass in "PERM" to switch to persistent storage mode!
-				tables: [
-					{
-						name: "records",
-						model:
-						{
-							"id:uuid": { pk: true },
-							"parent:uuid": {},
-							"time:int": {},
-							"arrival:int": {},
-							"type:string": {},
-							"name:string": {},
-							"title:string": {},
-							"body:string": {},
-							"description:string": {}
-						},
-						indexes:
-						{
-							"arrival:int": {},
-							"parent:uuid": {},
-							"time:int": {},
-							"name:string": { search: true },
-							"type:string": {},
-							"body:string": { search: true },
-							"title:string": { search: true },
-						}
-					}
-				],
-				plugins: [
-					FuzzySearch()
-				]
-			})
+			self.db = new DrayerDatabaseConnection({perm:settings.perm, dbname:settings.dbname,syncKey:settings.syncKey, writePassword:settings.writePassword})
+			self.db.onChangeset=function(){updateCallback(self.proxy)}
+			self.db.statusCallback=self.statusCallback
+			if(settings.syncURL)
+			{
+			self.db.connect(settings.syncURL)
+			}
+			await self.db.dbSuccess
+
 		}
 
 		// Good idea to create a variable to hold on to our settings, because they might change in the future. See below.
@@ -1784,129 +1797,32 @@ function uuidv4() {
 
 		self.handler = {
 			set: function (obj, prop, val) {
-				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertRecord(r) to set a record.");
+				throw new Error("You can't set anything here. Use loadData({}) to get all fuzzy matching records, and insertDocument(r) to set a record.  Insert a record with type=__null__ to delete");
 			}
 
 		}
-		self.makeExternalEditRow = function (d) {
-			var m = {
-				set: function (o, k, v) {
 
-					//We use time-triggered updates.
-					//Saving a record is done by putting a listener on the arrival time.
-					//The value we set is irrelevant, it is always set to the current time.
-					if (k == 'id') {
-						if (v != o.id) {
-							throw new Error("You cannot change a record's ID")
-						}
-					}
-					if (k == 'arrival') {
-						o.arrival = Date.now() * 1000
-						self.upsert(o);
-						self.data.set(o);
-					}
-					else {
-						//If we make a local change, update the timestamp to tell about it.
-						o.time = Date.now() * 1000
-						o[k] = v;
-					}
-				}
-			}
-
-			return new Proxy(d, m)
-		}
 
 		self.data = {
+			connected: false,
+
 			loadData: async function (filter) {
-				"Returns a query object for getting the"
-				nSQL().useDatabase(self.settings.dbname);
-				var x = nSQL('records').query('select').where(['type', '!=', '__null__']);
-
-				//Everything in the DB must match
-				for (i in filter) {
-					if (filter[i]) {
-						if (((i != 'sortField') && (i != "sortOrder") && (i != "pageSize") && (i != "pageIndex") && (i != "pageLoading"))) {
-							if ((i == 'body') || (i == 'name') || (i == 'title') || (i == 'description')) {
-								x = x.where(["SEARCH(" + i.replace("'", '') + ",'" + filter[i].replace("'", '') + "')", "=", 0])
-							}
-							else {
-								x = x.where([i, '=', filter[i]]);
-							}
-						}
-					}
-				}
-
-
-				if (filter.sortOrder) {
-					x = x.orderBy([filter.sortField + ' ' + filter.sortOrder.toUpperCase()])
-				}
-
-				x = x.limit(filter.pageSize).offset((filter.pageIndex - 1) * filter.pageSize)
-
-				try {
-
-					var d = await x.exec()
-
-					//Someday this should show the right page count after filtering?
-					return { data: d, itemsCount: (filter.pageIndex + 1) * filter.pageSize }
-				}
-				catch (e) {
-
-					console.log(e)
-				}
-
+				return self.db.loadData(filter);
 			},
 
 			insertItem: async function (record) {
-				record.time = Date.now() * 1000
-				self.upsert(record)
+				await self.db.insertDocument(record)
+			},
+			updateItem: async function (record) {
+				await self.db.insertDocument(record)
 			},
 
 			deleteItem: async function (record) {
-				if (record.id) {
-					nSQL().useDatabase(self.settings.dbname);
-					var x = await nSQL('records').query('select').where(['id', '=', record.id]).exec()
-					if (x) {
-						self.upsert({ type: "__null__", id: record.id })
-					}
-				}
-
+				await self.db.insertDocument({id=record.id, type="__null__"})
 			}
 		}
 
-		self.data.updateItem = self.data.insertItem
 		self.proxy = new Proxy(self.data, self.handler)
-
-		self.upsert = async function (record, noRefresh) {
-			try {
-				var r = {}
-				Object.assign(r, record);
-				r['time'] = r['time'] || Date.now() * 1000;
-				r['arrival'] = r['arrival'] || r['time']
-				r['id'] = r['id'] || freeboard.genUUID();
-				r['name'] = r['name'] || r['id']
-
-				nSQL().useDatabase(self.settings.dbname);
-
-				//Newer version already exists, discard this one.
-				//Note that time, not arrival, determines conflic resolution
-				var x = await nSQL('records').query('delete').where(["id", '=', r.id]).where(['time', '>=', r.time]).exec()
-				if (x.length) {
-					return
-				}
-				await nSQL('records').query('delete').where(["id", '=', r.id]).exec()
-
-				var x = nSQL('records').query('upsert', [r]).exec()
-				await x
-				if (!noRefresh) {
-					updateCallback(self.proxy);
-				}
-			}
-			catch (e) {
-				console.log(e);
-				throw e;
-			}
-		}
 
 
 		/* This is some function where I'll get my data from somewhere */
@@ -1924,7 +1840,10 @@ function uuidv4() {
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function (newSettings) {
 
-			var oldDBName = newSettings.dbname;
+			if(currentSettings.dbname != newSettings.dbname)
+			{
+				throw error("Cannot change DB name. Delete and re-create this datasource to do so.")
+			}
 
 			// Here we update our current settings with the variable that is passed in.
 			currentSettings = newSettings;
@@ -4383,6 +4302,8 @@ freeboard.loadDatasourcePlugin({
 				{
 					currentSettings.data = obj
 					freeboard.setDatasourceSettings(currentSettings.name, obj)
+					freeboard.unsaved["Board Definition"]=true
+
 				}
 				return true;
 			}

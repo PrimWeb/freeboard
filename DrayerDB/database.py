@@ -539,7 +539,7 @@ class DocumentDatabase():
         if x:
             # Check that record we are trying to insert is newer, else ignore
             if x[0] < doc['time']:
-                self.threadLocal.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$.id')=?", (d), signature,  doc['id']))
+                self.threadLocal.conn.execute("UPDATE document SET json=?, signature=? WHERE json_extract(json,'$.id')=?", (d, signature,  doc['id']))
 
                 # If we are marking this as deleted, we can ditch everything that depends on it.
                 # We don't even have to just set them as deleted, we can relly delete them, the deleted parent record

@@ -37,6 +37,7 @@ freeboard(fork!)
 
 * freeboard.playSound function plays sounds either from a URL, or defined in the soundData global settings namespace.   There's a UI in settings to upload files.
 * New setting type: constructor. This is to let your users define a JS object directly, for more advanced event handling.
+* freeboard.unsaved["Board Definition"]=true can be used to register an unsaved change that stops the user from leaving accidentaly
 
 **free·board** (noun) *\ˈfrē-ˌbȯrd\*
 
@@ -254,6 +255,20 @@ Does exactly the opposite of bindHandlers.  Use it on the exact original object,
 implement cleanup of an old set of bindings, when settings change or plugins are unloaded.
 
 -------
+
+
+**freeboard.unsaved**
+
+Dict of booleans. While there is at least one true value, leaving the page results in a prompt.
+
+freeboard.unsaved['Board Definition'] is automatically reset to false when you download the board,
+and set to true when modifying widgets, etc.
+
+Use your own descriptive key for anything not part of the board definition.
+
+
+-------
+
 
 ### Building Plugins
 
