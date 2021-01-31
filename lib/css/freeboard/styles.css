@@ -62,6 +62,12 @@
 	--logo-image: "";
 	--logo-border-radius: 1em;
 	--box-backdrop: blur(4px);
+/*
+	--pane-border-image-source: none;
+	--pane-border-image-outset:2px;
+	--pane-border-image-repeat:round;
+	--pane-border-image-slice: 60 60 60 60;
+	--pane-border-image-width: 0px;*/
 
 	--chess-background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHElEQVQYV2NkYGAwZmBgOMsABYwwBjYBsEoMFQBQhgIF9JIf4wAAAABJRU5ErkJggg==) repeat;
 }
@@ -881,6 +887,13 @@ body {
 	border-color: var(--border-color);
 	border-radius: var(--dialog-border-radius);
 	border-style: var(--border-style);
+
+	/*border-image-source: var(--pane-border-image-source);
+	border-image-slice: var(--pane-border-image-slice);
+	border-image-repeat: var(--pane-border-image-repeat);
+	border-image-width: var(--pane-border-image-width);
+	border-width: max(var(--border-width),var(--pane-border-image-width));
+	border-image-outset: max(var(--border-width),var(--pane-border-image-width));*/
 }
 
 .modal.small {
@@ -1494,7 +1507,6 @@ ul, ol {
 	padding: var(--pane-padding);
 	border-radius: var(--pane-border-radius);
 	border-style: var(--border-style);
-	border-width: var(--border-width);
 	border-color: var(--border-color);
 	margin: 0px;
 	overflow: hidden;
@@ -1506,6 +1518,14 @@ ul, ol {
 	-ms-user-select: text;
 	user-select: text;
 	box-shadow: 3px 3px 12px var(--pane-shadow);
+
+	/*border-image-source: var(--pane-border-image-source);
+	border-image-slice: var(--pane-border-image-slice);
+	border-image-repeat: var(--pane-border-image-repeat);
+	border-image-width:  max(var(--border-width),var(--pane-border-image-width));	
+	border-image-outset: max(var(--border-width),var(--pane-border-image-width));
+*/
+	border-width: var(--border-width);
 }
 
 .gridster .gs_w header {

@@ -14,8 +14,34 @@
   "--widget-shadow": "rgba(0,0,0,0.335)",
   "--widget-text-shadow": "rgba(218,216,211,1)",
   "--border-color": "rgba(145,130,118,1)",
-  "--pane-header-line-height": "40px",
-  "--widget-border-radius": "0.6em",
   "--widget-border-color": "rgba(101,102,69,1)",
-  "--modal-tint":"rgba(135,146,106,0.215)"
+  "--modal-tint": "rgba(135,146,106,0.215)",
+  "--widget-border-radius": "0.6em",
+  "--pane-header-line-height": "40px",
+  "background-particles": {
+    "color": [
+      "rgba(188,182,182,0.58)",
+      "rgba(135,104,18,1)",
+      "rgba(30,64,42,1)",
+      "rgba(0,184,26,1)",
+      "rgba(68,52,99,1)"
+    ],
+    "count": 25,
+    "shape": "diamond",
+    "style": "fill",
+    "minSize": 12,
+    "maxSize": 60,
+    "minAlpha": 0,
+    "maxAlpha": 0.75,
+    "direction": 180,
+    "speed": 3,
+    "parallax": 5,
+    "xVariance": 10,
+    "yVariance": 3,
+    "drift": 5,
+    "glow": 40,
+    "rotation": 3,
+    "bounce": false,
+    "imageUrl": []
+  }
 }

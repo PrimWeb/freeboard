@@ -459,7 +459,13 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI) {
 	this.setGlobalSettings = function (d) {
 		Object.assign(self.globalSettings, d)
 		for (var i in self.globalSettingsHandlers) {
+			try{
 			self.globalSettingsHandlers[i](self.globalSettings)
+			}
+			catch(e){
+				console.log(self.globalSettingsHandlers[i])
+				console.error(e)
+			}
 		}
 	}
 
@@ -495,15 +501,15 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI) {
 			$("#board-logo").html(d.theme['--logo-text'])
 		}
 
-		if (this.sparticles) {
+		if (self.sparticles) {
 			try {
-				this.sparticles.destroy()
+				self.sparticles.destroy()
 			}
 			catch (e) {
 
 				console.error(e)
 			}
-			this.sparticles = null
+			self.sparticles = null
 		}
 
 		if (d.theme['background-particles']) {
@@ -513,10 +519,10 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI) {
 			if (particles.count) {
 				let myElement = document.getElementById("bg_particle_fx")
 				try{
-					this.sparticles = new Sparticles(myElement, particles);
+					self.sparticles = new Sparticles(myElement, particles);
 				}
 				catch(e){
-					this.sparticles=null
+					self.sparticles=null
 					console.error(e)
 					freeboard.showDialog(outer, "Bad particle FX settings", "OK")
 				}
@@ -902,6 +908,103 @@ function FreeboardModel(datasourcePlugins, widgetPlugins, freeboardUI) {
 	}
 }
 
+//https://gist.github.com/OwlyCode/6421823
+//Allows dynamic settings changes
+(function($) {
+    $.Gridster.generate_stylesheet = function(opts) {
+        var styles = '';
+        var max_size_x = this.options.max_size_x;
+        var max_rows = 0;
+        var max_cols = 0;
+        var i;
+        var rules;
+
+        opts || (opts = {});
+        opts.cols || (opts.cols = this.cols);
+        opts.rows || (opts.rows = this.rows);
+        opts.namespace || (opts.namespace = this.options.namespace);
+        opts.widget_base_dimensions || (opts.widget_base_dimensions = this.options.widget_base_dimensions);
+        opts.widget_margins || (opts.widget_margins = this.options.widget_margins);
+        opts.min_widget_width = (opts.widget_margins[0] * 2) +
+            opts.widget_base_dimensions[0];
+        opts.min_widget_height = (opts.widget_margins[1] * 2) +
+            opts.widget_base_dimensions[1];
+
+
+        /* generate CSS styles for cols */
+        for (i = opts.cols; i >= 0; i--) {
+            styles += (opts.namespace + ' [data-col="'+ (i + 1) + '"] { left:' +
+                ((i * opts.widget_base_dimensions[0]) +
+                (i * opts.widget_margins[0]) +
+                ((i + 1) * opts.widget_margins[0])) + 'px;} ');
+        }
+
+        /* generate CSS styles for rows */
+        for (i = opts.rows; i >= 0; i--) {
+            styles += (opts.namespace + ' [data-row="' + (i + 1) + '"] { top:' +
+                ((i * opts.widget_base_dimensions[1]) +
+                (i * opts.widget_margins[1]) +
+                ((i + 1) * opts.widget_margins[1]) ) + 'px;} ');
+        }
+
+        for (var y = 1; y <= opts.rows; y++) {
+            styles += (opts.namespace + ' [data-sizey="' + y + '"] { height:' +
+                (y * opts.widget_base_dimensions[1] +
+                (y - 1) * (opts.widget_margins[1] * 2)) + 'px;}');
+        }
+
+        for (var x = 1; x <= max_size_x; x++) {
+            styles += (opts.namespace + ' [data-sizex="' + x + '"] { width:' +
+                (x * opts.widget_base_dimensions[0] +
+                (x - 1) * (opts.widget_margins[0] * 2)) + 'px;}');
+        }
+
+        return this.add_style_tag(styles);
+    };
+
+    $.Gridster.add_style_tag = function(css) {
+        var d = document;
+        var tag = d.createElement('style');
+
+        tag.setAttribute('generated-from', 'gridster');
+
+        d.getElementsByTagName('head')[0].appendChild(tag);
+        tag.setAttribute('type', 'text/css');
+
+        if (tag.styleSheet) {
+            tag.styleSheet.cssText = css;
+        } else {
+            tag.appendChild(document.createTextNode(css));
+        }
+        return this;
+    };
+
+    $.Gridster.resize_widget_dimensions = function(options) {
+        if (options.widget_margins) {
+            this.options.widget_margins = options.widget_margins;
+        }
+
+        if (options.widget_base_dimensions) {
+             this.options.widget_base_dimensions = options.widget_base_dimensions;
+        }
+
+        this.min_widget_width  = (this.options.widget_margins[0] * 2) + this.options.widget_base_dimensions[0];
+        this.min_widget_height = (this.options.widget_margins[1] * 2) + this.options.widget_base_dimensions[1];
+
+        var serializedGrid = this.serialize();
+        this.$widgets.each($.proxy(function(i, widget) {
+            var $widget = $(widget);
+            this.resize_widget($widget);
+        }, this));
+
+        this.generate_grid_and_stylesheet();
+        this.get_widgets_from_DOM();
+        this.set_dom_grid_height();
+
+        return false;
+    };
+})(jQuery);
+
 function FreeboardUI() {
 	var PANE_MARGIN = 10;
 	var PANE_WIDTH = 300;
@@ -935,6 +1038,20 @@ function FreeboardUI() {
 
 
 	function processResize(layoutWidgets) {
+		PANE_WIDTH = 300
+		try{
+			PANE_WIDTH += parseFloat(getComputedStyle($('.gs_w')[0]).getPropertyValue('padding'))*2
+		}
+		catch(e)
+		{
+			PANE_WIDTH +=10;
+			console.log("No panes, guessing padding")
+		}
+
+		var borderHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--border-width'))
+
+		PANE_WIDTH += borderHeight*2
+
 		var maxDisplayableColumns = getMaxDisplayableColumnCount();
 		var repositionFunction = function () { };
 		if (layoutWidgets) {
@@ -1461,9 +1578,21 @@ function PaneModel(theFreeboardModel, widgetPlugins) {
 		// sumHeights+= extraGridSize;
 
 		var titleHeight = getComputedStyle(document.documentElement).getPropertyValue('--pane-header-line-height')
+		
+		try{
+			var paddingHeight = parseFloat(getComputedStyle($('.gs_w')[0]).getPropertyValue('padding'))*2
+		}
+		catch(e)
+		{
+			paddingHeight=10;
+			console.log("No panes, guessing padding")
+		}
+		//Meh just always say it's 5
+		var borderHeight = 5
+
 		//Remove the px
 		titleHeight = titleHeight.substring(0,titleHeight.length-2);
-		var rows = Math.ceil((sumHeights + parseFloat(titleHeight)) / 30);
+		var rows = Math.ceil((sumHeights + parseFloat(titleHeight)+borderHeight*2 + paddingHeight*2) / 30);
 
 		return Math.max(4, rows);
 	}
@@ -3963,7 +4092,11 @@ globalSettingsSchema = {
             type: "object",
             title: "Theme",
             properties: {
-
+                "--border-style":
+                {
+                    type: "string",
+                    enum: ["inset", "outset", "solid", "double", "groove", "ridge", "dotted",'dashed']
+                },
                 "background-particles": {
                     type: "object",
 
@@ -4129,6 +4262,30 @@ globalSettingsSchema = {
                         "type": "img/png"
                     },
                 },
+/*
+                "--pane-border-image-source": {
+                    type: "string",
+                    "media": {
+                        "binaryEncoding": "base64",
+                        "type": "img/png"
+                    },
+                },
+                "--pane-border-image-width": {
+                    type: "string",
+                    default: "20px"
+                },
+
+                "--pane-border-image-repeat": {
+                    type: "string",
+                    default: "round"
+                },
+
+                "--pane-border-image-slice": {
+                    type: "string",
+                    default: "60 60 60 60"
+                },
+                */
+
                 "--widget-bg-image": {
                     type: "string",
                     "media": {
