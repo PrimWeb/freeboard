@@ -1103,15 +1103,28 @@
             }
         }
 
+        this.updateMode = function(){
+            if(this.settings.mode=="cover")
+            {
+                $(widgetElement).css({
+                    width: "100%",
+                    height: "100%",
+                    "background-size": "cover",
+                    "background-position": "center"
+                });
+            }
+            else{
+                $(widgetElement).css({
+                    width: "100%",
+                    "background-size": "contain",
+                    "background-position": "center",
+                    "background-repeat":"no-repeat"
+                });
+            }
+        }
         this.render = function (element) {
-            $(element).css({
-                width: "100%",
-                height: "100%",
-                "background-size": "cover",
-                "background-position": "center"
-            });
-
             widgetElement = element;
+            this.updateMode()
         }
 
         this.onSettingsChanged = function (newSettings) {
@@ -1120,6 +1133,8 @@
             if (newSettings.refresh && newSettings.refresh > 0) {
                 timer = setInterval(updateImage, Number(newSettings.refresh) * 1000);
             }
+            this.settings = newSettings
+            this.updateMode()
         }
 
         this.onCalculatedValueChanged = function (settingName, newValue) {
@@ -1128,6 +1143,7 @@
             }
 
             updateImage();
+
         }
 
         this.onDispose = function () {
@@ -1152,12 +1168,29 @@
                 type: "calculated"
             },
             {
-                "type": "number",
+                "type": "calculated",
                 "display_name": "Refresh every",
                 "name": "refresh",
                 "suffix": "seconds",
                 "description": "Leave blank if the image doesn't need to be refreshed"
-            }
+            },
+
+            {
+                name: "mode",
+                display_name: "mode",
+                type: "option",
+                options: [
+                    {
+                        name: "Center",
+                        value: "center"
+                    },
+                    {
+                        name: "Cover",
+                        value: "cover"
+                    }
+                   
+                ]
+            },
         ],
         newInstance: function (settings, newInstanceCallback) {
             newInstanceCallback(new pictureWidget(settings));

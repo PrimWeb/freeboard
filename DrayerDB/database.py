@@ -56,9 +56,15 @@ databaseBySyncKeyHash = weakref.WeakValueDictionary()
 import asyncio
 import websockets
 
+
 class Session():
     def __init__(self):
         self.alreadyDidInitialSync = False
+
+        #When you send the client all new changes
+        #Set this flag to say what the most recent messaage is, so you can then
+        #Get all more recent messages than that.
+        self.lastResyncFlushTime = 0
 
 
 async def DBAPI(websocket, path):
@@ -71,9 +77,18 @@ async def DBAPI(websocket, path):
         await websocket.send(databaseBySyncKeyHash[a[:16]].handleBinaryAPICall(a,session))
         databaseBySyncKeyHash[a[:16]].subscribers[time.time()] = websocket
 
+        db = databaseBySyncKeyHash[a[:16]]
+
         while not websocket.closed:
-            a = await websocket.recv()
-            await websocket.send(databaseBySyncKeyHash[a[:16]].handleBinaryAPICall(a,session))
+            try:
+                a = await asyncio.wait_for(websocket.recv(), timeout=5)
+                await websocket.send(databaseBySyncKeyHash[a[:16]].handleBinaryAPICall(a,session))
+            except asyncio.TimeoutError:
+                pass
+
+            if db.lastChange > session.lastResyncFlushTime:
+                pass
+
     except websockets.exceptions.ConnectionClosedOK:
         pass
     
@@ -395,12 +410,17 @@ class DocumentDatabase():
             #Avoid dumping way too much at once
             cur.execute(
                 "SELECT json,signature FROM document WHERE json_extract(json,'$.arrival')>? LIMIT 100", (d['getNewArrivals'],))
+            
+            #Declares that there are no records left out in between this time and the first time we actually send
+            r['recordsStartFrom'] = d['getNewArrivals']
 
             for i in cur:
                 if not 'records' in r:
                     r['records']=[]
                 print(i)
                 r['records'].append([i[0], base64.b64encode(i[1]).decode()])
+            
+                sessionObject.lastResyncFlushTime = max(sessionObject.lastResyncFlushTime, json.loads(i[0])['arrival']  )
 
         if "records" in d and d['records']:
             for i in d['records']:
@@ -411,9 +431,36 @@ class DocumentDatabase():
 
             #Set a flag saying that
             cur = self.threadLocal.conn.cursor()
-            cur.execute("UPDATE peers SET lastArrival=? WHERE peerID=? AND lastArrival !=?", ( r['getNewArrivals'], remoteNodeID, r['getNewArrivals']))
+            #If the recorded lastArrival is less than the incoming recordsStartFrom, it would mean that there is a gap in which records
+            #That we don't know about could be hiding.   Don't update the timestamp in that case, as the chain is broken.
+            #We can still accept new records, but we will need to request everything all over again starting at the breakpoint to fix this.
+            cur.execute("UPDATE peers SET lastArrival=? WHERE peerID=? AND lastArrival !=? AND lastArrival>=?", ( r['getNewArrivals'], remoteNodeID, r['getNewArrivals'], r.get("recordsStartFrom")))
 
         return self.encodeMessage(r)
+
+
+    def getUpdatesForSession(self,session):
+
+        #Don't send anything till they have requested something, ohterwise we will just be sending nonsense they already have
+        if session.lastResyncFlushTime:
+            r = {}
+            cur = self.threadLocal.conn.cursor()
+            #Avoid dumping way too much at once
+            cur.execute(
+                "SELECT json,signature FROM document WHERE json_extract(json,'$.arrival')>? LIMIT 100", (session.lastResyncFlushTime,))
+            
+            #Declares that there are no records left out in between this time and the first time we actually send
+            r['recordsStartFrom'] = d['getNewArrivals']
+
+            for i in cur:
+                if not 'records' in r:
+                    r['records']=[]
+                r['records'].append([i[0], base64.b64encode(i[1]).decode()])
+            
+                session.lastResyncFlushTime = max(session.lastResyncFlushTime, json.loads(i[0])['arrival']  )
+        #We can of course just send nothing if there are no changes to flush.
+        if r:
+            return self.encodeMessage(r)
 
     def createBinaryWriteCall(self, r,sig=None):
 
