@@ -2954,10 +2954,12 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 				if (e instanceof ReferenceError && (/^\w+$/).test(rawValue)) {
 					returnValue = rawValue;
 				}
+				/*
 				if (showError) {
-					freeboard.showDialog(e, "Error with: " + settingName, "OK")
+					freeboard.showDialog(e, "xError with: " + settingName, "OK")
 					freeboard.playSound('error')
 				}
+				*/
 			}
 
 			var f = async function (returnValue) {
@@ -2982,7 +2984,7 @@ function WidgetModel(theFreeboardModel, widgetPlugins) {
 			catch (e) {
 				console.log(e.toString());
 				if (showError) {
-					freeboard.showDialog(e, "Error with: " + settingName, "OK")
+					freeboard.showDialog(e, "yError with: " + settingName, "OK")
 					freeboard.playSound('error')
 				}
 			}
@@ -3642,9 +3644,6 @@ var freeboard = (function () {
             'ubuntu-koto': 'ubuntu/Koto_chords.opus',
 			'ubuntu-mallet': 'ubuntu/Mallet.opus',
             'ubuntu': 'ubuntu/Ubuntu.opus'
-
-
-
 		},
 
 
