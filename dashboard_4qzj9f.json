@@ -1,0 +1,274 @@
+{
+	"version": 1,
+	"allow_edit": true,
+	"plugins": [],
+	"pages": {
+		"default": {
+			"contents": [
+				{
+					"title": "Temperature",
+					"width": 1,
+					"row": {
+						"3": 1,
+						"4": 1
+					},
+					"col": {
+						"3": 1,
+						"4": 2
+					},
+					"col_width": 1,
+					"widgets": [
+						{
+							"type": "gauge",
+							"settings": {
+								"title": "Temperature",
+								"style": {
+									"pointerColor": "#000000",
+									"pointerTipColor": "#002000",
+									"pointerCircleInner": "rgb(57,43,21)",
+									"pointerCircleInnerEnd": "rgb(57,43,21)",
+									"pointerCircleOuter": "rgb(87,63,41)",
+									"pointerCircleOuterEnd": "rgb(57,43,21)",
+									"pointerShadowBottom": "#000000",
+									"pointerShadowTop": "#000000",
+									"fgColor": "rgb(57,43,21)",
+									"borderInner": "rgb(77,68,56)",
+									"borderInnerEnd": "rgb(59,44,36)",
+									"borderMiddle": "rgb(202,192,155)",
+									"borderMiddleEnd": "rgb(163,145,96)",
+									"borderOuter": "rgb(102,90,67)",
+									"borderOuterEnd": "rgb(57,41,34)",
+									"borderInnerWidth": 2,
+									"borderMiddleWidth": 3,
+									"borderOuterWidth": 2,
+									"size": 4,
+									"borderShadow": "#000000",
+									"plateColor": "rgb(204,198,190)",
+									"plateColorEnd": "rgb(195,190,180)",
+									"fontTitleSize": 32,
+									"fontValueSize": 40
+								},
+								"value": "=datasources[\"Temperature\"][\"result\"][0][\"data\"]",
+								"min_value": 0,
+								"max_value": "50",
+								"tick_interval": "5",
+								"minor_ticks": "10",
+								"digits": 2
+							}
+						},
+						{
+							"type": "text_widget",
+							"settings": {
+								"size": "regular",
+								"value": "=datasources[\"Temperature\"][\"result\"][0][\"data\"]",
+								"sparkline": true,
+								"animate": true,
+								"units": "degC"
+							}
+						}
+					]
+				},
+				{
+					"title": "Humidity",
+					"width": 1,
+					"row": {
+						"3": 1,
+						"4": 1
+					},
+					"col": {
+						"3": 2,
+						"4": 3
+					},
+					"col_width": 1,
+					"widgets": [
+						{
+							"type": "text_widget",
+							"settings": {
+								"title": "Humidity",
+								"size": "regular",
+								"value": "=datasources[\"Humidity\"][\"result\"][0][\"data\"]",
+								"sparkline": true,
+								"animate": true,
+								"units": "%"
+							}
+						},
+						{
+							"type": "text_widget",
+							"settings": {
+								"title": "Timestamp",
+								"size": "regular",
+								"value": "=datasources[\"Humidity\"][\"result\"][0][\"timestamp\"]",
+								"animate": true
+							}
+						}
+					]
+				},
+				{
+					"title": "Relay",
+					"width": 1,
+					"row": {
+						"3": 1,
+						"4": 8
+					},
+					"col": {
+						"3": 3,
+						"4": 1
+					},
+					"col_width": 1,
+					"widgets": [
+						{
+							"type": "button_plugin",
+							"settings": {
+								"html": "<i>On</i>",
+								"tooltip": "",
+								"target": "",
+								"sound": "low-click",
+								"height": 30,
+								"code": "function httpGetAsync(theUrl, callback)\n{\n    var xmlHttp = new XMLHttpRequest();\n    xmlHttp.onreadystatechange = function() { \n        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)\n            callback(xmlHttp.responseText);\n    }\n    xmlHttp.open(\"GET\", theUrl, true); // true for asynchronous \n    xmlHttp.send(null);\n}\n\nthis.onClick = function(){\n    httpGetAsync(\"http://bipes.net.br/easymqtt/publish.php?session=vn28pd&topic=relay&value=1\");\n};",
+								"unit": ""
+							}
+						},
+						{
+							"type": "button_plugin",
+							"settings": {
+								"html": "<i>Off</i>",
+								"tooltip": "",
+								"sound": "",
+								"height": 30,
+								"code": "function httpGetAsync(theUrl, callback)\n{\n    var xmlHttp = new XMLHttpRequest();\n    xmlHttp.onreadystatechange = function() { \n        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)\n            callback(xmlHttp.responseText);\n    }\n    xmlHttp.open(\"GET\", theUrl, true); // true for asynchronous \n    xmlHttp.send(null);\n}\n\nthis.onClick = function(){\n    httpGetAsync(\"http://bipes.net.br/easymqtt/publish.php?session=vn28pd&topic=relay&value=0\");\n};",
+								"unit": ""
+							}
+						},
+						{
+							"type": "indicator",
+							"settings": {
+								"title": "Relay state",
+								"value": "=datasources[\"Relay\"][\"result\"][0][\"data\"]",
+								"on_text": "On",
+								"off_text": "Off"
+							}
+						}
+					]
+				},
+				{
+					"title": "Counter",
+					"width": 1,
+					"row": {
+						"3": 10,
+						"4": 1
+					},
+					"col": {
+						"3": 2,
+						"4": 1
+					},
+					"col_width": 1,
+					"widgets": [
+						{
+							"type": "text_widget",
+							"settings": {
+								"title": "Counter",
+								"size": "regular",
+								"value": "=datasources[\"Counter\"][\"result\"][0][\"data\"]",
+								"sparkline": true,
+								"animate": true
+							}
+						}
+					]
+				},
+				{
+					"title": "Clock",
+					"width": 1,
+					"row": {
+						"3": 10
+					},
+					"col": {
+						"3": 3
+					},
+					"col_width": 1,
+					"widgets": [
+						{
+							"type": "text_widget",
+							"settings": {
+								"title": "System Time",
+								"size": "regular",
+								"value": "=datasources[\"Clock\"][\"time_string_value\"]",
+								"animate": true
+							}
+						}
+					]
+				}
+			],
+			"name": "default"
+		},
+		"xx": {
+			"contents": [],
+			"name": "xx"
+		}
+	},
+	"datasources": [
+		{
+			"name": "vars",
+			"type": "core_scratchpad_plugin",
+			"settings": {
+				"data": "={}",
+				"persist": "off",
+				"lock": false,
+				"name": "vars"
+			}
+		},
+		{
+			"name": "Counter",
+			"type": "JSON",
+			"settings": {
+				"url": "http://bipes.net.br/easymqtt/gettopic_last.php?session=vn28pd&topic=Counter",
+				"use_thingproxy": false,
+				"refresh": 2,
+				"method": "GET"
+			}
+		},
+		{
+			"name": "Humidity",
+			"type": "JSON",
+			"settings": {
+				"url": "http://bipes.net.br/easymqtt/gettopic_last.php?session=vn28pd&topic=Humidity",
+				"use_thingproxy": false,
+				"refresh": 2,
+				"method": "GET",
+				"name": "Humidity"
+			}
+		},
+		{
+			"name": "Temperature",
+			"type": "JSON",
+			"settings": {
+				"url": "http://bipes.net.br/easymqtt/gettopic_last.php?session=vn28pd&topic=Temperature",
+				"use_thingproxy": false,
+				"refresh": 2,
+				"method": "GET"
+			}
+		},
+		{
+			"name": "Relay",
+			"type": "JSON",
+			"settings": {
+				"url": "http://bipes.net.br/easymqtt/gettopic_last.php?session=vn28pd&topic=relay",
+				"use_thingproxy": false,
+				"refresh": 5,
+				"method": "GET"
+			}
+		},
+		{
+			"name": "Clock",
+			"type": "clock",
+			"settings": {
+				"refresh": 1,
+				"strftime": "%I:%M:%S %p %b %d %Y"
+			}
+		}
+	],
+	"columns": 3,
+	"globalSettings": {
+		"theme": {},
+		"imageData": {}
+	}
+}

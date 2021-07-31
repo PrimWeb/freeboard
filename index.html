@@ -33,6 +33,11 @@
         }
         head.js("js/freeboard_plugins.min.js",
             // *** Load more plugins here ***
+                "js/freeboard_gmap.js", //https://gist.github.com/Sypheos/d58a6b2457fab37e3fa503e046c27594#file-freeboard-google-map-tracker
+                "js/freeboard_gmap_tracker.js", //https://buglabs.tumblr.com/post/166116803266/new-freeboard-map-widget-gives-more-color-to-your
+                "js/plugin_highcharts.js", //https://blog.onlinux.fr/dynamic-highcharts-plugin-for-freeboard-io/
+                "js/freeboard.bipesEasyMQTTdatasources.js", 
+
             function () {
                 $(function () { //DOM Ready
                     freeboard.initialize(true);
