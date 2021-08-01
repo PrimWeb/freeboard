@@ -19,6 +19,10 @@
     <script src="js/freeboard.thirdparty.min.js"></script>
     <script type="text/javascript">
 
+        function showClassic() {
+            window.location.href='../freeboardClassic/';
+        }
+ 
         function showFreeboardHelp() {
             freeboard.showDialog(generateFreeboardHelp(), "Help", "Close")
         }
@@ -103,6 +107,7 @@
                 <div id="board-tools">
                     <div id="board-actions">
                         <ul class="board-toolbar vertical">
+                            <li data-bind="click: showClassic"><label>Switch to classic freeboard</label></li>
                             <li data-bind="click: showFreeboadTemplatesMenu"><label> Load Example</label></li>
                             <li data-bind="click: showFreeboardHelp"><label> Show Help</label></li>
                             <li data-bind="click: showEmoji"><label> Show Emoji</label></li>
